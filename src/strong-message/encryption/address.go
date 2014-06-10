@@ -1,10 +1,11 @@
 package encryption
 
 import (
-	"fmt"
 	"crypto/rand"
 	"crypto/elliptic"
+	"crypto/sha512"
 	"math/big"
+	"encoding/base64"
 	"github.com/ThePiachu/Split-Vanity-Miner-Golang/src/pkg/ripemd160"
 )
 
@@ -20,8 +21,13 @@ func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
 	pubKey := elliptic.Marshal(elliptic.P256(), x, y)
 	ripemd := ripemd160.New()
 
-	fmt.Println(pubKey)
-	fmt.Println(ripemd)
+	appender := ripemd.Sum(sha512.Sum384(pubKey))
+	address := make([]byte, 1, 1)
 	
-	return nil, ""
+	// Version 0x01
+	address[0] = 0x01
+	append(address, appender)
+	append(address, sha512.Sum384(sha512.Sum384(address))[:4])
+
+	return address, base64.StdEncoding.EncodeToString(address)
 }
