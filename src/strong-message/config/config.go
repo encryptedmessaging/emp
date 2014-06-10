@@ -4,19 +4,14 @@ import (
   "encoding/json"
   "fmt"
   "io/ioutil"
-  "time"
+  "strong-message/objects"
 )
 
 type PeerList struct {
-  Peers []Peer `json:"peers"`
+  Peers []objects.Peer `json:"peers"`
 }
 
-type Peer struct {
-  IpAddress string `json:"ip_address"`
-  LastSeen time.Time `json:"last_seen"`
-}
-
-func LoadPeers(log chan string) {
+func LoadPeers(log chan string) []objects.Peer {
   peers_filepath := "./peers.json"
   content, err := ioutil.ReadFile(peers_filepath)
   if err != nil {
@@ -32,6 +27,8 @@ func LoadPeers(log chan string) {
     } else {
       msg := fmt.Sprintf("Loaded %d peers from config", len(peer_list.Peers))
       log <- msg
+      return peer_list.Peers
     }
   }
+  return nil
 }

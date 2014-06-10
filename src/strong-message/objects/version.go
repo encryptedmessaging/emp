@@ -5,7 +5,7 @@ import (
 )
 
 type Version struct {
-  Version unit32
+  Version uint32
   Timestamp time.Time
   UserAgent string
 }
