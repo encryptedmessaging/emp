@@ -40,4 +40,6 @@ func (m *Msg) GetBytes(log chan string) []byte {
 
 type MsgUnencrypted struct {
 	Txid []byte
-	
+	SendAddr []byte
+	Message string
+}
