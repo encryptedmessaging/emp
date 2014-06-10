@@ -1,7 +1,7 @@
 package objects
 
 import (
-	"encoding/big"
+	"math/big"
 )
 
 type Msg struct {
