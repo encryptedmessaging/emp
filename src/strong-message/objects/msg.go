@@ -2,7 +2,7 @@ package objects
 
 import (
 	"encoding/big"
-	
+)
 
 type Msg struct {
 	AddrHash []byte
