@@ -10,7 +10,7 @@ import (
 )
 
 func Encrypt(log chan string, dest_pubkey []byte, plainText string) ([]byte, []byte, []byte, []byte) {
-	
+
 	// Make Initialization Vector
 	IV := make([]byte, 16, 16)
 	n, err := rand.Reader.Read(IV)
@@ -21,14 +21,15 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) ([]byte, []b
 
 	// Pad Plaintext
 	plainBytes := []byte(plainText)
-	padding := make([]byte, (len(plainBytes) % aes.BlockSize) % aes.BlockSize, (len(plainBytes) % aes.BlockSize) % aes.BlockSize)
+  pad_len = len(plainBytes) % aes.BlockSize
+	padding := make([]byte, pad_len % aes.BlockSize, pad_len % aes.BlockSize)
 	append(plainBytes, padding)
-	
+
 	// Generate New Public/Private Key Pair
 	D1, X1, Y1, _ := CreateKey(log)
 	// Unmarshal the Destination's Pubkey
 	X2, Y2 := elliptic.Unmarshal(elliptic.P256(), dest_pubkey)
-	
+
 	// Point Multiply to get new Pubkey
 	PubX, PubY := elliptpic.P256().ScalarMult(X2, Y2, D1)
 

@@ -8,11 +8,7 @@ type Msg struct {
 	AddrHash []byte
 	TxidHash []byte
 	Timestamp time.Time
-	IV []byte
-	X big.Int
-	Y big.Int
-	Encrypted []byte
-	MAC []byte
+	EncryptedMsg EncryptedMessage
 }
 
 func (m *Msg) FromBytes(log chan string, data []byte) {
