@@ -2,9 +2,14 @@ package main
 
 import (
   "fmt"
+  "strong-message/config"
 )
 
 var LogChannel = make(chan string)
+
+func BootstrapNetwork (log chan string) {
+  config.LoadPeers(log)
+}
 
 func BlockingLogger(channel chan string) {
   for {
@@ -14,5 +19,6 @@ func BlockingLogger(channel chan string) {
 }
 
 func main() {
+  go BootstrapNetwork(LogChannel)
   BlockingLogger(LogChannel)
 }
