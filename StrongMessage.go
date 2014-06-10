@@ -22,7 +22,7 @@ func BootstrapNetwork (log chan string) {
       log <- err.Error()
     } else {
       for _, v := range peers {
-        go v.Connect(LogChannel, MessageChannel, context)
+        go v.Subscribe(LogChannel, MessageChannel, context)
       }
     }
   }
