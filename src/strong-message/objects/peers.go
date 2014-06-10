@@ -17,7 +17,7 @@ func (p *Peer) IpString() string {
   return fmt.Sprintf("tcp://%s:%d", p.IpAddress.String(), p.Port)
 }
 
-func (p *Peer) Connect(log chan string, messageChannel chan Message, context *zmq.Context) {
+func (p *Peer) Subscribe(log chan string, messageChannel chan Message, context *zmq.Context) {
   socket, err := context.NewSocket(zmq.SUB)
   if err != nil {
     log <- "Error creating socket"
