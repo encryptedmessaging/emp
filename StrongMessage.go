@@ -6,7 +6,7 @@ import (
 )
 
 var LogChannel = make(chan string)
-var MessageChannel = make(chan objects.Frame)
+var MessageChannel = make(chan objects.Message)
 
 
 
