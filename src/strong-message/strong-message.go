@@ -23,3 +23,25 @@ func BoostrapNetwork(log_channel chan string, message_channel chan objects.Messa
 		return nil
 	}
 }
+
+func StartPubServer(log chan string) {
+	context, err := zmq.NewContext()
+	if err != nil {
+		log <- "Error creating ZMQ context"
+		log <- err.Error()
+	} else {
+		socket, err := context.NewSocket(zmq.PUB)
+		if err != nil {
+			log <- "Error creating socket."
+			log <- err.Error()
+		}
+		socket.Bind("tcp://127.0.0.1:5000")
+		for {
+			message := <-MessageChannel
+			bytes := message.GetBytes(log)
+			socket.Send(bytes, 0)
+		}
+	}
+}
+
+
