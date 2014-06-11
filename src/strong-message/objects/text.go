@@ -6,14 +6,24 @@ import (
   "time"
 )
 
-type Msg struct {
+type Message struct {
 	AddrHash []byte
 	TxidHash []byte
 	Timestamp time.Time
-	EncryptedMsg EncryptedMessage
+	Content EncryptedData
 }
 
-func (m *Msg) FromBytes(log chan string, data []byte) {
+// Lets allow for multiple datatypes even if we don't support them in the first
+// itteration.
+type MessageUnencrypted struct {
+	Txid []byte
+	SendAddr []byte
+  Timestamp time.Time
+  DataType string
+	Data []byte
+}
+
+func (m *Message) FromBytes(log chan string, data []byte) {
   var buffer bytes.Buffer
   enc := gob.NewDecoder(&buffer)
   err := enc.Decode(m)
@@ -23,7 +33,7 @@ func (m *Msg) FromBytes(log chan string, data []byte) {
   }
 }
 
-func (m *Msg) GetBytes(log chan string) []byte {
+func (m *Message) GetBytes(log chan string) []byte {
   var buffer bytes.Buffer
   enc := gob.NewEncoder(&buffer)
   err := enc.Encode(m)
@@ -36,8 +46,4 @@ func (m *Msg) GetBytes(log chan string) []byte {
   }
 }
 
-type MsgUnencrypted struct {
-	Txid []byte
-	SendAddr []byte
-	Message string
-}
+

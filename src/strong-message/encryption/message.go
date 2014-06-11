@@ -7,9 +7,10 @@ import (
 	"crypto/aes"
 	"crypto/hmac"
 	"crypto/sha256"
+  "strong-message/objects"
 )
 
-func Encrypt(log chan string, dest_pubkey []byte, plainText string) ([]byte, []byte, []byte, []byte) {
+func Encrypt(log chan string, dest_pubkey []byte, plainText string) objects.EncryptedData {
 
 	// Make Initialization Vector
 	IV := make([]byte, 16, 16)
@@ -51,8 +52,8 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) ([]byte, []b
 	mac := hmac.New(sha256.New, PubHash_M)
 	mac.Write(cipherText)
 	HMAC := mac.Sum(nil)
-
-	return IV, elliptic.Marshal(elliptic.P256(), X2, Y2), cipherText, HMAC
+  encrypted_data = objects.EncryptedData{ IV: IV, PublicKey: elliptic.Marshal(elliptic.P256(), X2, Y2), CipherText: cipherText, HMAC: HMAC }
+	return encrypted_data
 }
 
 // checkMAC returns true if messageMAC is a valid HMAC tag for message.
