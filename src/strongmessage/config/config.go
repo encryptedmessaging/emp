@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strong-message/objects"
+	"strongmessage/objects"
 )
 
 type PeerList struct {
