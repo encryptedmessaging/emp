@@ -1,49 +1,47 @@
 package objects
 
 import (
-  "bytes"
-  "encoding/gob"
-  "time"
+	"bytes"
+	"encoding/gob"
+	"time"
 )
 
 type Message struct {
-	AddrHash []byte
-	TxidHash []byte
+	AddrHash  []byte
+	TxidHash  []byte
 	Timestamp time.Time
-	Content EncryptedData
+	Content   EncryptedData
 }
 
 // Lets allow for multiple datatypes even if we don't support them in the first
 // itteration.
 type MessageUnencrypted struct {
-	Txid []byte
-	SendAddr []byte
-  Timestamp time.Time
-  DataType string
-	Data []byte
+	Txid      []byte
+	SendAddr  []byte
+	Timestamp time.Time
+	DataType  string
+	Data      []byte
 }
 
 func (m *Message) FromBytes(log chan string, data []byte) {
-  var buffer bytes.Buffer
-  enc := gob.NewDecoder(&buffer)
-  err := enc.Decode(m)
-  if err != nil {
-    log <- "Decoding error."
-    log <- err.Error()
-  }
+	var buffer bytes.Buffer
+	enc := gob.NewDecoder(&buffer)
+	err := enc.Decode(m)
+	if err != nil {
+		log <- "Decoding error."
+		log <- err.Error()
+	}
 }
 
 func (m *Message) GetBytes(log chan string) []byte {
-  var buffer bytes.Buffer
-  enc := gob.NewEncoder(&buffer)
-  err := enc.Encode(m)
-  if err != nil {
-    log <- "Encoding error!"
-    log <- err.Error()
-    return nil
-  } else {
-    return buffer.Bytes()
-  }
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
+	err := enc.Encode(m)
+	if err != nil {
+		log <- "Encoding error!"
+		log <- err.Error()
+		return nil
+	} else {
+		return buffer.Bytes()
+	}
 }
-
-

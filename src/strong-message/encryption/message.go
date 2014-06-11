@@ -1,13 +1,13 @@
 package encryption
 
 import (
-	"crypto/rand"
-	"crypto/elliptic"
-	"crypto/sha512"
 	"crypto/aes"
+	"crypto/elliptic"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
-  "strong-message/objects"
+	"crypto/sha512"
+	"strong-message/objects"
 )
 
 func Encrypt(log chan string, dest_pubkey []byte, plainText string) objects.EncryptedData {
@@ -15,15 +15,15 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) objects.Encr
 	// Make Initialization Vector
 	IV := make([]byte, 16, 16)
 	n, err := rand.Reader.Read(IV)
-	if err != nil | n != 16 {
+	if err != nil|n != 16 {
 		log <- "Error reading from Random Generator"
 		return nil, nil, "", nil
 	}
 
 	// Pad Plaintext
 	plainBytes := []byte(plainText)
-  pad_len = len(plainBytes) % aes.BlockSize
-	padding := make([]byte, pad_len % aes.BlockSize, pad_len % aes.BlockSize)
+	pad_len = len(plainBytes) % aes.BlockSize
+	padding := make([]byte, pad_len%aes.BlockSize, pad_len%aes.BlockSize)
 	append(plainBytes, padding)
 
 	// Generate New Public/Private Key Pair
@@ -44,7 +44,7 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) objects.Encr
 	mode := cipher.NewCBCEncrypter(block, IV)
 
 	// Do encryption
-	cipherText := make([]byte, 0, aes.BlockSize + len(plainBytes))
+	cipherText := make([]byte, 0, aes.BlockSize+len(plainBytes))
 	append(cipherText, IV)
 	mode.CryptBlocks(cipherText[aes.BlockSize:], plainBytes)
 
@@ -52,7 +52,7 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) objects.Encr
 	mac := hmac.New(sha256.New, PubHash_M)
 	mac.Write(cipherText)
 	HMAC := mac.Sum(nil)
-  encrypted_data = objects.EncryptedData{ IV: IV, PublicKey: elliptic.Marshal(elliptic.P256(), X2, Y2), CipherText: cipherText, HMAC: HMAC }
+	encrypted_data = objects.EncryptedData{IV: IV, PublicKey: elliptic.Marshal(elliptic.P256(), X2, Y2), CipherText: cipherText, HMAC: HMAC}
 	return encrypted_data
 }
 
@@ -71,10 +71,10 @@ func Decrypt(log chan string, privKey, IV, pubKey, cipherText, HMAC []byte) []by
 	// Point Multiply to get the new Pubkey
 	PubX, PubY := elliptpic.P256().ScalarMult(X2, Y2, D1)
 
-  // Generate Pubkey hashes 
-  PubHash := sha512.Sum384(elliptic.Marshal(elliptic.P256(), PubX, PubY))
-  PubHash_E = PubHash[:24]
-  PubHash_M = PubHash[24:48]
+	// Generate Pubkey hashes
+	PubHash := sha512.Sum384(elliptic.Marshal(elliptic.P256(), PubX, PubY))
+	PubHash_E = PubHash[:24]
+	PubHash_M = PubHash[24:48]
 
 	// Check HMAC
 	if !checkMAC(cipherText, HMAC, PubHash_M) {
@@ -83,12 +83,12 @@ func Decrypt(log chan string, privKey, IV, pubKey, cipherText, HMAC []byte) []by
 	}
 
 	// Generate AES Cipher
-  block, _ := aes.NewCipher(PubHash_E)
-  mode := cipher.NewCBCDecrypter(block, IV)
+	block, _ := aes.NewCipher(PubHash_E)
+	mode := cipher.NewCBCDecrypter(block, IV)
 
-  // Do decryption
-  plainText := make([]byte, 0, len(cipherText))
-  mode.CryptBlocks(plainText, cipherText)
+	// Do decryption
+	plainText := make([]byte, 0, len(cipherText))
+	mode.CryptBlocks(plainText, cipherText)
 
 	return plainText
 }

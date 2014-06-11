@@ -1,19 +1,19 @@
 package encryption
 
 import (
-	"crypto/rand"
 	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha512"
-	"math/big"
 	"encoding/base64"
 	"github.com/ThePiachu/Split-Vanity-Miner-Golang/src/pkg/ripemd160"
+	"math/big"
 )
 
 // This type is a placeholder for returns.  It hasn't been implemented yet.
 type Address struct {
-  PrivateKey []byte
-  X *big.Int
-  Y *big.Int
+	PrivateKey []byte
+	X          *big.Int
+	Y          *big.Int
 }
 
 func CreateKey(log chan string) ([]byte, *big.Int, *big.Int) {
@@ -30,7 +30,7 @@ func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
 
 	appender := ripemd.Sum(sha512.Sum384(pubKey))
 	address := make([]byte, 1, 1)
-	
+
 	// Version 0x01
 	address[0] = 0x01
 	append(address, appender)
