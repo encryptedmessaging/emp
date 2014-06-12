@@ -33,11 +33,3 @@ func FrameFromBytes(b []byte) (Frame, error) {
   return frame, nil
 }
 
-
-func (f *Frame) FromBytes(bytes []byte) {
-	if f == nil || len(bytes) < 12 {
-		return
-	}
-
-
-}

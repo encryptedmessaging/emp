@@ -2,39 +2,36 @@ package network
 
 import (
 	zmq "github.com/alecthomas/gozmq"
-	"fmt"
 )
 
-const (
-	bufLen = 100
-)
-
-func publishLoop(frames chan Frame, log chan string, quit chan bool, pubSocket *zmq.Socket) {
-	defer pubSocket.Close()
-
-	for {
-		select {
-		case <-quit:
-			log <- "Ending Publishing Loop..."
-			return
-		case frm := <-frames:
-			pubSocket.Send(frm.GetBytes(), 0)
-		}
-	}
-}
-
-func Publish(port uint16, log chan string, context *zmq.Context) (chan Frame, chan bool) {
+func Publish(port uint16, log chan string, sendChannel chan Frame, context *zmq.Context) bool {
+	// Create PUB Socket
 	pubSocket, err := context.NewSocket(zmq.PUB)
 	if err != nil {
+		log <- "Error creating pub socket..."
 		log <- err.Error()
-		return nil, nil
+		return false
 	}
 
-	pubSocket.Bind(fmt.Sprintf("tcp://*:%d", port))
+	// Bind PUB Socket
+	err = pubSocket.Bind(fmt.Sprintf("tcp://*:%d", port))
+	if err != nil {
+		log <- "Error binding pub socket..."
+		log <- err.Error()
+		return false
+	}
 
-	quit := make(chan bool, 1)
-	frames := make(chan Frame, bufLen)
+	// Start PUB Loop
+	go func() {
+		for {
+			frame := <-sendChannel
+			err := pubSocket.Send(frame.GetBytes(), 0)
+			if err != nil {
+				log <- "Error sending frame..."
+				log <- err.Error()
+			}
+		}
+	}()
 
-	go publishLoop(frames, log, quit, pubSocket)
-	return frames, quit
+	return true
 }
