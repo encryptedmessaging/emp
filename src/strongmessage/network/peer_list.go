@@ -1,7 +1,6 @@
 package network
 
 import (
-  "strongmessage/objects"
   zmq "github.com/alecthomas/gozmq"
   "fmt"
 )
@@ -24,21 +23,21 @@ func (p *PeerList) Subscribe(log chan string, messageChannel chan Frame, context
         socket.Connect(v.TcpString())
         for {
           log <- fmt.Sprintf("Connected: %s:%d", v.IpAddress, v.Port)
-          msg, err := socket.Recv(0)
+          data, err := socket.Recv(0)
           if err != nil {
             log <- "Socket Error:"
             log <- err.Error()
           } else {
-            message, err := objects.MessageFromBytes(log, msg)
+            frame, err := FrameFromBytes(data)
             if err != nil {
               log <- "Decoding error:"
               log <- err.Error()
             } else {
               if DEBUG == true {
                 log <- "Got message:"
-                log <- fmt.Sprintf("%v", message)
+                log <- fmt.Sprintf("%v", frame)
               }
-              messageChannel <- message
+              messageChannel <- frame
             }
           }
         }
