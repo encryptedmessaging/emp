@@ -10,7 +10,8 @@ import (
   "encoding/json"
 )
 
-func StartSubscriptions(log chan string, messageChannel chan objects.Message) {
+/*
+func BootstrapNetwork(log chan string, messageChannel chan objects.Message) {
   peers := LoadPeers(log)
   log <- fmt.Sprintf("%v", peers)
   context, err := zmq.NewContext()
@@ -50,6 +51,7 @@ func StartPubServer(log chan string, frameChannel chan network.Frame) error {
     return nil
   }
 }
+*/
 
 func BlockingLogger(channel chan string) {
   for {

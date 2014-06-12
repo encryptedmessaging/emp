@@ -9,7 +9,7 @@ const (
 	bufLen = 100
 )
 
-func publishLoop(frames chan Frame, log chan string, quit chan bool, pubSocket zmq.Socket) {
+func publishLoop(frames chan Frame, log chan string, quit chan bool, pubSocket *zmq.Socket) {
 	defer pubSocket.Close()
 
 	for {
@@ -23,10 +23,10 @@ func publishLoop(frames chan Frame, log chan string, quit chan bool, pubSocket z
 	}
 }
 
-func Publish(port uint16, log chan string) (chan Frame, chan bool) {
+func Publish(port uint16, log chan string, context *zmq.Context) (chan Frame, chan bool) {
 	pubSocket, err := context.NewSocket(zmq.PUB)
 	if err != nil {
-		log <- err
+		log <- err.Error()
 		return nil, nil
 	}
 
