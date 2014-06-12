@@ -7,10 +7,10 @@ import (
 )
 
 type Message struct {
-  AddrHash  []byte
-  TxidHash  []byte
-  Timestamp time.Time
-  Content   EncryptedData
+  AddrHash    []byte
+  TxidHash    []byte
+  Timestamp   time.Time
+  Content     EncryptedData
 }
 
 // Lets allow for multiple datatypes even if we don't support them in the first
