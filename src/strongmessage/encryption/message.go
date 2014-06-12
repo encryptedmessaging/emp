@@ -1,35 +1,14 @@
 package encryption
 
 import (
-  "crypto/rand"
   "crypto/elliptic"
   "crypto/sha512"
-  "crypto/aes"
   "crypto/hmac"
   "crypto/sha256"
-  "crypto/cipher"
 	"strongmessage/objects"
 )
 
 func Encrypt(log chan string, dest_pubkey []byte, plainText string) *objects.EncryptedData {
-
-  // Make Initialization Vector
-  IV := make([]byte, 16, 16)
-  n, err := rand.Reader.Read(IV)
-  if err != nil || n != 16 {
-    log <- "Error reading from Random Generator"
-    return nil
-  }
-
-  // Pad Plaintext
-  plainBytes := []byte(plainText)
-
-  pad_len := aes.BlockSize - (len(plainBytes) % aes.BlockSize)
-
-  padding := make([]byte, pad_len, pad_len)
-  plainBytes = append(plainBytes, padding...)
-
-
   // Generate New Public/Private Key Pair
   D1, X1, Y1 := CreateKey(log)
   // Unmarshal the Destination's Pubkey
@@ -43,13 +22,7 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) *objects.Enc
   PubHash_E := PubHash[:24]
   PubHash_M := PubHash[24:48]
 
-  // Generate AES Cipher
-  block, _ := aes.NewCipher(PubHash_E)
-  mode := cipher.NewCBCEncrypter(block, IV)
-
-  // Do encryption
-  cipherText := make([]byte, len(plainBytes), len(plainBytes))
-  mode.CryptBlocks(cipherText, plainBytes)
+	IV, cipherText, _ := SymmetricEncrypt(PubHash_E, plainText)
 
   // Generate HMAC
   mac := hmac.New(sha256.New, PubHash_M)
@@ -57,7 +30,7 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) *objects.Enc
   HMAC := mac.Sum(nil)
 
 	ret := new(objects.EncryptedData)
-	copy(ret.IV[:], IV)
+	copy(ret.IV[:], IV[:])
 	copy(ret.PublicKey[:], elliptic.Marshal(elliptic.P256(), X1, Y1))
 	ret.CipherText = cipherText
 	copy(ret.HMAC[:], HMAC)
@@ -91,13 +64,5 @@ func Decrypt(log chan string, privKey []byte, encrypted *objects.EncryptedData) 
     return nil
   }
 
-  // Generate AES Cipher
-  block, _ := aes.NewCipher(PubHash_E)
-  mode := cipher.NewCBCDecrypter(block, encrypted.IV[:])
-
-  // Do decryption
-  plainText := make([]byte, len(encrypted.CipherText), len(encrypted.CipherText))
-  mode.CryptBlocks(plainText, encrypted.CipherText[:])
-
-  return plainText
+  return SymmetricDecrypt(encrypted.IV, PubHash_E, encrypted.CipherText)
 }
