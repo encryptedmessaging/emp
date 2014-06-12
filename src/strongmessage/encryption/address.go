@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
-	"github.com/ThePiachu/Split-Vanity-Miner-Golang/src/pkg/ripemd160"
 	"math/big"
+	"code.google.com/p/go.crypto/ripemd160"
 )
 
 // This type is a placeholder for returns.  It hasn't been implemented yet.
@@ -29,12 +29,14 @@ func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
 	ripemd := ripemd160.New()
 
 	sum := sha512.Sum384(pubKey)
-	appender := make([]byte, sha512.Size384, sha512.Size384)
+	sumslice := make([]byte, sha512.Size384, sha512.Size384)
 	for i := 0; i < sha512.Size384; i++ {
-		appender[i] = sum[i]
+		sumslice[i] = sum[i]
 	}	
 
-	appender = ripemd.Sum(appender)
+	ripemd.Write(sumslice)
+	appender := ripemd.Sum(nil)
+	appender = appender[len(appender)-20:]
 	address := make([]byte, 1, 1)
 
 	// Version 0x01
@@ -49,5 +51,5 @@ func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
 		address = append(address, sum[i])
 	}
 
-	return address, base64.StdEncoding.EncodeToString(address)
+	return address, "1" + base64.StdEncoding.EncodeToString(address[1:])
 }

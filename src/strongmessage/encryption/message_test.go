@@ -35,8 +35,10 @@ func TestSampleAddr(t *testing.T) {
 
 	byteAddr, strAddr := GetAddress(log, x, y)
 
-	fmt.Println("Sample Bytes: ", byteAddr)
-	fmt.Println("Sample Byte Len: ", len(byteAddr))
-	fmt.Println("Sample String: ", strAddr)
-	fmt.Println("Sample String Len: ", len(strAddr))
+	//Check lengths
+	if len(byteAddr) != 25 || len(strAddr) != 33 {
+		fmt.Println("Bad lengths: ", len(byteAddr), len(strAddr))
+		t.Fail()
+	}
+
 }
