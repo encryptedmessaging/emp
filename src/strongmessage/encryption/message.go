@@ -54,6 +54,7 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) objects.Encr
 	HMAC := mac.Sum(nil)
 	encrypted_data = objects.EncryptedData{IV: IV, PublicKey: elliptic.Marshal(elliptic.P256(), X2, Y2), CipherText: cipherText, HMAC: HMAC}
 	return encrypted_data
+
 }
 
 // checkMAC returns true if messageMAC is a valid HMAC tag for message.
