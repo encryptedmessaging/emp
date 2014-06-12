@@ -10,7 +10,7 @@ import (
   "encoding/json"
 )
 
-func BootstrapNetwork(log chan string, messageChannel chan objects.Message) {
+func StartSubscriptions(log chan string, messageChannel chan objects.Message) {
   peers := LoadPeers(log)
   log <- fmt.Sprintf("%v", peers)
   context, err := zmq.NewContext()
@@ -18,11 +18,17 @@ func BootstrapNetwork(log chan string, messageChannel chan objects.Message) {
     log <- "Error creating ZMQ context"
     log <- err.Error()
   } else {
+    peerChannel = make(chan Peer)
+    go func() {
+      for {
+        peer := <- peer_channel
+      }
+    }()
     peers.Subscribe(log, messageChannel, context)
   }
 }
 
-func StartPubServer(log chan string, message_channel chan objects.Message) error {
+func StartPubServer(log chan string, frameChannel chan network.Frame) error {
   context, err := zmq.NewContext()
   if err != nil {
     log <- "Error creating ZMQ context"

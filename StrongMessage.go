@@ -11,6 +11,7 @@ var FrameChannel = make(chan network.Frame)
 
 
 func main() {
-	go strongmessage.BootstrapNetwork(LogChannel, FrameChannel)
-	strongmessage.BlockingLogger(LogChannel)
+	go strongmessage.StartSubscriptions(LogChannel, FrameChannel)
+	go strongmessage.StartPubServer(LogChannel, FrameChannel)
+  strongmessage.BlockingLogger(LogChannel)
 }

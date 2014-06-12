@@ -11,7 +11,7 @@ type PeerList struct {
   Peers []Peer `json:"peers"`
 }
 
-func (p *PeerList) Subscribe(log chan string, messageChannel chan Frame, context *zmq.Context) {
+func (p *PeerList) Subscribe(log chan string, frameChannel chan Frame, context *zmq.Context) {
   socket, err := context.NewSocket(zmq.SUB)
   if err != nil {
     log <- "Error creating socket"
@@ -37,7 +37,7 @@ func (p *PeerList) Subscribe(log chan string, messageChannel chan Frame, context
                 log <- "Got message:"
                 log <- fmt.Sprintf("%v", frame)
               }
-              messageChannel <- frame
+              frameChannel <- frame
             }
           }
         }
