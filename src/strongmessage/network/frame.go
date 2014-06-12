@@ -13,7 +13,7 @@ type Frame struct {
 func (f *Frame) GetBytes() []byte {
 	ret := make([]byte, 12, 12)
 	copy(ret, f.Magic[:])
-	ret = append(ret, f.Type[:]...)
+	copy(ret[4:], f.Type[:])
 	ret = append(ret, f.Payload...)
 
 	return ret
@@ -28,6 +28,7 @@ func FrameFromBytes(b []byte) (Frame, error) {
 	copy(frame.Type[:], b[4:12])
 
 	if len(b) > 12 {
+		frame.Payload = make([]byte, len(b[12:]), cap(b[12:]))
 		copy(frame.Payload, b[12:])
 	}
   return frame, nil

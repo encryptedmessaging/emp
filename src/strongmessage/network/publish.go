@@ -5,13 +5,13 @@ import (
 	"fmt"
 )
 
-func Publish(port uint16, log chan string, sendChannel chan Frame, context *zmq.Context) bool {
+func Publish(port uint16, log chan string, sendChannel chan Frame, context *zmq.Context) (bool, *zmq.Socket) {
 	// Create PUB Socket
 	pubSocket, err := context.NewSocket(zmq.PUB)
 	if err != nil {
 		log <- "Error creating pub socket..."
 		log <- err.Error()
-		return false
+		return false, nil
 	}
 
 	// Bind PUB Socket
@@ -19,7 +19,8 @@ func Publish(port uint16, log chan string, sendChannel chan Frame, context *zmq.
 	if err != nil {
 		log <- "Error binding pub socket..."
 		log <- err.Error()
-		return false
+		pubSocket.Close()
+		return false, nil
 	}
 
 	// Start PUB Loop
@@ -34,5 +35,5 @@ func Publish(port uint16, log chan string, sendChannel chan Frame, context *zmq.
 		}
 	}()
 
-	return true
+	return true, pubSocket
 }
