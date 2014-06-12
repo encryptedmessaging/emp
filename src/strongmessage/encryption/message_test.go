@@ -17,9 +17,9 @@ func TestCrypt(t *testing.T) {
 
 	message := "If you see this, the test has passed!"
 
-	iv, pub2, cipher, MAC := Encrypt(log, pub, message)
+	enc := Encrypt(log, pub, message)
 	
-	plainBytes := Decrypt(log, priv, iv, pub2, cipher, MAC)
+	plainBytes := Decrypt(log, priv, enc)
 	plainBytes = bytes.Split(plainBytes, []byte{0})[0]
 	fmt.Println(string(plainBytes))
 	if message != string(plainBytes) {

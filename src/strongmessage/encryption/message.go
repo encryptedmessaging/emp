@@ -8,16 +8,17 @@ import (
   "crypto/hmac"
   "crypto/sha256"
   "crypto/cipher"
+	"strongmessage/objects"
 )
 
-func Encrypt(log chan string, dest_pubkey []byte, plainText string) ([]byte, []byte, []byte, []byte) {
+func Encrypt(log chan string, dest_pubkey []byte, plainText string) *objects.EncryptedData {
 
   // Make Initialization Vector
   IV := make([]byte, 16, 16)
   n, err := rand.Reader.Read(IV)
   if err != nil || n != 16 {
     log <- "Error reading from Random Generator"
-    return nil, nil, nil, nil
+    return nil
   }
 
   // Pad Plaintext
@@ -55,7 +56,13 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) ([]byte, []b
   mac.Write(cipherText)
   HMAC := mac.Sum(nil)
 
-  return IV, elliptic.Marshal(elliptic.P256(), X1, Y1), cipherText, HMAC
+	ret := new(objects.EncryptedData)
+	copy(ret.IV[:], IV)
+	copy(ret.PublicKey[:], elliptic.Marshal(elliptic.P256(), X1, Y1))
+	ret.CipherText = cipherText
+	copy(ret.HMAC[:], HMAC)
+
+  return ret
 }
 
 // checkMAC returns true if messageMAC is a valid HMAC tag for message.
@@ -66,9 +73,9 @@ func checkMAC(message, messageMAC, key []byte) bool {
   return hmac.Equal(messageMAC, expectedMAC)
 }
 
-func Decrypt(log chan string, privKey, IV, pubKey, cipherText, HMAC []byte) []byte {
+func Decrypt(log chan string, privKey []byte, encrypted *objects.EncryptedData) []byte {
   // Unmarshal the Sender's Pubkey
-  X2, Y2 := elliptic.Unmarshal(elliptic.P256(), pubKey)
+  X2, Y2 := elliptic.Unmarshal(elliptic.P256(), encrypted.PublicKey[:])
 
   // Point Multiply to get the new Pubkey
   PubX, PubY := elliptic.P256().ScalarMult(X2, Y2, privKey)
@@ -79,18 +86,18 @@ func Decrypt(log chan string, privKey, IV, pubKey, cipherText, HMAC []byte) []by
   PubHash_M := PubHash[24:48]
 
   // Check HMAC
-  if !checkMAC(cipherText, HMAC, PubHash_M) {
+  if !checkMAC(encrypted.CipherText[:], encrypted.HMAC[:], PubHash_M) {
     log <- "Invalid HMAC Message"
     return nil
   }
 
   // Generate AES Cipher
   block, _ := aes.NewCipher(PubHash_E)
-  mode := cipher.NewCBCDecrypter(block, IV)
+  mode := cipher.NewCBCDecrypter(block, encrypted.IV[:])
 
   // Do decryption
-  plainText := make([]byte, len(cipherText), len(cipherText))
-  mode.CryptBlocks(plainText, cipherText)
+  plainText := make([]byte, len(encrypted.CipherText), len(encrypted.CipherText))
+  mode.CryptBlocks(plainText, encrypted.CipherText[:])
 
   return plainText
 }
