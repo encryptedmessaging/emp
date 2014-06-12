@@ -1,13 +1,21 @@
 package main
 
 import (
-	"strongmessage"
 	"strongmessage/network"
+	"fmt"
+	zmq "github.com/alecthomas/gozmq"
 )
+
+func BlockingLogger(channel chan string) {
+  for {
+    log_message := <-channel
+    fmt.Println(log_message)
+  }
+}
 
 func main() {
 	log := make(chan string, 100)
-	port := 4444
+	port := uint16(4444)
 
 	context, err := zmq.NewContext()
 	defer context.Close()
@@ -21,12 +29,12 @@ func main() {
 
 	peerChan := make(chan network.Peer)
 
-	check := Subscription(log, recvChan, peerChan, context)
+	check := network.Subscription(log, recvChan, peerChan, context)
 	if !check {
 		fmt.Println("Could not start subscription service.")
 		return
 	}
-	check = Publish(port, log, sendChan, context)
+	check = network.Publish(port, log, sendChan, context)
 	if !check {
 		fmt.Println("Could not start subscription service.")
 		return

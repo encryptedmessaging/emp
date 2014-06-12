@@ -1,7 +1,5 @@
 package network
 
-package network
-
 import (
   zmq "github.com/alecthomas/gozmq"
 )
@@ -42,7 +40,7 @@ func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Pee
 				log <- "Received invalid frame..."
 				log <- err.Error()
 			}
-			framechannel <- frame
+			frameChannel <- frame
 		}
 	}()
 
