@@ -4,24 +4,21 @@ import (
   "fmt"
   zmq "github.com/alecthomas/gozmq"
   "strongmessage/config"
+  "strongmessage/network"
   "strongmessage/objects"
+  "io/ioutil"
+  "encoding/json"
 )
 
-func BootstrapNetwork(log chan string, message_channel chan objects.Message) {
+func BootstrapNetwork(log chan string, messageChannel chan objects.Message) {
   peers := LoadPeers(log)
   log <- fmt.Sprintf("%v", peers)
-  if peers == nil {
-    log <- "Failed to load peers.json"
+  context, err := zmq.NewContext()
+  if err != nil {
+    log <- "Error creating ZMQ context"
+    log <- err.Error()
   } else {
-    context, err := zmq.NewContext()
-    if err != nil {
-      log <- "Error creating ZMQ context"
-      log <- err.Error()
-    } else {
-      for _, v := range peers {
-        go v.Subscribe(log, message_channel, context)
-      }
-    }
+    peers.Subscribe(log, messageChannel, context)
   }
 }
 
@@ -55,7 +52,8 @@ func BlockingLogger(channel chan string) {
   }
 }
 
-func LoadPeers(log chan string) []objects.Peer {
+func LoadPeers(log chan string) network.PeerList {
+  var peer_list network.PeerList
   peers_filepath := "./peers.json"
   content, err := ioutil.ReadFile(peers_filepath)
   if err != nil {
@@ -63,7 +61,6 @@ func LoadPeers(log chan string) []objects.Peer {
     log <- err.Error()
   } else {
     log <- "Loaded peers from: " + peers_filepath
-    var peer_list PeerList
     err = json.Unmarshal(content, &peer_list)
     if err != nil {
       log <- "Error parsing json"
@@ -71,8 +68,9 @@ func LoadPeers(log chan string) []objects.Peer {
     } else {
       msg := fmt.Sprintf("Loaded %d peers from config", len(peer_list.Peers))
       log <- msg
-      return peer_list.Peers
+      return peer_list
     }
   }
-  return nil
+  //this should use error checking at some point
+  return peer_list
 }
