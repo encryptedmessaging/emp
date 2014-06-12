@@ -10,6 +10,7 @@ import (
   "encoding/json"
 )
 
+/*
 func BootstrapNetwork(log chan string, messageChannel chan objects.Message) {
   peers := LoadPeers(log)
   log <- fmt.Sprintf("%v", peers)
@@ -44,6 +45,7 @@ func StartPubServer(log chan string, message_channel chan objects.Message) error
     return nil
   }
 }
+*/
 
 func BlockingLogger(channel chan string) {
   for {
