@@ -7,18 +7,19 @@ import (
 	"strongmessage/objects"
 )
 
-func BootstrapNetwork(log_channel chan string, message_channel chan objects.Message) {
-	peers := config.LoadPeers(log_channel)
-	if peers == nil {
-		log_channel <- "Failed to load peers.json"
+func BootstrapNetwork(log chan string, message_channel chan objects.Message) {
+	peers := config.LoadPeers(log)
+  log <- fmt.Sprintf("%v", peers)
+  if peers == nil {
+		log <- "Failed to load peers.json"
 	} else {
 		context, err := zmq.NewContext()
 		if err != nil {
-			log_channel <- "Error creating ZMQ context"
-			log_channel <- err.Error()
+			log <- "Error creating ZMQ context"
+			log <- err.Error()
 		} else {
 			for _, v := range peers {
-				go v.Subscribe(log_channel, message_channel, context)
+				go v.Subscribe(log, message_channel, context)
 			}
 		}
 	}

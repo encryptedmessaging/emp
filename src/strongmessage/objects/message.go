@@ -23,20 +23,26 @@ type MessageUnencrypted struct {
 	Data      []byte
 }
 
-func (m *Message) FromBytes(log chan string, data []byte) {
-	var buffer bytes.Buffer
-	enc := gob.NewDecoder(&buffer)
-	err := enc.Decode(m)
+func MessageFromBytes(log chan string, data []byte) (Message, error) {
+  buffer := bytes.NewBuffer(data)
+  decoder := gob.NewDecoder(buffer)
+  var message Message
+	err := decoder.Decode(&message)
 	if err != nil {
 		log <- "Decoding error."
 		log <- err.Error()
-	}
+    return Message{}, err
+	} else {
+    return message, nil
+  }
+
 }
 
 func (m *Message) GetBytes(log chan string) []byte {
 	var buffer bytes.Buffer
-	enc := gob.NewEncoder(&buffer)
-	err := enc.Encode(m)
+	gob.Register(Message{})
+  enc := gob.NewEncoder(&buffer)
+	err := enc.Encode(&m)
 	if err != nil {
 		log <- "Encoding error!"
 		log <- err.Error()

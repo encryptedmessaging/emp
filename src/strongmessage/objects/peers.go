@@ -7,10 +7,12 @@ import (
 	"time"
 )
 
+const DEBUG = true
+
 type Peer struct {
-	IpAddress net.IP
-	Port      uint16
-	LastSeen  time.Time
+	IpAddress net.IP    `json:"ip_address"`
+	Port      uint16    `json:"port"`
+	LastSeen  time.Time `json:"last_seen"`
 }
 
 func (p *Peer) IpString() string {
@@ -23,6 +25,27 @@ func (p *Peer) Subscribe(log chan string, messageChannel chan Message, context *
 		log <- "Error creating socket"
 		log <- err.Error()
 	} else {
+    log <- fmt.Sprintf("Attempting subscription: %s:%d", p.IpAddress, p.Port)
 		socket.Connect(p.IpString())
+    for {
+      log <- fmt.Sprintf("Connected: %s:%d", p.IpAddress, p.Port)
+      msg, err := socket.Recv(0)
+      if err != nil {
+        log <- "Socket Error:"
+        log <- err.Error()
+      } else {
+        message, err := MessageFromBytes(log, msg)
+        if err != nil {
+          log <- "Decoding error:"
+          log <- err.Error()
+        } else {
+          if DEBUG == true {
+            log <- "Got message:"
+            log <- fmt.Sprintf("%v", message)
+          }
+          messageChannel <- message
+        }
+      }
+    }
 	}
 }
