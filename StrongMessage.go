@@ -6,11 +6,11 @@ import (
 )
 
 var LogChannel = make(chan string)
-var MessageChannel = make(chan objects.Message)
+var FrameChannel = make(chan network.Frame)
 
 
 
 func main() {
-	go strongmessage.BootstrapNetwork(LogChannel, MessageChannel)
+	go strongmessage.BootstrapNetwork(LogChannel, FrameChannel)
 	strongmessage.BlockingLogger(LogChannel)
 }
