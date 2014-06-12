@@ -1,32 +1,32 @@
 package objects
 
 import (
-	"fmt"
-	zmq "github.com/alecthomas/gozmq"
-	"net"
-	"time"
+  "fmt"
+  zmq "github.com/alecthomas/gozmq"
+  "net"
+  "time"
 )
 
 const DEBUG = true
 
 type Peer struct {
-	IpAddress net.IP    `json:"ip_address"`
-	Port      uint16    `json:"port"`
-	LastSeen  time.Time `json:"last_seen"`
+  IpAddress net.IP    `json:"ip_address"`
+  Port      uint16    `json:"port"`
+  LastSeen  time.Time `json:"last_seen"`
 }
 
 func (p *Peer) TcpString() string {
-	return fmt.Sprintf("tcp://%s:%d", p.IpAddress.String(), p.Port)
+  return fmt.Sprintf("tcp://%s:%d", p.IpAddress.String(), p.Port)
 }
 
 func (p *Peer) Subscribe(log chan string, messageChannel chan Message, context *zmq.Context) {
-	socket, err := context.NewSocket(zmq.SUB)
-	if err != nil {
-		log <- "Error creating socket"
-		log <- err.Error()
-	} else {
+  socket, err := context.NewSocket(zmq.SUB)
+  if err != nil {
+    log <- "Error creating socket"
+    log <- err.Error()
+  } else {
     log <- fmt.Sprintf("Attempting subscription: %s:%d", p.IpAddress, p.Port)
-		socket.Connect(p.TcpString())
+    socket.Connect(p.TcpString())
     for {
       log <- fmt.Sprintf("Connected: %s:%d", p.IpAddress, p.Port)
       msg, err := socket.Recv(0)
@@ -47,5 +47,5 @@ func (p *Peer) Subscribe(log chan string, messageChannel chan Message, context *
         }
       }
     }
-	}
+  }
 }

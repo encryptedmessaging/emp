@@ -42,7 +42,7 @@ func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
 	address = append(address, appender...)
 
 	sum = sha512.Sum384(address)
-	sum = sha512.Sum384(address)
+	sum = sha512.Sum384(sum[:])
 
 
 	for i := 0; i < 4; i++ {

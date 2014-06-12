@@ -26,3 +26,17 @@ func TestCrypt(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestSampleAddr(t *testing.T) {
+	log := make(chan string, 5)
+
+	// Generate Key
+	_, x, y := CreateKey(log)
+
+	byteAddr, strAddr := GetAddress(log, x, y)
+
+	fmt.Println("Sample Bytes: ", byteAddr)
+	fmt.Println("Sample Byte Len: ", len(byteAddr))
+	fmt.Println("Sample String: ", strAddr)
+	fmt.Println("Sample String Len: ", len(strAddr))
+}
