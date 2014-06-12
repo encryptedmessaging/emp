@@ -37,7 +37,8 @@ func StartPubServer(log chan string, message_channel chan objects.Message) error
 			log <- "Error creating socket."
 			log <- err.Error()
 		}
-		socket.Bind("tcp://127.0.0.1:5000")
+    tcpString := fmt.Sprintf("tcp://%s:%d", config.DOMAIN, config.PORT)
+		socket.Bind(tcpString)
 		for {
 			message := <- message_channel
 			bytes := message.GetBytes(log)

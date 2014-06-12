@@ -7,6 +7,11 @@ import (
 	"strongmessage/objects"
 )
 
+const (
+  PORT = 5555
+  DOMAIN = "sm.jar.st"
+)
+
 type PeerList struct {
 	Peers []objects.Peer `json:"peers"`
 }

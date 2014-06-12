@@ -15,7 +15,7 @@ type Peer struct {
 	LastSeen  time.Time `json:"last_seen"`
 }
 
-func (p *Peer) IpString() string {
+func (p *Peer) TcpString() string {
 	return fmt.Sprintf("tcp://%s:%d", p.IpAddress.String(), p.Port)
 }
 
@@ -26,7 +26,7 @@ func (p *Peer) Subscribe(log chan string, messageChannel chan Message, context *
 		log <- err.Error()
 	} else {
     log <- fmt.Sprintf("Attempting subscription: %s:%d", p.IpAddress, p.Port)
-		socket.Connect(p.IpString())
+		socket.Connect(p.TcpString())
     for {
       log <- fmt.Sprintf("Connected: %s:%d", p.IpAddress, p.Port)
       msg, err := socket.Recv(0)
