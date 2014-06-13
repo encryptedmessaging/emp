@@ -45,5 +45,18 @@ func main() {
 	defer sendSocket.Close()
 
 	fmt.Println("Services started successfully!")
+
+	fmt.Println("Connecting to peers...")
+	//Load peers from peers.json
+	peers, err := strongmessage.LoadPeers()
+	if err != nil {
+		fmt.Println("Could not load peers from peers.json")
+		fmt.Println("%s", err.Error())
+		// This is not fatal
+	}
+	for _, p := range peers.Peers {
+		peerChan <- p
+	}
+
 	strongmessage.BlockingLogger(log)
 }
