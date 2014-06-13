@@ -1,12 +1,12 @@
 package network
 
 import (
-  "errors"
+	"errors"
 )
 
 type Frame struct {
-	Magic [4]byte
-	Type [8]byte
+	Magic   [4]byte
+	Type    [8]byte
 	Payload []byte
 }
 
@@ -20,17 +20,16 @@ func (f *Frame) GetBytes() []byte {
 }
 
 func FrameFromBytes(b []byte) (Frame, error) {
-  var frame Frame
-  if len(b) < 12 {
-    return frame, errors.New("Frame too short")
-  }
-  copy(frame.Magic[:], b[:4])
+	var frame Frame
+	if len(b) < 12 {
+		return frame, errors.New("Frame too short")
+	}
+	copy(frame.Magic[:], b[:4])
 	copy(frame.Type[:], b[4:12])
 
 	if len(b) > 12 {
 		frame.Payload = make([]byte, len(b[12:]), cap(b[12:]))
 		copy(frame.Payload, b[12:])
 	}
-  return frame, nil
+	return frame, nil
 }
-

@@ -1,12 +1,12 @@
 package encryption
 
 import (
+	"code.google.com/p/go.crypto/ripemd160"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
 	"math/big"
-	"code.google.com/p/go.crypto/ripemd160"
 )
 
 // This type is a placeholder for returns.  It hasn't been implemented yet.
@@ -32,7 +32,7 @@ func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
 	sumslice := make([]byte, sha512.Size384, sha512.Size384)
 	for i := 0; i < sha512.Size384; i++ {
 		sumslice[i] = sum[i]
-	}	
+	}
 
 	ripemd.Write(sumslice)
 	appender := ripemd.Sum(nil)
@@ -45,7 +45,6 @@ func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
 
 	sum = sha512.Sum384(address)
 	sum = sha512.Sum384(sum[:])
-
 
 	for i := 0; i < 4; i++ {
 		address = append(address, sum[i])

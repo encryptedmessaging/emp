@@ -1,8 +1,8 @@
 package network
 
 import (
-	zmq "github.com/alecthomas/gozmq"
 	"fmt"
+	zmq "github.com/alecthomas/gozmq"
 )
 
 func Publish(port uint16, log chan string, sendChannel chan Frame, context *zmq.Context) (bool, *zmq.Socket) {
