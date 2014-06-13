@@ -5,6 +5,7 @@ import (
 )
 
 type Frame struct {
+	Peer    Peer  // Used for REP/REQ Pattern only
 	Magic   [4]byte
 	Type    [8]byte
 	Payload []byte
