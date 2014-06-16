@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strongmessage/network"
 	"os"
+	"strongmessage/network"
 )
 
 func LoadPeers() (network.PeerList, error) {

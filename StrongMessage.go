@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	zmq "github.com/alecthomas/gozmq"
-	"strongmessage"
-	"strongmessage/network"
-	"strongmessage/api"
+	"net"
 	"os"
+	"strongmessage"
+	"strongmessage/api"
+	"strongmessage/network"
 )
 
 const (
@@ -15,8 +16,8 @@ const (
 
 func main() {
 	log := make(chan string, 100)
-	port := uint16(4444)
-	repPort := uint16(4445)
+	port := uint16(5000)
+	repPort := uint16(5001)
 
 	// Start 0MQ Context
 	context, err := zmq.NewContext()
@@ -85,6 +86,12 @@ func main() {
 	channels.RepRecv = repRecv
 	channels.RepSend = repSend
 	channels.PeerChan = peerChan
+
+	// Setup Local Peer
+	channels.LocalPeer = new(network.Peer)
+	channels.LocalPeer.IpAddress = net.ParseIP("0.0.0.0")
+	channels.LocalPeer.Port = port
+	channels.LocalPeer.AdminPort = repPort
 
 	go api.Start(log, channels, peers)
 

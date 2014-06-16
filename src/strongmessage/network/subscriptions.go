@@ -1,8 +1,8 @@
 package network
 
 import (
-	zmq "github.com/alecthomas/gozmq"
 	"fmt"
+	zmq "github.com/alecthomas/gozmq"
 )
 
 func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Peer, context *zmq.Context) (bool, *zmq.Socket) {
@@ -30,7 +30,7 @@ func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Pee
 	// Frame Channel Receive Loop
 	go func() {
 		for {
-			var frame Frame
+			var frame *Frame
 			data, err := socket.Recv(0)
 
 			if err != nil {
@@ -42,7 +42,7 @@ func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Pee
 			if err != nil {
 				log <- fmt.Sprintf("Received invalid frame... %s", err.Error())
 			}
-			frameChannel <- frame
+			frameChannel <- *frame
 		}
 	}()
 

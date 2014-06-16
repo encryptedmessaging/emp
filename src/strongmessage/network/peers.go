@@ -2,15 +2,15 @@ package network
 
 import (
 	"fmt"
+	zmq "github.com/alecthomas/gozmq"
 	"net"
 	"time"
-	zmq "github.com/alecthomas/gozmq"
 )
 
 type Peer struct {
 	IpAddress net.IP    `json:"ip_address"`
 	Port      uint16    `json:"port"`
-	AdminPort uint16	`json:"admin_port"`
+	AdminPort uint16    `json:"admin_port"`
 	LastSeen  time.Time `json:"last_seen"`
 	socket    *zmq.Socket
 }
@@ -49,17 +49,17 @@ func (p *Peer) Connect(log chan string, context *zmq.Context) error {
 }
 
 func (p *Peer) Disconnect() {
-		if p.socket == nil {
-				return
-		}
+	if p.socket == nil {
+		return
+	}
 
-		p.socket.Close()
-		p.socket = nil
+	p.socket.Close()
+	p.socket = nil
 }
 
-func (p *Peer) SendRequest(log chan string, frame Frame, recvChannel chan Frame) bool {
+func (p *Peer) SendRequest(log chan string, frame *Frame, recvChannel chan Frame) bool {
 	if p.socket == nil {
-			return false
+		return false
 	}
 
 	go func() {
@@ -73,9 +73,9 @@ func (p *Peer) SendRequest(log chan string, frame Frame, recvChannel chan Frame)
 		data, err := p.socket.Recv(0)
 
 		if err != nil {
-		  log <- "Error receiving from socket..."
-		  log <- err.Error()
-		  return
+			log <- "Error receiving from socket..."
+			log <- err.Error()
+			return
 		}
 
 		frame, err = FrameFromBytes(data)
@@ -86,7 +86,7 @@ func (p *Peer) SendRequest(log chan string, frame Frame, recvChannel chan Frame)
 
 		frame.Peer = p
 
-		recvChannel <- frame
+		recvChannel <- *frame
 	}()
 	return true
 }

@@ -3,12 +3,21 @@ package objects
 import (
 	"bytes"
 	"encoding/gob"
+	"net"
 	"time"
+)
+
+const (
+	LOCAL_VERSION = 1
+	LOCAL_USER    = "strongmsgd v0.1"
 )
 
 type Version struct {
 	Version   uint32
 	Timestamp time.Time
+	IpAddress net.IP
+	Port      uint16
+	AdminPort uint16
 	UserAgent string
 }
 

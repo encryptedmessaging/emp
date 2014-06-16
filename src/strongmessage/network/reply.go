@@ -26,26 +26,26 @@ func RepServer(port uint16, log chan string, sendChannel chan Frame, recvChannel
 	// Start REP Loop
 	go func() {
 		for {
-			var frame Frame
-      data, err := repSocket.Recv(0)
+			var frame *Frame
+			data, err := repSocket.Recv(0)
 
-      if err != nil {
-        log <- fmt.Sprintf("Error receiving from reply socket... %s", err.Error())
-		continue
-      }
+			if err != nil {
+				log <- fmt.Sprintf("Error receiving from reply socket... %s", err.Error())
+				continue
+			}
 
-      frame, err = FrameFromBytes(data)
-      if err != nil {
-        log <- fmt.Sprintf("Received invalid frame... %s", err.Error())
-		repSocket.Send(nil, 0)
-		continue
-      }
+			frame, err = FrameFromBytes(data)
+			if err != nil {
+				log <- fmt.Sprintf("Received invalid frame... %s", err.Error())
+				repSocket.Send(nil, 0)
+				continue
+			}
 
 			// Should block until mux is ready...
-      recvChannel <- frame
+			recvChannel <- *frame
 
 			// Should block until reply is ready...
-			frame = <-sendChannel
+			*frame = <-sendChannel
 
 			err = repSocket.Send(frame.GetBytes(), 0)
 			if err != nil {
