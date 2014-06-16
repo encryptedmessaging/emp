@@ -7,7 +7,7 @@ import (
 )
 
 func AddPubkey(log chan string, hash, payload []byte) error {
-	if hashList == nil || dbConn == nil{
+	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
 	if Contains(string(hash)) == PUBKEY {
@@ -25,7 +25,7 @@ func AddPubkey(log chan string, hash, payload []byte) error {
 }
 
 func GetPubkey(log chan string, hash []byte) ([]byte, error) {
-	if hashList == nil || dbConn == nil{
+	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
 	}
 	if hashList[string(hash)] != PUBKEY {
@@ -34,7 +34,7 @@ func GetPubkey(log chan string, hash []byte) ([]byte, error) {
 
 	for s, err := dbConn.Query("SELECT payload FROM pubkey WHERE hash=?", hash); err == nil; err = s.Next() {
 		var payload []byte
-		s.Scan(payload)     // Assigns 1st column to rowid, the rest to row
+		s.Scan(payload) // Assigns 1st column to rowid, the rest to row
 		return payload, nil
 	}
 	// Not Found
@@ -42,7 +42,7 @@ func GetPubkey(log chan string, hash []byte) ([]byte, error) {
 }
 
 func AddPurge(log chan string, hash, txid []byte) error {
-	if hashList == nil || dbConn == nil{
+	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
 	if Contains(string(hash)) == PURGE {
@@ -60,7 +60,7 @@ func AddPurge(log chan string, hash, txid []byte) error {
 }
 
 func GetPurge(log chan string, hash []byte) ([]byte, error) {
-	if hashList == nil || dbConn == nil{
+	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
 	}
 	if hashList[string(hash)] != PURGE {
@@ -69,7 +69,7 @@ func GetPurge(log chan string, hash []byte) ([]byte, error) {
 
 	for s, err := dbConn.Query("SELECT txid FROM purge WHERE hash=?", hash); err == nil; err = s.Next() {
 		var txid []byte
-		s.Scan(txid)     // Assigns 1st column to rowid, the rest to row
+		s.Scan(txid) // Assigns 1st column to rowid, the rest to row
 		return txid, nil
 	}
 	// Not Found
@@ -77,7 +77,7 @@ func GetPurge(log chan string, hash []byte) ([]byte, error) {
 }
 
 func AddMessage(log chan string, msg *objects.Message) error {
-	if hashList == nil || dbConn == nil{
+	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
 	if Contains(string(msg.TxidHash)) == MSG {
@@ -96,7 +96,7 @@ func AddMessage(log chan string, msg *objects.Message) error {
 }
 
 func GetMessage(log chan string, hash []byte) (*objects.Message, error) {
-	if hashList == nil || dbConn == nil{
+	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
 	}
 	if hashList[string(hash)] != MSG {

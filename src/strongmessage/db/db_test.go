@@ -1,10 +1,10 @@
 package db
 
 import (
-	"testing"
 	"fmt"
-	"time"
 	"os/exec"
+	"testing"
+	"time"
 )
 
 func TestDatabase(t *testing.T) {
@@ -18,7 +18,7 @@ func TestDatabase(t *testing.T) {
 	}()
 
 	err := Initialize(log, "testdb.db")
-	if dbConn == nil  || hashList == nil {
+	if dbConn == nil || hashList == nil {
 		fmt.Println("ERROR! ERROR! WTF!!!")
 	}
 

@@ -1,9 +1,9 @@
 package db
 
 const (
-	PUBKEY = iota
-	PURGE = iota
-	MSG = iota
+	PUBKEY   = iota
+	PURGE    = iota
+	MSG      = iota
 	NOTFOUND = iota
 )
 

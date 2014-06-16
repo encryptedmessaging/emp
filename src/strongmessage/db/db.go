@@ -1,8 +1,8 @@
 package db
 
 import (
-	"github.com/mxk/go-sqlite/sqlite3"
 	"fmt"
+	"github.com/mxk/go-sqlite/sqlite3"
 )
 
 // Database Connection
@@ -16,12 +16,11 @@ func Initialize(log chan string, dbFile string) error {
 
 	// Create Database Connection
 	dbConn, err = sqlite3.Open(dbFile)
-	if err != nil || dbConn == nil{
+	if err != nil || dbConn == nil {
 		log <- fmt.Sprintf("Error opening sqlite database at %s... %s", dbFile, err)
 		dbConn = nil
 		return err
 	}
-
 
 	// Create Database Schema
 	err = dbConn.Exec("CREATE TABLE IF NOT EXISTS pubkey (hash BLOB NOT NULL UNIQUE, payload BLOB NOT NULL, PRIMARY KEY (hash))")
@@ -64,7 +63,7 @@ func Initialize(log chan string, dbFile string) error {
 		//return populateHashes()
 	}
 
-	if dbConn == nil  || hashList == nil {
+	if dbConn == nil || hashList == nil {
 		fmt.Println("ERROR! ERROR! WTF!!! SHOULD BE INITIALIZED!")
 	}
 
@@ -75,19 +74,19 @@ func populateHashes() error {
 
 	for s, err := dbConn.Query("SELECT hash FROM pubkey"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash)     // Assigns 1st column to rowid, the rest to row
+		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = PUBKEY
 	}
 
 	for s, err := dbConn.Query("SELECT hash FROM msg"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash)     // Assigns 1st column to rowid, the rest to row
+		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = MSG
 	}
 
 	for s, err := dbConn.Query("SELECT hash FROM purge"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash)     // Assigns 1st column to rowid, the rest to row
+		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = PURGE
 	}
 

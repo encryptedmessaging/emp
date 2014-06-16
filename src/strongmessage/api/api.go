@@ -35,6 +35,7 @@ func Start(log chan string, config *ApiConfig, peers network.PeerList) {
 		select {
 		case *frame = <-config.RecvChan:
 			// Handle Received frames that do not require replies
+
 		case *frame = <-config.RepRecv:
 			// Handle requests that require replies to config.RepSend
 		}
