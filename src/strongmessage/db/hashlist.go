@@ -8,23 +8,23 @@ const (
 )
 
 // Hash List
-var HashList map[string]int
+var hashList map[string]int
 
 func Add(hash string, hashType int) {
-	if HashList != nil {
-		HashList[hash] = hashType
+	if hashList != nil {
+		hashList[hash] = hashType
 	}
 }
 
 func Delete(hash string) {
-	if HashList != nil {
-		delete(HashList, hash)
+	if hashList != nil {
+		delete(hashList, hash)
 	}
 }
 
 func Contains(hash string) int {
-	if HashList != nil {
-		hashType, ok := HashList[hash]
+	if hashList != nil {
+		hashType, ok := hashList[hash]
 		if ok {
 			return hashType
 		} else {

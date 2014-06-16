@@ -52,8 +52,8 @@ func TestServices(t *testing.T) {
 	time.Sleep(time.Millisecond)
 
 	f := new(network.Frame)
-	f.Magic = [4]byte{'a', 'b', 'c', 'd'}
-	f.Type = [8]byte{'v', 'e', 'r', 's', 'i', 'o', 'n', '?'}
+	f.Magic = 12345
+	f.Type = "version?"
 	f.Payload = []byte("Hello World!")
 
 	sendChan <- *f
@@ -63,8 +63,6 @@ func TestServices(t *testing.T) {
 	if string(f.GetBytes()) != string(f2.GetBytes()) {
 		fmt.Println("Received Message differs from Sent Message")
 		t.Fail()
-	} else {
-		fmt.Println("Services Started Successfully!")
 	}
 
 }

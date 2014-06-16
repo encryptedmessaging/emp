@@ -20,7 +20,7 @@ type Frame struct {
 func (f *Frame) GetBytes() []byte {
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
-	err := enc.Encode(f)
+	err := enc.Encode(*f)
 	if err != nil {
 		return nil
 	} else {
@@ -39,15 +39,16 @@ func NewFrame(frameType string, b []byte) *Frame {
 
 func FrameFromBytes(b []byte) (*Frame, error) {
 	var frame *Frame
+	frame = new(Frame)
 	if len(b) < 12 {
-		return frame, errors.New("Frame too short")
+		return nil, errors.New("Frame too short")
 	}
 
-	var buffer bytes.Buffer
-	enc := gob.NewDecoder(&buffer)
-	err := enc.Decode(&frame)
+	buffer := bytes.NewBuffer(b)
+	dec := gob.NewDecoder(buffer)
+	err := dec.Decode(frame)
 	if err != nil {
-		return frame, err
+		return nil, err
 	}
 
 	return frame, nil

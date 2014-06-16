@@ -39,10 +39,12 @@ func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Pee
 			}
 
 			frame, err = FrameFromBytes(data)
-			if err != nil {
+
+			if err != nil || frame == nil {
 				log <- fmt.Sprintf("Received invalid frame... %s", err.Error())
+			} else {
+				frameChannel <- *frame
 			}
-			frameChannel <- *frame
 		}
 	}()
 

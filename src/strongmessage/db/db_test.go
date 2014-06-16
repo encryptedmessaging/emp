@@ -4,6 +4,7 @@ import (
 	"testing"
 	"fmt"
 	"time"
+	"os/exec"
 )
 
 func TestDatabase(t *testing.T) {
@@ -17,10 +18,10 @@ func TestDatabase(t *testing.T) {
 	}()
 
 	err := Initialize(log, "testdb.db")
-	if DBConn == nil  || HashList == nil {
+	if dbConn == nil  || hashList == nil {
 		fmt.Println("ERROR! ERROR! WTF!!!")
 	}
-	
+
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err)
 		t.FailNow()
@@ -57,7 +58,7 @@ func TestDatabase(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = AddPubkey(log, purgeHash, purgeHash)
+	err = AddPurge(log, purgeHash, purgeHash)
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err)
 		t.FailNow()
@@ -76,4 +77,8 @@ func TestDatabase(t *testing.T) {
 	}
 
 	Cleanup()
+
+	// Remove DB
+	err = exec.Command("rm", "testdb.db").Run()
+
 }
