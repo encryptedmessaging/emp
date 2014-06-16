@@ -2,22 +2,26 @@ package network
 
 import (
 	"errors"
+	"encoding/gob"
+	"bytes"
 )
 
 type Frame struct {
-	Peer    Peer  // Used for REP/REQ Pattern only
+	Peer    *Peer  // Used for REP/REQ Pattern only
 	Magic   [4]byte
-	Type    [8]byte
+	Type    string
 	Payload []byte
 }
 
 func (f *Frame) GetBytes() []byte {
-	ret := make([]byte, 12, 12)
-	copy(ret, f.Magic[:])
-	copy(ret[4:], f.Type[:])
-	ret = append(ret, f.Payload...)
-
-	return ret
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
+	err := enc.Encode(f)
+	if err != nil {
+		return nil
+	} else {
+		return buffer.Bytes()
+	}
 }
 
 func FrameFromBytes(b []byte) (Frame, error) {
@@ -25,12 +29,13 @@ func FrameFromBytes(b []byte) (Frame, error) {
 	if len(b) < 12 {
 		return frame, errors.New("Frame too short")
 	}
-	copy(frame.Magic[:], b[:4])
-	copy(frame.Type[:], b[4:12])
 
-	if len(b) > 12 {
-		frame.Payload = make([]byte, len(b[12:]), cap(b[12:]))
-		copy(frame.Payload, b[12:])
+	var buffer bytes.Buffer
+	enc := gob.NewDecoder(&buffer)
+	err := enc.Decode(&frame)
+	if err != nil {
+		return frame, err
 	}
+
 	return frame, nil
 }

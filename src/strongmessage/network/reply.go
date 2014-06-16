@@ -30,16 +30,15 @@ func RepServer(port uint16, log chan string, sendChannel chan Frame, recvChannel
       data, err := repSocket.Recv(0)
 
       if err != nil {
-        log <- "Error receiving from socket..."
-        log <- err.Error()
+        log <- fmt.Sprintf("Error receiving from reply socket... %s", err.Error())
+		continue
       }
 
       frame, err = FrameFromBytes(data)
       if err != nil {
-        log <- "Received invalid frame..."
-        log <- err.Error()
-				repSocket.Send(nil, 0)
-				continue
+        log <- fmt.Sprintf("Received invalid frame... %s", err.Error())
+		repSocket.Send(nil, 0)
+		continue
       }
 
 			// Should block until mux is ready...
@@ -50,8 +49,7 @@ func RepServer(port uint16, log chan string, sendChannel chan Frame, recvChannel
 
 			err = repSocket.Send(frame.GetBytes(), 0)
 			if err != nil {
-				log <- "Error sending frame..."
-				log <- err.Error()
+				log <- fmt.Sprintf("Error sending frame... %s", err.Error())
 			}
 		}
 	}()

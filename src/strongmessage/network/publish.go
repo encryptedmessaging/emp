@@ -17,8 +17,7 @@ func Publish(port uint16, log chan string, sendChannel chan Frame, context *zmq.
 	// Bind PUB Socket
 	err = pubSocket.Bind(fmt.Sprintf("tcp://*:%d", port))
 	if err != nil {
-		log <- "Error binding pub socket..."
-		log <- err.Error()
+		log <- fmt.Sprintf("Error binding pub socket... %s", err.Error())
 		pubSocket.Close()
 		return false, nil
 	}
@@ -29,8 +28,7 @@ func Publish(port uint16, log chan string, sendChannel chan Frame, context *zmq.
 			frame := <-sendChannel
 			err := pubSocket.Send(frame.GetBytes(), 0)
 			if err != nil {
-				log <- "Error sending frame..."
-				log <- err.Error()
+				log <- fmt.Sprintf("Error sending frame... %s", err.Error())
 			}
 		}
 	}()

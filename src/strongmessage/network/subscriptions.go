@@ -2,6 +2,7 @@ package network
 
 import (
 	zmq "github.com/alecthomas/gozmq"
+	"fmt"
 )
 
 func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Peer, context *zmq.Context) (bool, *zmq.Socket) {
@@ -20,8 +21,7 @@ func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Pee
 			peer := <-peerChannel
 			err = socket.Connect(peer.TcpString())
 			if err != nil {
-				log <- "Error subscribing to peer..."
-				log <- err.Error()
+				log <- fmt.Sprintf("Error subscribing to peer...%s; %s", peer.TcpString(), err.Error())
 			}
 
 		}
@@ -34,14 +34,13 @@ func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Pee
 			data, err := socket.Recv(0)
 
 			if err != nil {
-				log <- "Error receiving from socket..."
-				log <- err.Error()
+				log <- fmt.Sprintf("Error receiving from subscription socket... %s", err.Error())
+				continue
 			}
 
 			frame, err = FrameFromBytes(data)
 			if err != nil {
-				log <- "Received invalid frame..."
-				log <- err.Error()
+				log <- fmt.Sprintf("Received invalid frame... %s", err.Error())
 			}
 			frameChannel <- frame
 		}

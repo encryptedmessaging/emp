@@ -5,20 +5,13 @@ import (
 	zmq "github.com/alecthomas/gozmq"
 	"strongmessage"
 	"strongmessage/network"
+	"strongmessage/api"
+	"os"
 )
 
 const (
 	bufLen = 10
 )
-
-func route(from, to1, to2 chan network.Peer) {
-	var p network.Peer
-	for {
-		p = <-from
-		to1 <- p
-		to2 <- p
-	}
-}
 
 func main() {
 	log := make(chan string, 100)
@@ -41,16 +34,10 @@ func main() {
 	repRecv := make(chan network.Frame)
 	repSend := make(chan network.Frame)
 
-	reqSend := make(chan network.Frame)
-
 	peerChan := make(chan network.Peer)
-	subPeer := make(chan network.Peer)
-	reqPeer := make (chan network.Peer)
-
-	go route(peerChan, subPeer, reqPeer)
 
 	// Start Subscription Service
-	check, recvSocket := network.Subscription(log, recvChan, subPeer, context)
+	check, recvSocket := network.Subscription(log, recvChan, peerChan, context)
 	if !check {
 		fmt.Println("Could not start subscription service.")
 		return
@@ -76,15 +63,6 @@ func main() {
 
 	defer repSocket.Close()
 
-	// Start Request Service
-	check, reqSocket := network.ReqClient(log, reqSend, recvChan, reqPeer, context)
-	if !check {
-		fmt.Println("Could not start request service.")
-    return
-	}
-
-	defer reqSocket.Close()
-
 	fmt.Println("Services started successfully!")
 
 	fmt.Println("Connecting to peers...")
@@ -95,9 +73,21 @@ func main() {
 		fmt.Println("%s", err.Error())
 		// This is not fatal
 	}
-	for _, p := range peers.Peers {
-		peerChan <- p
-	}
+	peers.ConnectAll(log, context)
+	defer peers.DisconnectAll()
 
-	strongmessage.BlockingLogger(log)
+	// Setup Signals
+	quit := make(chan os.Signal, 1)
+
+	channels := new(api.ApiConfig)
+	channels.SendChan = sendChan
+	channels.RecvChan = recvChan
+	channels.RepRecv = repRecv
+	channels.RepSend = repSend
+	channels.PeerChan = peerChan
+
+	go api.Start(log, channels, peers)
+
+	fmt.Println("Connected... starting logger")
+	strongmessage.BlockingLogger(log, quit)
 }
