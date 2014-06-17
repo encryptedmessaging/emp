@@ -86,6 +86,7 @@ func main() {
 	channels.RepRecv = repRecv
 	channels.RepSend = repSend
 	channels.PeerChan = peerChan
+	channels.Context = context
 
 	// Setup Local Peer
 	channels.LocalPeer = new(network.Peer)

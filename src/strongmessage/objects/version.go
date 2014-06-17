@@ -21,14 +21,16 @@ type Version struct {
 	UserAgent string
 }
 
-func (v *Version) FromBytes(log chan string, data []byte) {
+func (v *Version) FromBytes(log chan string, data []byte) error {
 	var buffer bytes.Buffer
 	enc := gob.NewDecoder(&buffer)
 	err := enc.Decode(v)
 	if err != nil {
 		log <- "Decoding error."
 		log <- err.Error()
+		return err
 	}
+	return nil
 }
 
 func (v *Version) GetBytes(log chan string) []byte {

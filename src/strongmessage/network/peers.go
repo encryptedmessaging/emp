@@ -5,6 +5,12 @@ import (
 	zmq "github.com/alecthomas/gozmq"
 	"net"
 	"time"
+	"encoding/binary"
+	"errors"
+)
+
+const (
+	PeerLen = 28
 )
 
 type Peer struct {
@@ -13,6 +19,32 @@ type Peer struct {
 	AdminPort uint16    `json:"admin_port"`
 	LastSeen  time.Time `json:"last_seen"`
 	socket    *zmq.Socket
+}
+
+func (p *Peer) GetBytes() []byte {
+	ret := make([]byte, 0, PeerLen)
+	ret = append(ret, []byte(p.IpAddress)...)
+	binary.BigEndian.PutUint16(ret, p.Port)
+	binary.BigEndian.PutUint16(ret, p.AdminPort)
+	binary.BigEndian.PutUint64(ret, uint64(p.LastSeen.Unix()))
+
+	return ret
+}
+
+func (p *Peer) FromBytes(b []byte) error {
+	if p == nil {
+		return errors.New("Can't fill nil Peer object...")
+	}
+	if len(b) < PeerLen {
+		return errors.New("Byte slice too shor")
+	}
+
+	copy([]byte(p.IpAddress), b[:16])
+	p.Port = binary.BigEndian.Uint16(b[16:18])
+	p.AdminPort = binary.BigEndian.Uint16(b[18:20])
+	p.LastSeen = time.Unix(int64(binary.BigEndian.Uint64(b[20:28])), 0)
+	p.socket = nil
+	return nil
 }
 
 func (p *Peer) TcpString() string {

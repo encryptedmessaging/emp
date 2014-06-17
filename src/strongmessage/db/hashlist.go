@@ -4,6 +4,7 @@ const (
 	PUBKEY   = iota
 	PURGE    = iota
 	MSG      = iota
+	PUBKEYRQ = iota
 	NOTFOUND = iota
 )
 
@@ -32,4 +33,15 @@ func Contains(hash string) int {
 		}
 	}
 	return NOTFOUND
+}
+
+func HashCache() []string {
+	if hashList == nil {
+		return nil
+	}
+	ret := make([]string, 0, len(hashList))
+	for key, _ := range hashList {
+		ret = append(ret, key)
+	}
+	return ret
 }
