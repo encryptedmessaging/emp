@@ -45,3 +45,12 @@ func HashCache() []string {
 	}
 	return ret
 }
+
+func HashCopy() map[string]int {
+	cpy := make(map[string]int)
+	for k,v := range hashList {
+  		cpy[k] = v
+	}
+
+	return cpy
+}

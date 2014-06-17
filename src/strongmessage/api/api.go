@@ -131,6 +131,131 @@ func Start(log chan string, config *ApiConfig, peers network.PeerList) {
 
 		case *frame = <-config.RepRecv:
 			// Handle requests that require replies to config.RepSend
+			if frame.Magic != network.KNOWN_MAGIC {
+				continue
+			}
+			switch frame.Type {
+			case "version":
+				// Received version request
+				log <- fmt.Sprintf("Parsing version request...")
+				err = version.FromBytes(log, frame.Payload)
+				if err != nil {
+					continue
+				}
+				newPeer := new(network.Peer)
+
+				// Setup and Send Response
+				frame.Payload = localVersion.GetBytes(log)
+
+				config.RepSend <- *frame
+
+				newPeer.IpAddress = version.IpAddress
+				newPeer.Port = version.Port
+				newPeer.AdminPort = version.AdminPort
+				newPeer.LastSeen = time.Now()
+				for _, peer := range peers.Peers {
+					if peer.TcpString() == newPeer.TcpString() {
+						peer.LastSeen = newPeer.LastSeen
+						log <- fmt.Sprintf("Peer %s updated", peer.TcpString())
+						continue
+					}
+				}
+				peers.Peers = append(peers.Peers, *newPeer)
+				newPeer.Connect(log, config.Context)
+				config.PeerChan <- *newPeer
+
+			case "peer":
+				// Received peer request
+				newPeers := frame.Payload
+				// Condense PeerList to Peer Hash Table
+				peerHash := make(map[string]*network.Peer)
+
+				for _, peer := range peers.Peers {
+					peerHash[peer.TcpString()] = &peer
+				}
+
+				for i:= 0; i <= len(newPeers) - 28; i+= 28 {
+					p := new(network.Peer)
+					err := p.FromBytes(newPeers[i:i+28])
+					if err != nil {
+						log <- fmt.Sprintf("Error unserializing peer... %s", err)
+						continue
+					}
+
+					_, ok := peerHash[p.TcpString()]
+					if !ok {
+						peerHash[p.TcpString()] = p
+						peers.Peers = append(peers.Peers, *p)
+
+						// Send Version Request
+						err = p.Connect(log, config.Context)
+						if err != nil {
+							p.SendRequest(log, network.NewFrame("version", localVersion.GetBytes(log)), config.RecvChan)
+						}
+					}
+				}
+
+				payload := make([]byte, 0, 0)
+				for _, peer := range peerHash {
+					payload = append(payload, peer.GetBytes()...)
+				}
+
+				config.RepSend <- *network.NewFrame("peer", payload)
+
+			case "obj":
+				// Received object request
+				hashes := db.HashCopy()
+
+				objs := frame.Payload
+
+				for i:=0; i <= len(objs) - 48; i+= 48 {
+					if db.Contains(string(objs[i:i+48])) != db.NOTFOUND {
+						delete(hashes, string(objs[i:i+48]))
+					}
+				}
+
+				payload := make([]byte, 0, 0)
+
+				for hash, _ := range hashes {
+					payload = append(payload, []byte(hash)...)
+				}
+
+				config.RepSend <- *network.NewFrame("obj", payload)
+			case "getobj":
+				// Received object request
+				hash := frame.Payload
+
+				switch db.Contains(string(hash)) {
+				case db.MSG:
+					msg, err := db.GetMessage(log, hash)
+					if err != nil {
+						config.RepSend <- *network.NewFrame("getobj", nil)
+					} else {
+						config.RepSend <- *network.NewFrame("msg", msg.GetBytes(log))
+					}
+				case db.PUBKEY:
+					pub, err := db.GetPubkey(log, hash)
+					if err != nil {
+						config.RepSend <- *network.NewFrame("getobj", nil)
+					} else {
+						config.RepSend <- *network.NewFrame("pubkey", append(hash, pub...))
+					}
+				case db.PUBKEYRQ:
+					config.RepSend <- *network.NewFrame("pubkeyrq", hash)
+				case db.PURGE:
+					pur, err := db.GetPurge(log, hash)
+					if err != nil {
+						config.RepSend <- *network.NewFrame("getobj", nil)
+					} else {
+						config.RepSend <- *network.NewFrame("purge", pur)
+					}
+				default:
+					config.RepSend <- *network.NewFrame("getobj", nil)
+				}
+
+			default:
+				log <- fmt.Sprintf("Received unknown message of type... %s", frame.Type)
+			}
 		}
 	}
 }

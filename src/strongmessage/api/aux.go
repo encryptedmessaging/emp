@@ -97,6 +97,7 @@ func handleObj(log chan string, config *ApiConfig, objs []byte, reqPeer *network
 			frame := new(network.Frame)
 			frame.Magic = network.KNOWN_MAGIC
 			frame.Type = "getobj"
+			copy(frame.Payload, objs[i:i+48])
 			reqPeer.SendRequest(log, frame, config.RecvChan)
 		}
 	}
