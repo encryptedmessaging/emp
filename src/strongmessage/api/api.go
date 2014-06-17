@@ -211,6 +211,10 @@ func Start(log chan string, config *ApiConfig, peers network.PeerList) {
 				for i:=0; i <= len(objs) - 48; i+= 48 {
 					if db.Contains(string(objs[i:i+48])) != db.NOTFOUND {
 						delete(hashes, string(objs[i:i+48]))
+					} else {
+						for j:=1; (j < 5 && j <= len(peers.Peers)); j++ {
+							peers.Peers[len(peers.Peers)-j].SendRequest(log, network.NewFrame("getobj", objs[i:i+48]), config.RecvChan)
+						}
 					}
 				}
 
