@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"net"
 	"time"
+	"fmt"
 )
 
 const (
@@ -22,12 +23,11 @@ type Version struct {
 }
 
 func (v *Version) FromBytes(log chan string, data []byte) error {
-	var buffer bytes.Buffer
-	enc := gob.NewDecoder(&buffer)
+	buffer := bytes.NewBuffer(data)
+	enc := gob.NewDecoder(buffer)
 	err := enc.Decode(v)
 	if err != nil {
-		log <- "Decoding error."
-		log <- err.Error()
+		log <- fmt.Sprintf("Version Decoding error: %s", err.Error())
 		return err
 	}
 	return nil

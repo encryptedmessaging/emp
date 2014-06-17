@@ -22,11 +22,12 @@ type Peer struct {
 }
 
 func (p *Peer) GetBytes() []byte {
-	ret := make([]byte, 0, PeerLen)
-	ret = append(ret, []byte(p.IpAddress)...)
-	binary.BigEndian.PutUint16(ret, p.Port)
-	binary.BigEndian.PutUint16(ret, p.AdminPort)
-	binary.BigEndian.PutUint64(ret, uint64(p.LastSeen.Unix()))
+	ret := make([]byte, PeerLen, PeerLen)
+	copy(ret[0:16], []byte(p.IpAddress.To16()))
+
+	binary.BigEndian.PutUint16(ret[16:18], p.Port)
+	binary.BigEndian.PutUint16(ret[18:20], p.AdminPort)
+	binary.BigEndian.PutUint64(ret[20:28], uint64(p.LastSeen.Unix()))
 
 	return ret
 }
@@ -39,7 +40,7 @@ func (p *Peer) FromBytes(b []byte) error {
 		return errors.New("Byte slice too shor")
 	}
 
-	copy([]byte(p.IpAddress), b[:16])
+	p.IpAddress = net.IP(append([]byte(p.IpAddress), b[:16]...))
 	p.Port = binary.BigEndian.Uint16(b[16:18])
 	p.AdminPort = binary.BigEndian.Uint16(b[18:20])
 	p.LastSeen = time.Unix(int64(binary.BigEndian.Uint64(b[20:28])), 0)

@@ -174,11 +174,17 @@ func Start(log chan string, config *ApiConfig, peers network.PeerList) {
 					peerHash[peer.TcpString()] = &peer
 				}
 
+				payload := make([]byte, 0, 0)
+				for _, peer := range peerHash {
+					payload = append(payload, peer.GetBytes()...)
+				}
+				config.RepSend <- *network.NewFrame("peer", payload)
+
+
 				for i:= 0; i <= len(newPeers) - 28; i+= 28 {
 					p := new(network.Peer)
 					err := p.FromBytes(newPeers[i:i+28])
 					if err != nil {
-						log <- fmt.Sprintf("Error unserializing peer... %s", err)
 						continue
 					}
 
@@ -194,14 +200,6 @@ func Start(log chan string, config *ApiConfig, peers network.PeerList) {
 						}
 					}
 				}
-
-				payload := make([]byte, 0, 0)
-				for _, peer := range peerHash {
-					payload = append(payload, peer.GetBytes()...)
-				}
-
-				config.RepSend <- *network.NewFrame("peer", payload)
-
 			case "obj":
 				// Received object request
 				hashes := db.HashCopy()
