@@ -8,14 +8,17 @@ import (
 
 func AddPubkey(log chan string, hash, payload []byte) error {
 	if hashList == nil || dbConn == nil {
+
 		return DBError(EUNINIT)
 	}
 	if Contains(string(hash)) == PUBKEY {
+
 		return nil
 	}
 
 	err := dbConn.Exec("INSERT INTO pubkey VALUES (?, ?)", hash, payload)
 	if err != nil {
+		fmt.Println("UH OH!", err)
 		log <- fmt.Sprintf("Error inserting pubkey into db... %s", err)
 		return err
 	}
@@ -34,7 +37,7 @@ func GetPubkey(log chan string, hash []byte) ([]byte, error) {
 
 	for s, err := dbConn.Query("SELECT payload FROM pubkey WHERE hash=?", hash); err == nil; err = s.Next() {
 		var payload []byte
-		s.Scan(payload) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&payload) // Assigns 1st column to rowid, the rest to row
 		return payload, nil
 	}
 	// Not Found

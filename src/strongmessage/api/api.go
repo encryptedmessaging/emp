@@ -16,11 +16,15 @@ type ApiConfig struct {
 	RepRecv   chan network.Frame
 	RepSend   chan network.Frame
 	PeerChan  chan network.Peer
+	DBFile    string
 	Context   *zmq.Context
 	LocalPeer *network.Peer
 }
 
 func Start(log chan string, config *ApiConfig, peers *network.PeerList) {
+
+	db.Initialize(log, config.DBFile)
+
 	var frame *network.Frame
 	var version *objects.Version
 	var err error
@@ -77,6 +81,7 @@ func Start(log chan string, config *ApiConfig, peers *network.PeerList) {
 					pubHash := frame.Payload
 					frame.Type = "pubkey"
 					frame.Payload, err = db.GetPubkey(log, pubHash)
+					frame.Payload = append(pubHash, frame.Payload...)
 					if err != nil {
 						db.RemoveHash(log, pubHash)
 						continue
@@ -95,7 +100,9 @@ func Start(log chan string, config *ApiConfig, peers *network.PeerList) {
 					continue
 				} else {
 					db.Delete(string(pubHash))
-					err = db.AddPubkey(log, pubHash, frame.Payload[48:])
+					encPubkey := make([]byte, 65, 65)
+					copy(encPubkey, frame.Payload[48:])
+					err = db.AddPubkey(log, pubHash, encPubkey)
 					config.SendChan <- *frame
 				}
 			case "msg":

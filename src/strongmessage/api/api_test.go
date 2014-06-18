@@ -6,12 +6,14 @@ import (
 	"net"
 	"strongmessage/network"
 	"strongmessage/objects"
+	"strongmessage/db"
 	"testing"
 	"time"
+	"crypto/sha512"
+	"os/exec"
 )
 
-func TestApi(t *testing.T) {
-	// Setup Environment
+func setup() (chan string, *ApiConfig, *network.PeerList) {
 	config := new(ApiConfig)
 
 	config.Context, _ = zmq.NewContext()
@@ -26,6 +28,7 @@ func TestApi(t *testing.T) {
 	config.RepRecv = make(chan network.Frame, 10)
 	config.RepSend = make(chan network.Frame, 10)
 	config.PeerChan = make(chan network.Peer, 10)
+	config.DBFile = "testdb.db"
 
 	log := make(chan string, 100)
 
@@ -33,7 +36,20 @@ func TestApi(t *testing.T) {
 
 	go Start(log, config, peers)
 
-	fmt.Println("API Startup Successful!")
+	return log, config, peers
+}
+
+func cleanup(config *ApiConfig, peers *network.PeerList) {
+	peers.DisconnectAll()
+	config.Context.Close()
+
+	db.Cleanup()
+	exec.Command("rm", "testdb.db").Run()
+}
+
+func TestVersionPeer(t *testing.T) {
+	// Setup Environment
+	log, config, peers := setup()
 
 	frame := new(network.Frame)
 	var err error
@@ -49,15 +65,7 @@ func TestApi(t *testing.T) {
 
 	config.RepRecv <- *network.NewFrame("version", version.GetBytes(log))
 
-	isWaiting := true
-	for isWaiting {
-		select {
-		case *frame = <-config.RepSend:
-			isWaiting = false
-		case logger := <-log:
-			fmt.Println(logger)
-		}
-	}
+	*frame = <-config.RepSend
 
 	if frame.Type != "version" {
 		fmt.Println("Error: version type incorrect")
@@ -86,15 +94,7 @@ func TestApi(t *testing.T) {
 
 	config.RepRecv <- *network.NewFrame("peer", testPeer.GetBytes())
 
-	isWaiting = true
-	for isWaiting {
-		select {
-		case logger := <-log:
-			fmt.Println(logger)
-		case *frame = <-config.RepSend:
-			isWaiting = false
-		}
-	}
+	*frame = <-config.RepSend
 
 	if frame.Type != "peer" {
 		fmt.Println("Error: peer type incorrect")
@@ -113,6 +113,7 @@ func TestApi(t *testing.T) {
 		fmt.Println("Error: Peer response is incorrect... ", testPeer2)
 		t.FailNow()
 	}
+
 	*testPeer2 = <-config.PeerChan
 
 	// Should match the version request from earlier
@@ -121,7 +122,67 @@ func TestApi(t *testing.T) {
 		t.FailNow()
 	}
 
-	peers.DisconnectAll()
-	config.Context.Close()
+	cleanup(config, peers)
+}
 
+func TestPubkey(t *testing.T) {
+	_, config, peers := setup()
+
+	addrHash := sha512.Sum384([]byte{'a', 'b', 'c', 'd'})
+	var pubkey [65]byte
+	for i:=0; i<65; i++ {
+		pubkey[i] = 1
+	}
+
+	var frame network.Frame
+
+	// Test 3: Public Key Request
+	config.RecvChan <- *network.NewFrame("pubkeyrq", addrHash[:])
+
+	frame = <-config.SendChan
+
+	if frame.Type != "pubkeyrq" {
+		fmt.Println("Error: pubkeyrq type incorrect")
+		t.FailNow()
+	}
+
+	if string(frame.Payload) != string(addrHash[:]) {
+		fmt.Println("Error: Incorrect test 3 payload: ", frame.Payload)
+		t.FailNow()
+	}
+
+	// Test 4: Tested Later, should not send out another pubkeyrq
+	config.RecvChan <- *network.NewFrame("pubkeyrq", addrHash[:])
+
+	// Test 5: Public Key
+	config.RecvChan <- *network.NewFrame("pubkey", append(addrHash[:], pubkey[:]...))
+
+	frame = <-config.SendChan
+
+	if frame.Type != "pubkey" {
+		fmt.Println("Error: pubkeyrq was resent!")
+		t.FailNow()
+	}
+
+	if string(frame.Payload) != string(append(addrHash[:], pubkey[:]...)) {
+		fmt.Println("Error: Incorrect test 5 payload: ", frame.Payload, append(addrHash[:], pubkey[:]...))
+		t.FailNow()
+	}
+
+	// Test 6: Public Key Request returns Pubkey
+	config.RecvChan <- *network.NewFrame("pubkeyrq", addrHash[:])
+
+	frame = <-config.SendChan
+
+	if frame.Type != "pubkey" {
+		fmt.Println("Error: public key not sent back! Type: ", frame.Type)
+		t.FailNow()
+	}
+
+	if string(frame.Payload) != string(append(addrHash[:], pubkey[:]...)) {
+		fmt.Println("Error: Incorrect test 6 payload: ", frame.Payload, append(addrHash[:], pubkey[:]...))
+		t.FailNow()
+	}
+
+	cleanup(config, peers)
 }

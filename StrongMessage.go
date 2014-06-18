@@ -87,6 +87,7 @@ func main() {
 	channels.RepSend = repSend
 	channels.PeerChan = peerChan
 	channels.Context = context
+	channels.DBFile = "intentory.db"
 
 	// Setup Local Peer
 	channels.LocalPeer = new(network.Peer)
