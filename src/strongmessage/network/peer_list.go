@@ -22,6 +22,7 @@ func (plist *PeerList) SendAll(log chan string, frame *Frame, recvChannel chan F
 
 func (plist *PeerList) DisconnectAll() {
 	for _, peer := range plist.Peers {
+
 		peer.Disconnect()
 	}
 }

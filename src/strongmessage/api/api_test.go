@@ -2,12 +2,12 @@ package api
 
 import (
 	"fmt"
-	"net"
-	"time"
-	"testing"
 	zmq "github.com/alecthomas/gozmq"
+	"net"
 	"strongmessage/network"
 	"strongmessage/objects"
+	"testing"
+	"time"
 )
 
 func TestApi(t *testing.T) {
@@ -31,7 +31,7 @@ func TestApi(t *testing.T) {
 
 	peers := new(network.PeerList)
 
-	go Start(log, config, *peers)
+	go Start(log, config, peers)
 
 	fmt.Println("API Startup Successful!")
 
@@ -89,10 +89,10 @@ func TestApi(t *testing.T) {
 	isWaiting = true
 	for isWaiting {
 		select {
-		case *frame = <-config.RepSend:
-			isWaiting = false
 		case logger := <-log:
 			fmt.Println(logger)
+		case *frame = <-config.RepSend:
+			isWaiting = false
 		}
 	}
 
@@ -113,7 +113,6 @@ func TestApi(t *testing.T) {
 		fmt.Println("Error: Peer response is incorrect... ", testPeer2)
 		t.FailNow()
 	}
-
 	*testPeer2 = <-config.PeerChan
 
 	// Should match the version request from earlier
@@ -122,6 +121,7 @@ func TestApi(t *testing.T) {
 		t.FailNow()
 	}
 
+	peers.DisconnectAll()
 	config.Context.Close()
 
 }

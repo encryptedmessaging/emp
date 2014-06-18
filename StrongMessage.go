@@ -94,7 +94,7 @@ func main() {
 	channels.LocalPeer.Port = port
 	channels.LocalPeer.AdminPort = repPort
 
-	go api.Start(log, channels, peers)
+	go api.Start(log, channels, &peers)
 
 	fmt.Println("Connected... starting logger")
 	strongmessage.BlockingLogger(log, quit)

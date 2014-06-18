@@ -1,14 +1,14 @@
 package api
 
 import (
+	"fmt"
+	"strongmessage/db"
 	"strongmessage/network"
 	"strongmessage/objects"
-	"strongmessage/db"
 	"time"
-	"fmt"
 )
 
-func handleVersion(log chan string, config *ApiConfig, version *objects.Version, peers network.PeerList) {
+func handleVersion(log chan string, config *ApiConfig, version *objects.Version, peers *network.PeerList) {
 	newPeer := new(network.Peer)
 
 	newPeer.IpAddress = version.IpAddress
@@ -20,7 +20,6 @@ func handleVersion(log chan string, config *ApiConfig, version *objects.Version,
 	frame := new(network.Frame)
 	frame.Magic = network.KNOWN_MAGIC
 	frame.Type = "peer"
-
 
 	for _, peer := range peers.Peers {
 		frame.Payload = append(frame.Payload, peer.GetBytes()...)
@@ -39,7 +38,7 @@ func handleVersion(log chan string, config *ApiConfig, version *objects.Version,
 	newPeer.SendRequest(log, frame, config.RecvChan)
 }
 
-func handlePeer(log chan string, config *ApiConfig, newPeers []byte, peers network.PeerList, localVersion *objects.Version, reqPeer *network.Peer) {
+func handlePeer(log chan string, config *ApiConfig, newPeers []byte, peers *network.PeerList, localVersion *objects.Version, reqPeer *network.Peer) {
 
 	// Prepare Version Request
 	frame := new(network.Frame)
@@ -54,9 +53,9 @@ func handlePeer(log chan string, config *ApiConfig, newPeers []byte, peers netwo
 		peerHash[peer.TcpString()] = &peer
 	}
 
-	for i:= 0; i <= len(newPeers) - 28; i+= 28 {
+	for i := 0; i <= len(newPeers)-28; i += 28 {
 		p := new(network.Peer)
-		err := p.FromBytes(newPeers[i:i+28])
+		err := p.FromBytes(newPeers[i : i+28])
 		if err != nil {
 			log <- fmt.Sprintf("Error unserializing peer... %s", err)
 			continue
@@ -91,8 +90,7 @@ func handleObj(log chan string, config *ApiConfig, objs []byte, reqPeer *network
 		return
 	}
 
-
-	for i:=0; i <= len(objs) - 48; i+= 48 {
+	for i := 0; i <= len(objs)-48; i += 48 {
 		if db.Contains(string(objs[i:i+48])) == db.NOTFOUND {
 			frame := new(network.Frame)
 			frame.Magic = network.KNOWN_MAGIC

@@ -74,6 +74,7 @@ func (p *Peer) Connect(log chan string, context *zmq.Context) error {
 	if err != nil {
 		log <- "Error subscribing to peer..."
 		log <- err.Error()
+		socket.Close()
 		return err
 	}
 
