@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strongmessage/network"
 )
 
@@ -22,14 +21,8 @@ func LoadPeers() (network.PeerList, error) {
 	return peerList, nil
 }
 
-func BlockingLogger(channel chan string, quit chan os.Signal) {
+func BlockingLogger(channel chan string) {
 	for {
-		select {
-		case log_message := <-channel:
-			fmt.Println(log_message)
-		case <-quit:
-			fmt.Println("Exiting...")
-			return
-		}
+		fmt.Println(<-channel)
 	}
 }

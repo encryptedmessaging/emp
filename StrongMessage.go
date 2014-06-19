@@ -4,7 +4,6 @@ import (
 	"fmt"
 	zmq "github.com/alecthomas/gozmq"
 	"net"
-	"os"
 	"strongmessage"
 	"strongmessage/api"
 	"strongmessage/network"
@@ -77,9 +76,6 @@ func main() {
 	peers.ConnectAll(log, context)
 	defer peers.DisconnectAll()
 
-	// Setup Signals
-	quit := make(chan os.Signal, 1)
-
 	channels := new(api.ApiConfig)
 	channels.SendChan = sendChan
 	channels.RecvChan = recvChan
@@ -98,5 +94,5 @@ func main() {
 	go api.Start(log, channels, &peers)
 
 	fmt.Println("Connected... starting logger")
-	strongmessage.BlockingLogger(log, quit)
+	strongmessage.BlockingLogger(log)
 }

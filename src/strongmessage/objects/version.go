@@ -3,9 +3,9 @@ package objects
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"net"
 	"time"
-	"fmt"
 )
 
 const (

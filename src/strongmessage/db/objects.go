@@ -72,7 +72,7 @@ func GetPurge(log chan string, hash []byte) ([]byte, error) {
 
 	for s, err := dbConn.Query("SELECT txid FROM purge WHERE hash=?", hash); err == nil; err = s.Next() {
 		var txid []byte
-		s.Scan(txid) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&txid) // Assigns 1st column to rowid, the rest to row
 		return txid, nil
 	}
 	// Not Found
@@ -87,13 +87,13 @@ func AddMessage(log chan string, msg *objects.Message) error {
 		return nil
 	}
 
-	err := dbConn.Exec("INSERT INTO purge VALUES (?, ?, ?, ?)", msg.TxidHash, msg.AddrHash, msg.Timestamp.Unix(), msg.Content.GetBytes())
+	err := dbConn.Exec("INSERT INTO msg VALUES (?, ?, ?, ?)", msg.TxidHash, msg.AddrHash, msg.Timestamp.Unix(), msg.Content.GetBytes())
 	if err != nil {
 		log <- fmt.Sprintf("Error inserting purge into db... %s", err)
 		return err
 	}
 
-	Add(string(msg.TxidHash), PURGE)
+	Add(string(msg.TxidHash), MSG)
 	return nil
 
 }
@@ -111,10 +111,10 @@ func GetMessage(log chan string, hash []byte) (*objects.Message, error) {
 	for s, err := dbConn.Query("SELECT * FROM msg WHERE hash=?", hash); err == nil; err = s.Next() {
 		var timestamp int64
 		var encrypted []byte
-		s.Scan(msg.TxidHash, msg.AddrHash, &timestamp, encrypted)
+		s.Scan(&msg.TxidHash, &msg.AddrHash, &timestamp, &encrypted)
 
 		msg.Timestamp = time.Unix(timestamp, 0)
-		msg.Content = objects.EncryptedFromBytes(encrypted)
+		msg.Content = *objects.EncryptedFromBytes(encrypted)
 
 		return msg, nil
 	}

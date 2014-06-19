@@ -8,10 +8,10 @@ type EncryptedData struct {
 }
 
 const (
-	ivLen = 16
+	ivLen     = 16
 	pubkeyLen = 65
-	hmacLen = 32
-	minLen = ivLen + pubkeyLen + hmacLen
+	hmacLen   = 32
+	minLen    = ivLen + pubkeyLen + hmacLen
 )
 
 func EncryptedFromBytes(b []byte) *EncryptedData {
@@ -22,8 +22,8 @@ func EncryptedFromBytes(b []byte) *EncryptedData {
 	ret := new(EncryptedData)
 
 	copy(ret.IV[:], b[:ivLen])
-	copy(ret.PublicKey[:], b[ivLen:ivLen + pubkeyLen])
-	copy(ret.CipherText, b[ivLen + pubkeyLen : len(b) - hmacLen])
+	copy(ret.PublicKey[:], b[ivLen:ivLen+pubkeyLen])
+	ret.CipherText = append(ret.CipherText, b[ivLen+pubkeyLen:len(b)-hmacLen]...)
 	copy(ret.HMAC[:], b[len(b)-hmacLen:])
 
 	return ret
@@ -35,5 +35,6 @@ func (e *EncryptedData) GetBytes() []byte {
 	ret = append(ret, e.PublicKey[:]...)
 	ret = append(ret, e.CipherText...)
 	ret = append(ret, e.HMAC[:]...)
+
 	return ret
 }

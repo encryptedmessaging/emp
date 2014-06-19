@@ -1,16 +1,19 @@
 package api
 
 import (
+	"crypto/elliptic"
+	"crypto/sha512"
 	"fmt"
 	zmq "github.com/alecthomas/gozmq"
 	"net"
+	"os/exec"
+	"strongmessage"
+	"strongmessage/db"
+	"strongmessage/encryption"
 	"strongmessage/network"
 	"strongmessage/objects"
-	"strongmessage/db"
 	"testing"
 	"time"
-	"crypto/sha512"
-	"os/exec"
 )
 
 func setup() (chan string, *ApiConfig, *network.PeerList) {
@@ -35,6 +38,7 @@ func setup() (chan string, *ApiConfig, *network.PeerList) {
 	peers := new(network.PeerList)
 
 	go Start(log, config, peers)
+	go strongmessage.BlockingLogger(log)
 
 	return log, config, peers
 }
@@ -130,7 +134,7 @@ func TestPubkey(t *testing.T) {
 
 	addrHash := sha512.Sum384([]byte{'a', 'b', 'c', 'd'})
 	var pubkey [65]byte
-	for i:=0; i<65; i++ {
+	for i := 0; i < 65; i++ {
 		pubkey[i] = 1
 	}
 
@@ -181,6 +185,102 @@ func TestPubkey(t *testing.T) {
 
 	if string(frame.Payload) != string(append(addrHash[:], pubkey[:]...)) {
 		fmt.Println("Error: Incorrect test 6 payload: ", frame.Payload, append(addrHash[:], pubkey[:]...))
+		t.FailNow()
+	}
+
+	cleanup(config, peers)
+}
+
+func TestMsgPurge(t *testing.T) {
+	log, config, peers := setup()
+
+	// Setup Message to send:
+	priv, x, y := encryption.CreateKey(log)
+	pub := elliptic.Marshal(elliptic.P256(), x, y)
+
+	if priv == nil {
+		fmt.Println("Error creating keypair")
+		t.FailNow()
+	}
+
+	address, _ := encryption.GetAddress(log, x, y)
+
+	addrHash := sha512.Sum384(address)
+
+	encData := encryption.Encrypt(log, pub, "Hello    World!")
+	msg := new(objects.Message)
+	msg.AddrHash = addrHash[:]
+	msg.TxidHash = addrHash[:]
+	msg.Timestamp = time.Now().Round(time.Second)
+	msg.Content = *encData
+
+	var frame network.Frame
+
+	// Test 7: Check published message
+	config.RecvChan <- *network.NewFrame("msg", msg.GetBytes(log))
+
+	frame = <-config.SendChan
+
+	if frame.Type != "msg" {
+		fmt.Println("Error: msg not sent back! Type: ", frame.Type)
+		t.FailNow()
+	}
+
+	if string(frame.Payload) != string(msg.GetBytes(log)) {
+		fmt.Println("Incorrect msg sendback payload: ", frame.Payload)
+		t.FailNow()
+	}
+
+	// Test 8: Check getobj
+	config.RepRecv <- *network.NewFrame("getobj", addrHash[:])
+
+	frame = <-config.RepSend
+
+	if frame.Type != "msg" {
+		fmt.Println("Error: could not find msg for response! Type: ", frame.Type)
+		t.FailNow()
+	}
+
+	if string(frame.Payload) != string(msg.GetBytes(log)) {
+		fmt.Println("Incorrect msg getobj response payload. ")
+		fmt.Println("Should be: ", msg)
+
+		test, _ := objects.MessageFromBytes(log, frame.Payload)
+		fmt.Println("Payload was: ", test)
+
+		t.FailNow()
+	}
+
+	// Test 9: Double-Send Protection (tested later)
+	config.RecvChan <- *network.NewFrame("msg", msg.GetBytes(log))
+
+	// Test 10: Test purge
+	config.RecvChan <- *network.NewFrame("purge", address)
+
+	frame = <-config.SendChan
+
+	if frame.Type != "purge" {
+		fmt.Println("Error: incorrect purge sendback, msg double-send test failed! Type: ", frame.Type)
+		t.FailNow()
+	}
+
+	if string(frame.Payload) != string(address) {
+		fmt.Println("Incorrect purge sendback payload: ", frame.Payload)
+		t.FailNow()
+	}
+
+	// Test 11: Another getobj to test the purge
+	config.RepRecv <- *network.NewFrame("getobj", addrHash[:])
+
+	frame = <-config.RepSend
+
+	if frame.Type != "purge" {
+		fmt.Println("Error: incorrect purge sendback, msg double-send test failed! Type: ", frame.Type)
+		t.FailNow()
+	}
+
+	if string(frame.Payload) != string(address) {
+		fmt.Println("Incorrect purge payload: ", frame.Payload)
 		t.FailNow()
 	}
 
