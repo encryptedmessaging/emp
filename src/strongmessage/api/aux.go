@@ -29,8 +29,8 @@ func handleVersion(log chan string, config *ApiConfig, version *objects.Version,
 			return
 		}
 	}
-	peers.Peers = append(peers.Peers, *newPeer)
 	newPeer.Connect(log, config.Context)
+	peers.Peers = append(peers.Peers, *newPeer)
 	config.PeerChan <- *newPeer
 	log <- fmt.Sprintf("New Peer Added: %s", newPeer.TcpString())
 
@@ -64,10 +64,10 @@ func handlePeer(log chan string, config *ApiConfig, newPeers []byte, peers *netw
 		_, ok := peerHash[p.TcpString()]
 		if !ok {
 			peerHash[p.TcpString()] = p
-			peers.Peers = append(peers.Peers, *p)
 
 			// Send Version Request
 			err = p.Connect(log, config.Context)
+			peers.Peers = append(peers.Peers, *p)
 			if err != nil {
 				p.SendRequest(log, frame, config.RecvChan)
 			}

@@ -1,12 +1,12 @@
 package network
 
 import (
+	"encoding/binary"
+	"errors"
 	"fmt"
 	zmq "github.com/alecthomas/gozmq"
 	"net"
 	"time"
-	"encoding/binary"
-	"errors"
 )
 
 const (

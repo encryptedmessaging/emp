@@ -286,3 +286,28 @@ func TestMsgPurge(t *testing.T) {
 
 	cleanup(config, peers)
 }
+
+func TestSubVer(t *testing.T) {
+	log, config, peers := setup()
+
+	// Test 12: Sending Version response, expecting addition to PeerChan
+	version := new(objects.Version)
+	version.Version = uint32(1)
+	version.Timestamp = time.Now()
+	version.IpAddress = net.ParseIP("127.0.0.1")
+	version.Port = 4444
+	version.AdminPort = 4445
+	version.UserAgent = objects.LOCAL_USER
+
+	config.RecvChan <- *network.NewFrame("version", version.GetBytes(log))
+
+	testPeer := new(network.Peer)
+
+	*testPeer = <-config.PeerChan
+	if testPeer.IpAddress.String() != "127.0.0.1" || testPeer.Port != 4444 || testPeer.AdminPort != 4445 {
+		fmt.Println("Error: Test 13 peer info incorrect! ", testPeer)
+		t.FailNow()
+	}
+
+	cleanup(config, peers)
+}
