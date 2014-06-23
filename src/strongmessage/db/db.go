@@ -60,7 +60,7 @@ func Initialize(log chan string, dbFile string) error {
 
 	if hashList == nil {
 		hashList = make(map[string]int)
-		//return populateHashes()
+		return populateHashes()
 	}
 
 	if dbConn == nil || hashList == nil {

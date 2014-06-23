@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"fmt"
 )
 
 func SymmetricEncrypt(key []byte, plainText string) ([aes.BlockSize]byte, []byte, error) {
@@ -24,7 +25,15 @@ func SymmetricEncrypt(key []byte, plainText string) ([aes.BlockSize]byte, []byte
 	plainBytes = append(plainBytes, padding...)
 
 	// Generate AES Cipher
-	block, _ := aes.NewCipher(key)
+
+	if len(key) == 25 {
+		key = append(key, make([]byte, 7, 7)...)
+	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		fmt.Println("Uh Oh: ", err)
+		return IV, nil, err
+	}
 	mode := cipher.NewCBCEncrypter(block, IV[:])
 
 	// Do encryption

@@ -11,14 +11,16 @@ import (
 )
 
 type ApiConfig struct {
-	SendChan  chan network.Frame
-	RecvChan  chan network.Frame
-	RepRecv   chan network.Frame
-	RepSend   chan network.Frame
-	PeerChan  chan network.Peer
-	DBFile    string
-	Context   *zmq.Context
-	LocalPeer *network.Peer
+	SendChan     chan network.Frame
+	RecvChan     chan network.Frame
+	RepRecv      chan network.Frame
+	RepSend      chan network.Frame
+	PeerChan     chan network.Peer
+	DBFile       string
+	LocalDB      string
+	Context      *zmq.Context
+	LocalPeer    *network.Peer
+	LocalVersion *objects.Version
 }
 
 func Start(log chan string, config *ApiConfig, peers *network.PeerList) {
@@ -31,14 +33,7 @@ func Start(log chan string, config *ApiConfig, peers *network.PeerList) {
 	version = new(objects.Version)
 
 	// Create local version with which to connect to peers
-	localVersion := new(objects.Version)
-
-	localVersion.Version = uint32(objects.LOCAL_VERSION)
-	localVersion.UserAgent = objects.LOCAL_USER
-	localVersion.Timestamp = time.Now()
-	localVersion.IpAddress = config.LocalPeer.IpAddress
-	localVersion.Port = config.LocalPeer.Port
-	localVersion.AdminPort = config.LocalPeer.AdminPort
+	localVersion := config.LocalVersion
 
 	frame = network.NewFrame("version", localVersion.GetBytes(log))
 	peers.SendAll(log, frame, config.RecvChan)
@@ -100,7 +95,7 @@ func Start(log chan string, config *ApiConfig, peers *network.PeerList) {
 					continue
 				} else {
 					db.Delete(string(pubHash))
-					encPubkey := make([]byte, 65, 65)
+					encPubkey := make([]byte, 96, 96)
 					copy(encPubkey, frame.Payload[48:])
 					err = db.AddPubkey(log, pubHash, encPubkey)
 					config.SendChan <- *frame

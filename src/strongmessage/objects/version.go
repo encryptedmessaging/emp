@@ -14,12 +14,12 @@ const (
 )
 
 type Version struct {
-	Version   uint32
-	Timestamp time.Time
-	IpAddress net.IP
-	Port      uint16
-	AdminPort uint16
-	UserAgent string
+	Version   uint32 `json:"version"`
+	Timestamp time.Time `json:"timestamp"`
+	IpAddress net.IP `json:"ip_address"`
+	Port      uint16 `json:"port"`
+	AdminPort uint16 `json:"admin_port"`
+	UserAgent string `json:"user_agent"`
 }
 
 func (v *Version) FromBytes(log chan string, data []byte) error {

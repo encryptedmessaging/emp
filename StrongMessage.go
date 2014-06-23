@@ -6,7 +6,10 @@ import (
 	"net"
 	"strongmessage"
 	"strongmessage/api"
+	"strongmessage/local/localapi"
 	"strongmessage/network"
+	"strongmessage/objects"
+	"time"
 )
 
 const (
@@ -17,6 +20,7 @@ func main() {
 	log := make(chan string, 100)
 	port := uint16(5000)
 	repPort := uint16(5001)
+	rpcPort := uint16(8080)
 
 	// Start 0MQ Context
 	context, err := zmq.NewContext()
@@ -83,13 +87,31 @@ func main() {
 	channels.RepSend = repSend
 	channels.PeerChan = peerChan
 	channels.Context = context
-	channels.DBFile = "intentory.db"
+	channels.DBFile = "inventory.db"
+	channels.LocalDB = "local.db"
 
 	// Setup Local Peer
 	channels.LocalPeer = new(network.Peer)
 	channels.LocalPeer.IpAddress = net.ParseIP("0.0.0.0")
 	channels.LocalPeer.Port = port
 	channels.LocalPeer.AdminPort = repPort
+
+	localVersion := new(objects.Version)
+
+	localVersion.Version = uint32(objects.LOCAL_VERSION)
+	localVersion.UserAgent = objects.LOCAL_USER
+	localVersion.Timestamp = time.Now()
+	localVersion.IpAddress = channels.LocalPeer.IpAddress
+	localVersion.Port = channels.LocalPeer.Port
+	localVersion.AdminPort = channels.LocalPeer.AdminPort
+
+	channels.LocalVersion = localVersion
+
+	err = localapi.Initialize(log, channels, rpcPort)
+
+	if err != nil {
+		fmt.Println("Could not start RPC Server: ", err.Error())
+	}
 
 	go api.Start(log, channels, &peers)
 

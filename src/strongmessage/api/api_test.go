@@ -33,6 +33,17 @@ func setup() (chan string, *ApiConfig, *network.PeerList) {
 	config.PeerChan = make(chan network.Peer, 10)
 	config.DBFile = "testdb.db"
 
+	localVersion := new(objects.Version)
+
+	localVersion.Version = uint32(objects.LOCAL_VERSION)
+	localVersion.UserAgent = objects.LOCAL_USER
+	localVersion.Timestamp = time.Now()
+	localVersion.IpAddress = config.LocalPeer.IpAddress
+	localVersion.Port = config.LocalPeer.Port
+	localVersion.AdminPort = config.LocalPeer.AdminPort
+
+	config.LocalVersion = localVersion
+
 	log := make(chan string, 100)
 
 	peers := new(network.PeerList)
@@ -132,7 +143,7 @@ func TestVersionPeer(t *testing.T) {
 func TestPubkey(t *testing.T) {
 	_, config, peers := setup()
 
-	addrHash := sha512.Sum384([]byte{'a', 'b', 'c', 'd'})
+	addrHash := sha512.Sum384(make([]byte, 25, 25))
 	var pubkey [65]byte
 	for i := 0; i < 65; i++ {
 		pubkey[i] = 1
@@ -159,7 +170,10 @@ func TestPubkey(t *testing.T) {
 	config.RecvChan <- *network.NewFrame("pubkeyrq", addrHash[:])
 
 	// Test 5: Public Key
-	config.RecvChan <- *network.NewFrame("pubkey", append(addrHash[:], pubkey[:]...))
+	IV, pubkeyCipher, _ := encryption.SymmetricEncrypt(make([]byte, 25, 25), string(pubkey[:]))
+
+	// Record Pubkey for Network
+	config.RecvChan <- *network.NewFrame("pubkey", append(addrHash[:], append(IV[:], pubkeyCipher...)...))
 
 	frame = <-config.SendChan
 
@@ -168,8 +182,8 @@ func TestPubkey(t *testing.T) {
 		t.FailNow()
 	}
 
-	if string(frame.Payload) != string(append(addrHash[:], pubkey[:]...)) {
-		fmt.Println("Error: Incorrect test 5 payload: ", frame.Payload, append(addrHash[:], pubkey[:]...))
+	if string(frame.Payload) != string(append(addrHash[:], append(IV[:], pubkeyCipher...)...)) {
+		fmt.Println("Error: Incorrect test 5 payload: ", frame.Payload, append(addrHash[:], append(IV[:], pubkeyCipher...)...))
 		t.FailNow()
 	}
 
@@ -183,8 +197,8 @@ func TestPubkey(t *testing.T) {
 		t.FailNow()
 	}
 
-	if string(frame.Payload) != string(append(addrHash[:], pubkey[:]...)) {
-		fmt.Println("Error: Incorrect test 6 payload: ", frame.Payload, append(addrHash[:], pubkey[:]...))
+	if string(frame.Payload) != string(append(addrHash[:], append(IV[:], pubkeyCipher...)...)) {
+		fmt.Println("Error: Incorrect test 6 payload: ", frame.Payload, append(addrHash[:], append(IV[:], pubkeyCipher...)...))
 		t.FailNow()
 	}
 
