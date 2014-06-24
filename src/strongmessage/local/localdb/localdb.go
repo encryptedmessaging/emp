@@ -31,7 +31,7 @@ func Initialize(log chan string, dbFile string) error {
 		return err
 	}
 
-	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS msg (txid_hash BLOB NOT NULL UNIQUE, encrypted BLOB, decrypted BLOB, PRIMARY KEY (txid_hash) ON CONFLICT REPLACE)")
+	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS msg (txid_hash BLOB NOT NULL, encrypted BLOB, decrypted BLOB, purged INTEGER, PRIMARY KEY (txid_hash) ON CONFLICT REPLACE)")
 	if err != nil {
 		log <- fmt.Sprintf("Error setting up msg schema... %s", err)
 		LocalDB = nil

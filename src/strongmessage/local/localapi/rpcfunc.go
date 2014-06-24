@@ -98,6 +98,18 @@ func (service *StrongService) AddUpdateAddress(r *http.Request, args *ShortAddre
 	hashArr := sha512.Sum384(address)
 	hash := hashArr[:]
 
+	// Check Address
+	if len(address) != 25 {
+		return errors.New("Invalid Address: Incorrect Length")
+	}
+
+	sum := sha512.Sum384(address[:21])
+	sum = sha512.Sum384(sum[:])
+
+	if string(sum[:4]) != string(address[21:]) {
+		return errors.New("Invalid Address: Bad Checksum")
+	}
+
 	// Check that pubkey matches address
 	if args.Pubkey != nil {
 		x, y := elliptic.Unmarshal(elliptic.P256(), args.Pubkey)
@@ -109,6 +121,10 @@ func (service *StrongService) AddUpdateAddress(r *http.Request, args *ShortAddre
 			return errors.New("Public Key doesn't match provided address!")
 		}
 	}
+
+	// Record Public Key for Network
+	IV, pubkeyCipher, _ := encryption.SymmetricEncrypt(address, string(args.Pubkey))
+	service.Config.RecvChan <- *network.NewFrame("pubkey", append(hash, append(IV[:], pubkeyCipher...)...))
 
 
 	hashType := localdb.Contains(string(hash))

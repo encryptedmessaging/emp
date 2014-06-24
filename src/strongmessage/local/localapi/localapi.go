@@ -57,36 +57,45 @@ func Initialize(log chan string, config *api.ApiConfig, port uint16) error {
 }
 
 func getPubkey(log chan string, config *api.ApiConfig, addrHash []byte, address []byte) []byte {
-	if db.Contains(string(addrHash)) == db.PUBKEY {
-		payload, _ := db.GetPubkey(log, addrHash)
-		if payload != nil {
-			var IV [16]byte
-			for i := 0; i < 16; i++ {
-				IV[i] = payload[i]
-			}
-			pubkey := encryption.SymmetricDecrypt(IV, address, payload[16:])
+	payload := make([]byte, 0, 90)
 
-			// Check public Key
-			x, y := elliptic.Unmarshal(elliptic.P256(), pubkey)
-			if x == nil {
-				log <- "Decrypted Public Key Invalid"
-				return nil
-			}
-			address2, _ := encryption.GetAddress(log, x, y)
-			if string(address) != string(address2) {
-				log <- "Decrypted Public Key doesn't match provided address!"
-				return nil
-			}
-
-			// Add public key to local db
-			err := localdb.LocalDB.Exec("UPDATE addressbook SET pubkey=? WHERE hash=?", pubkey, addrHash)
-			if err != nil {
-				log <- fmt.Sprintf("Error updating pubkey in localdb... %s", err)
-				return pubkey
-			}
-
-			return pubkey
+	for s, err := localdb.LocalDB.Query("SELECT pubkey FROM addressbook WHERE hash=?", addrHash); err == nil; err = s.Next() {
+		s.Scan(&payload)
+		if len(payload) > 0 {
+			return payload
 		}
+	}
+
+	if db.Contains(string(addrHash)) == db.PUBKEY {
+		payload, _ = db.GetPubkey(log, addrHash)
+	}
+
+	if len(payload) > 0 {
+		var IV [16]byte
+		for i := 0; i < 16; i++ {
+			IV[i] = payload[i]
+		}
+		pubkey := encryption.SymmetricDecrypt(IV, address, payload[16:])
+
+		// Check public Key
+		x, y := elliptic.Unmarshal(elliptic.P256(), pubkey)
+		if x == nil {
+			log <- "Decrypted Public Key Invalid"
+			return nil
+		}
+
+		address2, _ := encryption.GetAddress(log, x, y)
+		if string(address) != string(address2) {
+			log <- "Decrypted Public Key doesn't match provided address!"
+			return nil
+		}
+
+		// Add public key to local db
+		err := localdb.LocalDB.Exec("UPDATE addressbook SET pubkey=? WHERE hash=?", pubkey, addrHash)
+		if err != nil {
+			log <- fmt.Sprintf("Error updating pubkey in localdb... %s", err)
+		}
+		return pubkey
 	}
 
 	config.RecvChan <- *network.NewFrame("pubkeyrq", addrHash)
