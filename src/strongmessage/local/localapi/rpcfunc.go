@@ -154,3 +154,21 @@ func (service *StrongService) AddUpdateAddress(r *http.Request, args *ShortAddre
 		return errors.New("Hash appears to be a Message TXID...")
 	}
 }
+
+func (service *StrongService) ListAddresses(r *http.Request, args *bool, reply *([]ShortAddress)) error {
+
+	for s, err := localdb.LocalDB.Query("SELECT address, registered, pubkey, privkey FROM addressbook"); err == nil; err = s.Next() {
+		sa := new(ShortAddress)
+		addr := make([]byte, 25, 25)
+		s.Scan(&addr, &sa.IsRegistered, &sa.Pubkey, &sa.Privkey) // Assigns 1st column to rowid, the rest to row
+		sa.Address = "1" + base64.StdEncoding.EncodeToString(addr[1:])
+		if args != nil {
+			if *args != sa.IsRegistered {
+				continue
+			}
+		}
+		*reply = append(*reply, *sa)
+	}
+
+	return nil
+}
