@@ -76,10 +76,81 @@ func (service *StrongService) GetAddress(r *http.Request, args *string, reply *L
 	for s, err := localdb.LocalDB.Query("SELECT registered, pubkey, privkey FROM addressbook WHERE hash=?", reply.Hash); err == nil; err = s.Next() {
 		s.Scan(&reply.IsRegistered, &reply.Pubkey, &reply.Privkey) // Assigns 1st column to rowid, the rest to row
 		if len(reply.Pubkey) == 0 {
-			service.Config.RecvChan <- *network.NewFrame("pubkeyrq", reply.Hash)
+			reply.Pubkey = getPubkey(service.Log, service.Config, reply.Hash, reply.Address)
 		}
 		return nil
 	}
 
 	return err
+}
+
+
+
+func (service *StrongService) AddUpdateAddress(r *http.Request, args *ShortAddress, reply *NilParam) error {
+	halfaddr, err := base64.StdEncoding.DecodeString(args.Address[1:])
+	if err != nil {
+		return err
+	}
+	address := make([]byte, 1, 1)
+	address[0] = 0x01
+	address = append(address, halfaddr...)
+
+	hashArr := sha512.Sum384(address)
+	hash := hashArr[:]
+
+	// Check that pubkey matches address
+	if args.Pubkey != nil {
+		x, y := elliptic.Unmarshal(elliptic.P256(), args.Pubkey)
+		if x == nil {
+			return errors.New("Public Key Invalid")
+		}
+		address2, _ := encryption.GetAddress(service.Log, x, y)
+		if string(address) != string(address2) {
+			return errors.New("Public Key doesn't match provided address!")
+		}
+	}
+
+
+	hashType := localdb.Contains(string(hash))
+	switch hashType {
+	case localdb.NOTFOUND:
+		// Insert new address
+		err := localdb.LocalDB.Exec("INSERT INTO addressbook VALUES (?, ?, ?, ?, ?)", hash, address, args.IsRegistered, args.Pubkey, args.Privkey)
+		if err != nil {
+			service.Log <- fmt.Sprintf("Error inserting address into localdb... %s", err)
+			return err
+		}
+		localdb.Add(string(hash), localdb.ADDRESS)
+		if args.Pubkey == nil {
+			args.Pubkey = getPubkey(service.Log, service.Config, hash, address)
+		}
+		return nil
+	case localdb.ADDRESS:
+		// Update Address in database
+		err := localdb.LocalDB.Exec("UPDATE addressbook SET registered=? WHERE hash=?", args.IsRegistered, hash)
+		if err != nil {
+			service.Log <- fmt.Sprintf("Error updating address in localdb... %s", err)
+			return err
+		}
+
+		if args.Pubkey != nil {
+			err = localdb.LocalDB.Exec("UPDATE addressbook SET pubkey=? WHERE hash=?", args.Pubkey, hash)
+			if err != nil {
+				service.Log <- fmt.Sprintf("Error updating pubkey in localdb... %s", err)
+				return err
+			}
+		}
+
+		if args.Privkey != nil {
+			err = localdb.LocalDB.Exec("UPDATE addressbook SET privkey=? WHERE hash=?", args.Privkey, hash)
+			if err != nil {
+				service.Log <- fmt.Sprintf("Error updating privkey in localdb... %s", err)
+				return err
+			}
+		}
+
+		return nil
+	default:
+		return errors.New("Hash appears to be a Message TXID...")
+	}
 }

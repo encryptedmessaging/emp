@@ -21,3 +21,10 @@ type LocalAddress struct {
 	Pubkey       []byte `json:"pubkey"`
 	Privkey      []byte `json:"privkey"`
 }
+
+type ShortAddress struct {
+	Address string `json:"address"`
+	IsRegistered bool `json:"registered"`
+	Pubkey []byte `json:"pubkey"`
+	Privkey []byte `json:"privkey"`
+}

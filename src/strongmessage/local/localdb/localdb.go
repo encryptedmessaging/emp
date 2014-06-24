@@ -75,24 +75,24 @@ func populateHashes() error {
 
 	for s, err := LocalDB.Query("SELECT txid_hash FROM inbox"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = INBOX
 	}
 
 	for s, err := LocalDB.Query("SELECT txid_hash FROM outbox"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = OUTBOX
 	}
 
 	for s, err := LocalDB.Query("SELECT txid_hash FROM sendbox"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = SENDBOX
 	}
 	for s, err := LocalDB.Query("SELECT hash FROM addressbook"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = ADDRESS
 	}
 

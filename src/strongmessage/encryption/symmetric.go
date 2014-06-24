@@ -46,6 +46,10 @@ func SymmetricEncrypt(key []byte, plainText string) ([aes.BlockSize]byte, []byte
 func SymmetricDecrypt(IV [aes.BlockSize]byte, key, cipherText []byte) []byte {
 	plainText := make([]byte, len(cipherText), len(cipherText))
 
+	if len(key) == 25 {
+		key = append(key, make([]byte, 7, 7)...)
+	}
+
 	// Generate AES Cipher
 	block, _ := aes.NewCipher(key)
 	mode := cipher.NewCBCDecrypter(block, IV[:])
