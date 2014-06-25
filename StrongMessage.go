@@ -87,6 +87,8 @@ func main() {
 	channels.RepSend = repSend
 	channels.PeerChan = peerChan
 	channels.Context = context
+	channels.PubkeyRegister = make(chan []byte, bufLen)
+	channels.MessageRegister = make(chan objects.Message, bufLen)
 	channels.DBFile = "inventory.db"
 	channels.LocalDB = "local.db"
 

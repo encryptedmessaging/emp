@@ -192,3 +192,4 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 	reply.TxidHash = msg.TxidHash
 	return nil
 }
+

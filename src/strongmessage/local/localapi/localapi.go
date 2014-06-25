@@ -135,7 +135,26 @@ func register(log chan string, config *api.ApiConfig) {
 			}
 
 			// Check registration, then store message in inbox
-
+			s, err := localdb.LocalDB.Query("SELECT registered, address from addressbook WHERE hash=?", message.AddrHash)
+			if err != nil {
+				break
+			}
+			var recipient []byte
+			var isRegistered bool
+			s.Scan(&isRegistered, &recipient)
+			if !isRegistered {
+				break
+			}
+			err = localdb.LocalDB.Exec("INSERT INTO msg VALUES(?, ?, NULL, 0)", message.TxidHash, message.Content.GetBytes())
+			if err != nil {
+				log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
+				break
+			}
+			err = localdb.LocalDB.Exec("INSERT INTO inbox VALUES(?, ?, NULL, ?)", message.TxidHash, message.Timestamp.Unix(), recipient)
+			if err != nil {
+				log <- fmt.Sprintf("Error updating local inbox database... %s", err.Error())
+				break
+			}
 		}
 	}
 }
