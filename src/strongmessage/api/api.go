@@ -16,6 +16,8 @@ type ApiConfig struct {
 	RepRecv      chan network.Frame
 	RepSend      chan network.Frame
 	PeerChan     chan network.Peer
+	PubkeyRegister chan []byte
+	MessageRegister chan objects.Message
 	DBFile       string
 	LocalDB      string
 	Context      *zmq.Context
@@ -98,6 +100,7 @@ func Start(log chan string, config *ApiConfig, peers *network.PeerList) {
 					encPubkey := make([]byte, 96, 96)
 					copy(encPubkey, frame.Payload[48:])
 					err = db.AddPubkey(log, pubHash, encPubkey)
+					config.PubkeyRegister <- pubHash
 					config.SendChan <- *frame
 				}
 			case "msg":
@@ -112,6 +115,7 @@ func Start(log chan string, config *ApiConfig, peers *network.PeerList) {
 				if hashType == db.NOTFOUND {
 					config.SendChan <- *frame
 					err = db.AddMessage(log, &msg)
+					config.MessageRegister <- msg
 				}
 			case "purge":
 				// Received purge request

@@ -122,9 +122,7 @@ func (service *StrongService) AddUpdateAddress(r *http.Request, args *ShortAddre
 		}
 	}
 
-	// Record Public Key for Network
-	IV, pubkeyCipher, _ := encryption.SymmetricEncrypt(address, string(args.Pubkey))
-	service.Config.RecvChan <- *network.NewFrame("pubkey", append(hash, append(IV[:], pubkeyCipher...)...))
+	
 
 
 	hashType := localdb.Contains(string(hash))
@@ -155,6 +153,9 @@ func (service *StrongService) AddUpdateAddress(r *http.Request, args *ShortAddre
 				service.Log <- fmt.Sprintf("Error updating pubkey in localdb... %s", err)
 				return err
 			}
+			// Record Public Key for Network
+			IV, pubkeyCipher, _ := encryption.SymmetricEncrypt(address, string(args.Pubkey))
+			service.Config.RecvChan <- *network.NewFrame("pubkey", append(hash, append(IV[:], pubkeyCipher...)...))
 		}
 
 		if args.Privkey != nil {
