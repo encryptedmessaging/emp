@@ -18,9 +18,9 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) *objects.Enc
 	PubX, PubY := elliptic.P256().ScalarMult(X2, Y2, D1)
 
 	// Generate Pubkey hashes
-	PubHash := sha512.Sum384(elliptic.Marshal(elliptic.P256(), PubX, PubY))
-	PubHash_E := PubHash[:24]
-	PubHash_M := PubHash[24:48]
+	PubHash := sha512.Sum512(elliptic.Marshal(elliptic.P256(), PubX, PubY))
+	PubHash_E := PubHash[:32]
+	PubHash_M := PubHash[32:64]
 
 	IV, cipherText, _ := SymmetricEncrypt(PubHash_E, plainText)
 
@@ -58,9 +58,9 @@ func Decrypt(log chan string, privKey []byte, encrypted *objects.EncryptedData) 
 	PubX, PubY := elliptic.P256().ScalarMult(X2, Y2, privKey)
 
 	// Generate Pubkey hashes
-	PubHash := sha512.Sum384(elliptic.Marshal(elliptic.P256(), PubX, PubY))
-	PubHash_E := PubHash[:24]
-	PubHash_M := PubHash[24:48]
+	PubHash := sha512.Sum512(elliptic.Marshal(elliptic.P256(), PubX, PubY))
+	PubHash_E := PubHash[:32]
+	PubHash_M := PubHash[32:64]
 
 	// Check HMAC
 	if !checkMAC(encrypted.CipherText[:], encrypted.HMAC[:], PubHash_M) {
