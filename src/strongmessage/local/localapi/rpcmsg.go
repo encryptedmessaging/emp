@@ -162,7 +162,7 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 	} else {
 		// Send message and add to sendbox...
 
-		msg.Encrypted = encryption.Encrypt(service.Log, pubkey, string(msg.Decrypted.Data))
+		msg.Encrypted = encryption.Encrypt(service.Log, pubkey, string(msg.Decrypted.GetBytes()))
 
 		err = localdb.LocalDB.Exec("INSERT INTO msg VALUES (?, ?, ?, ?)", msg.TxidHash, msg.Encrypted.GetBytes(), msg.Decrypted.GetBytes(), msg.IsPurged)
 		if err != nil {
@@ -288,6 +288,7 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 				privkey := make([]byte, 0, 0)
 				s2.Scan(&privkey)
 				reply.Decrypted = objects.DecryptedFromBytes(encryption.Decrypt(service.Log, privkey, reply.Encrypted))
+				fmt.Println(encryption.Decrypt(service.Log, privkey, reply.Encrypted))
 				if reply.Decrypted != nil {
 					// Decryption Successful! Update Databases and Purge
 					err = localdb.LocalDB.Exec("UPDATE msg SET decrypted=?, purged=? WHERE txid_hash=?", reply.Decrypted.GetBytes(), reply.IsPurged, reply.TxidHash)

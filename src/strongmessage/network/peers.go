@@ -93,7 +93,6 @@ func (p *Peer) Disconnect() {
 
 func (p *Peer) SendRequest(log chan string, frame *Frame, recvChannel chan Frame) bool {
 	if p.socket == nil {
-		fmt.Println("UH OH!")
 		return false
 	}
 

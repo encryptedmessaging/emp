@@ -180,6 +180,7 @@ func getPubkey(log chan string, config *api.ApiConfig, addrHash, address []byte)
 			IV[i] = payload[i]
 		}
 		pubkey := encryption.SymmetricDecrypt(IV, address, payload[16:])
+		pubkey = pubkey[:65]
 
 		// Check public Key
 		x, y := elliptic.Unmarshal(elliptic.P256(), pubkey)
