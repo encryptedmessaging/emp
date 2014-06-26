@@ -59,7 +59,7 @@ func main() {
 	defer sendSocket.Close()
 
 	// Start Reply Server
-	check, repSocket := network.RepServer(repPort, log, repRecv, repSend, context)
+	check, repSocket := network.RepServer(repPort, log, repSend, repRecv, context)
 	if !check {
 		fmt.Println("Could not start reply server.")
 		return
@@ -94,7 +94,7 @@ func main() {
 
 	// Setup Local Peer
 	channels.LocalPeer = new(network.Peer)
-	channels.LocalPeer.IpAddress = net.ParseIP("10.50.10.109")
+	channels.LocalPeer.IpAddress = net.ParseIP("127.0.0.1")
 	channels.LocalPeer.Port = port
 	channels.LocalPeer.AdminPort = repPort
 

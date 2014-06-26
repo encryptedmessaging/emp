@@ -105,7 +105,6 @@ func (p *Peer) SendRequest(log chan string, frame *Frame, recvChannel chan Frame
 			log <- err.Error()
 			return
 		}
-
 		data, err := p.socket.Recv(0)
 
 		if err != nil {
