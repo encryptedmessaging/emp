@@ -26,6 +26,8 @@ func handleVersion(log chan string, config *ApiConfig, version *objects.Version,
 		if peer.TcpString() == newPeer.TcpString() {
 			peer.LastSeen = newPeer.LastSeen
 			log <- fmt.Sprintf("Peer %s updated", peer.TcpString())
+			config.PeerChan <- *newPeer
+			newPeer.SendRequest(log, frame, config.RecvChan)
 			return
 		}
 	}

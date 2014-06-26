@@ -18,7 +18,9 @@ func Subscription(log chan string, frameChannel chan Frame, peerChannel chan Pee
 	go func() {
 		var err error
 		for {
+			log <- "Listening for peers..."
 			peer := <-peerChannel
+			log <- fmt.Sprintf("Subscribing to peer: %s", peer.TcpString())
 			err = socket.Connect(peer.TcpString())
 			if err != nil {
 				log <- fmt.Sprintf("Error subscribing to peer...%s; %s", peer.TcpString(), err.Error())
