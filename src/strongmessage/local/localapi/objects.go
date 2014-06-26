@@ -15,6 +15,12 @@ type LocalMessage struct {
 	Decrypted *objects.MessageUnencrypted
 }
 
+type MetaMessage struct {
+	TxidHash []byte
+	Timestamp time.Time
+	Sender string
+	Recipient string
+}
 
 // Address Objects
 type LocalAddress struct {

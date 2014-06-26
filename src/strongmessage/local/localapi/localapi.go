@@ -155,6 +155,7 @@ func register(log chan string, config *api.ApiConfig) {
 				log <- fmt.Sprintf("Error updating local inbox database... %s", err.Error())
 				break
 			}
+			localdb.Add(string(message.TxidHash), localdb.INBOX)
 		}
 	}
 }

@@ -47,6 +47,10 @@ func checkMAC(message, messageMAC, key []byte) bool {
 }
 
 func Decrypt(log chan string, privKey []byte, encrypted *objects.EncryptedData) []byte {
+	if encrypted == nil  || privKey == nil || log == nil{
+		return nil
+	}
+
 	// Unmarshal the Sender's Pubkey
 	X2, Y2 := elliptic.Unmarshal(elliptic.P256(), encrypted.PublicKey[:])
 

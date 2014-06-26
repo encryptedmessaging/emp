@@ -193,3 +193,122 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 	return nil
 }
 
+func (service *StrongService) Inbox(r *http.Request, args *NilParam, reply *[]MetaMessage) error {
+	for s, err := localdb.LocalDB.Query("SELECT * FROM inbox"); err == nil; err = s.Next() {
+		msg := new(MetaMessage)
+		sender := make([]byte, 0, 25)
+		recipient := make([]byte, 0, 25)
+		var timestamp int64
+		s.Scan(&msg.TxidHash, &timestamp, &sender, &recipient)
+		msg.Timestamp = time.Unix(timestamp, 0)
+		if len(sender) == 25 {
+			msg.Sender = "1" + base64.StdEncoding.EncodeToString(sender[1:])
+		}
+		if len(recipient) == 25 {
+			msg.Recipient = "1" + base64.StdEncoding.EncodeToString(recipient[1:])
+		}
+		*reply = append(*reply, *msg)
+	}
+	return nil
+}
+
+func (service *StrongService) Outbox(r *http.Request, args *NilParam, reply *[]MetaMessage) error {
+	for s, err := localdb.LocalDB.Query("SELECT * FROM outbox"); err == nil; err = s.Next() {
+		msg := new(MetaMessage)
+		sender := make([]byte, 0, 25)
+		recipient := make([]byte, 0, 25)
+		var timestamp int64
+		s.Scan(&msg.TxidHash, &timestamp, &sender, &recipient)
+		msg.Timestamp = time.Unix(timestamp, 0)
+		if len(sender) == 25 {
+			msg.Sender = "1" + base64.StdEncoding.EncodeToString(sender[1:])
+		}
+		if len(recipient) == 25 {
+			msg.Recipient = "1" + base64.StdEncoding.EncodeToString(recipient[1:])
+		}
+		*reply = append(*reply, *msg)
+	}
+	return nil
+}
+
+func (service *StrongService) Sendbox(r *http.Request, args *NilParam, reply *[]MetaMessage) error {
+	for s, err := localdb.LocalDB.Query("SELECT * FROM sendbox"); err == nil; err = s.Next() {
+		msg := new(MetaMessage)
+		sender := make([]byte, 0, 25)
+		recipient := make([]byte, 0, 25)
+		var timestamp int64
+		s.Scan(&msg.TxidHash, &timestamp, &sender, &recipient)
+		msg.Timestamp = time.Unix(timestamp, 0)
+		if len(sender) == 25 {
+			msg.Sender = "1" + base64.StdEncoding.EncodeToString(sender[1:])
+		}
+		if len(recipient) == 25 {
+			msg.Recipient = "1" + base64.StdEncoding.EncodeToString(recipient[1:])
+		}
+		*reply = append(*reply, *msg)
+	}
+	return nil
+}
+
+func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *LocalMessage) error {
+	reply.TxidHash = *args
+	if len(reply.TxidHash) != 48 {
+		return errors.New("Invalid Txid for message!")
+	}
+	sql := "SELECT * FROM %s INNNER JOIN msg ON %s.txid_hash=msg.txid_hash WHERE msg.txid_hash=?"
+	var table string
+
+	switch localdb.Contains(string(reply.TxidHash)) {
+	case localdb.INBOX:
+		table = "inbox"
+	case localdb.SENDBOX:
+		table = "outbox"
+	case localdb.OUTBOX:
+		table = "sendbox"
+	default:
+		return errors.New("Message not found!")
+	}
+	sql = fmt.Sprintf(sql, table, table)
+
+	fmt.Println(sql)
+	for s, err := localdb.LocalDB.Query(sql, reply.TxidHash); err == nil; err = s.Next() {
+		fmt.Println("Yay!")
+		sender := make([]byte, 0, 25)
+		recipient := make([]byte, 0, 25)
+		enc := make([]byte, 0, 0)
+		dec := make([]byte, 0, 0)
+		var timestamp int64
+		s.Scan(&reply.TxidHash, &timestamp, &sender, &recipient, &enc, &dec, &reply.IsPurged)
+		reply.Timestamp = time.Unix(timestamp, 0)
+		addrArr := sha512.Sum384(recipient)
+		reply.AddrHash = addrArr[:]
+		reply.Encrypted = objects.EncryptedFromBytes(enc)
+		reply.Decrypted = objects.DecryptedFromBytes(dec)
+		if reply.Decrypted == nil {
+			// Attempt to decrypt message, purge if successful
+			s2, err := localdb.LocalDB.Query("SELECT privkey FROM addressbook WHERE hash=?", reply.AddrHash)
+			if err == nil {
+				privkey := make([]byte, 0, 0)
+				s2.Scan(&privkey)
+				reply.Decrypted = objects.DecryptedFromBytes(encryption.Decrypt(service.Log, privkey, reply.Encrypted))
+				if reply.Decrypted != nil {
+					// Decryption Successful! Update Databases and Purge
+					err = localdb.LocalDB.Exec("UPDATE msg SET decrypted=?, purged=? WHERE txid_hash=?", reply.Decrypted.GetBytes(), reply.IsPurged, reply.TxidHash)
+					if err != nil {
+						service.Log <- fmt.Sprintf("OpenMessage(): Error Updating msg Database... %s", err.Error())
+						return err
+					}
+					err = localdb.LocalDB.Exec("UPDATE ? SET sender=? WHERE txid_hash=?", table, reply.Decrypted.SendAddr, reply.TxidHash)
+					if err != nil {
+						service.Log <- fmt.Sprintf("OpenMessage(): Error Updating %s database... %s", table, err.Error())
+						return err
+					}
+					service.Config.RecvChan <- *network.NewFrame("purge", reply.Decrypted.Txid)
+					return nil
+				}
+			}
+		}
+		return nil
+	}
+	return errors.New("Message not found!")
+}
