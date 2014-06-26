@@ -94,7 +94,7 @@ func main() {
 
 	// Setup Local Peer
 	channels.LocalPeer = new(network.Peer)
-	channels.LocalPeer.IpAddress = net.ParseIP("0.0.0.0")
+	channels.LocalPeer.IpAddress = net.ParseIP("10.50.10.109")
 	channels.LocalPeer.Port = port
 	channels.LocalPeer.AdminPort = repPort
 
