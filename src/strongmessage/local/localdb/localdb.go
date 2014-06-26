@@ -73,12 +73,6 @@ func Initialize(log chan string, dbFile string) error {
 
 func populateHashes() error {
 
-	for s, err := LocalDB.Query("SELECT txid_hash FROM inbox"); err == nil; err = s.Next() {
-		var hash []byte
-		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
-		hashList[string(hash)] = INBOX
-	}
-
 	for s, err := LocalDB.Query("SELECT txid_hash FROM outbox"); err == nil; err = s.Next() {
 		var hash []byte
 		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
@@ -94,6 +88,12 @@ func populateHashes() error {
 		var hash []byte
 		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = ADDRESS
+	}
+
+	for s, err := LocalDB.Query("SELECT txid_hash FROM inbox"); err == nil; err = s.Next() {
+		var hash []byte
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
+		hashList[string(hash)] = INBOX
 	}
 
 	return nil

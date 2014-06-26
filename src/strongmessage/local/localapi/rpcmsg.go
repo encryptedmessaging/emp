@@ -255,30 +255,27 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 	if len(reply.TxidHash) != 48 {
 		return errors.New("Invalid Txid for message!")
 	}
-	sql := "SELECT * FROM %s INNNER JOIN msg ON %s.txid_hash=msg.txid_hash WHERE msg.txid_hash=?"
+	sql := "SELECT timestamp, recipient, encrypted, decrypted, purged FROM %s INNER JOIN msg ON %s.txid_hash=msg.txid_hash WHERE msg.txid_hash=?"
 	var table string
 
 	switch localdb.Contains(string(reply.TxidHash)) {
 	case localdb.INBOX:
 		table = "inbox"
 	case localdb.SENDBOX:
-		table = "outbox"
-	case localdb.OUTBOX:
 		table = "sendbox"
+	case localdb.OUTBOX:
+		table = "outbox"
 	default:
 		return errors.New("Message not found!")
 	}
 	sql = fmt.Sprintf(sql, table, table)
 
-	fmt.Println(sql)
 	for s, err := localdb.LocalDB.Query(sql, reply.TxidHash); err == nil; err = s.Next() {
-		fmt.Println("Yay!")
-		sender := make([]byte, 0, 25)
 		recipient := make([]byte, 0, 25)
 		enc := make([]byte, 0, 0)
 		dec := make([]byte, 0, 0)
 		var timestamp int64
-		s.Scan(&reply.TxidHash, &timestamp, &sender, &recipient, &enc, &dec, &reply.IsPurged)
+		s.Scan(&timestamp, &recipient, &enc, &dec, &reply.IsPurged)
 		reply.Timestamp = time.Unix(timestamp, 0)
 		addrArr := sha512.Sum384(recipient)
 		reply.AddrHash = addrArr[:]
@@ -298,7 +295,8 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 						service.Log <- fmt.Sprintf("OpenMessage(): Error Updating msg Database... %s", err.Error())
 						return err
 					}
-					err = localdb.LocalDB.Exec("UPDATE ? SET sender=? WHERE txid_hash=?", table, reply.Decrypted.SendAddr, reply.TxidHash)
+					sql2 := fmt.Sprintf("UPDATE %s SET sender=? WHERE txid_hash=?", table)
+					err = localdb.LocalDB.Exec(sql2, reply.Decrypted.SendAddr, reply.TxidHash)
 					if err != nil {
 						service.Log <- fmt.Sprintf("OpenMessage(): Error Updating %s database... %s", table, err.Error())
 						return err
