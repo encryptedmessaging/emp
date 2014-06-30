@@ -2,101 +2,51 @@ package objects
 
 import (
 	"bytes"
-	"encoding/gob"
 	"encoding/binary"
 	"time"
+	"errors"
+	"strongmessage/encryption"
 )
 
 type Message struct {
-	AddrHash  []byte
-	TxidHash  []byte
+	AddrHash  Hash
+	TxidHash  Hash
 	Timestamp time.Time
-	Content   EncryptedData
-}
-
-// Lets allow for multiple datatypes even if we don't support them in the first
-// itteration.
-type MessageUnencrypted struct {
-	Txid      []byte
-	SendAddr  []byte
-	Timestamp time.Time
-	DataType  string
-	Data      []byte
-	Signature []byte
+	Content   encryption.EncryptedMessage
 }
 
 const (
-	unMinLen = 16+25+8
+	msgLen = 2*hashLen + 8
 )
 
-func MessageFromBytes(log chan string, data []byte) (Message, error) {
+func (m *Message) FromBytes(data []byte) error {
+	if len(data) < msgLen {
+		return errors.New("Data too short to create message!")
+	}
+	if m == nil {
+		return errors.New("Can't fill nil Message object!")
+	}
 	buffer := bytes.NewBuffer(data)
-	decoder := gob.NewDecoder(buffer)
-	var message Message
-	err := decoder.Decode(&message)
-	if err != nil {
-		log <- "Decoding error."
-		log <- err.Error()
-		return Message{}, err
-	} else {
-		return message, nil
-	}
-
-}
-
-func (m *Message) GetBytes(log chan string) []byte {
-	var buffer bytes.Buffer
-	gob.Register(Message{})
-	enc := gob.NewEncoder(&buffer)
-	err := enc.Encode(&m)
-	if err != nil {
-		log <- "Encoding error!"
-		log <- err.Error()
-		return nil
-	} else {
-		return buffer.Bytes()
-	}
-}
-
-func DecryptedFromBytes(b []byte) *MessageUnencrypted {
-	if len(b) < unMinLen {
-		return nil
-	}
-
-	ret := new(MessageUnencrypted)
-
-	ret.Txid = append(ret.Txid, b[:16]...)
-	ret.SendAddr = append(ret.SendAddr, b[16:16+25]...)
-	ret.Timestamp = time.Unix(int64(binary.BigEndian.Uint64(b[16+25:unMinLen])), 0)
-
-	for i := unMinLen; i < len(b); i++ {
-		if b[i] == 0x00 {
-			typeStr := make([]byte, i - (unMinLen), i - (unMinLen))
-			copy(typeStr, b[unMinLen:i])
-			ret.DataType = string(typeStr)
-			ret.Data = append(ret.Data, b[i:len(b)-65]...)
-			ret.Signature = append(ret.Signature, b[len(b)-65:]...)
-			return ret
-		}
-	}
+	m.AddrHash.FromBytes(buffer.Next(hashLen))
+	m.TxidHash.FromBytes(buffer.Next(hashLen))
+	m.Timestamp = time.Unix(int64(binary.BigEndian.Uint64(buffer.Next(8))), 0)
+	m.Content.FromBytes(buffer.Bytes())
 
 	return nil
+
 }
 
-func (e *MessageUnencrypted) GetBytes() []byte {
-	ret := make([]byte, 0, 0)
-	ret = append(ret, e.Txid...)
-	ret = append(ret, e.SendAddr...)
+func (m *Message) GetBytes() []byte {
+	if m == nil {
+		return nil
+	}
 
-	timestmp := make([]byte, 8, 8)
-	binary.BigEndian.PutUint64(timestmp, uint64(e.Timestamp.Unix()))
-	ret = append(ret, timestmp...)
-
-	ret = append(ret, e.DataType...)
-	ret = append(ret, 0x00)
-
-	ret = append(ret, e.Data...)
-	ret = append(ret, e.Signature...)
-
+	ret := make([]byte, 0, msgLen)
+	ret = append(m.AddrHash.GetBytes(), m.TxidHash.GetBytes()...)
+	time := make([]byte, 8, 8)
+	binary.BigEndian.PutUint64(time, uint64(m.Timestamp.Unix()))
+	ret = append(ret, time...)
+	ret = append(ret, m.Content.GetBytes()...)
 	return ret
 }
+

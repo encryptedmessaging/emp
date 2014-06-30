@@ -5,10 +5,9 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/sha512"
-	"strongmessage/objects"
 )
 
-func Encrypt(log chan string, dest_pubkey []byte, plainText string) *objects.EncryptedData {
+func Encrypt(log chan string, dest_pubkey []byte, plainText string) *EncryptedMessage {
 	// Generate New Public/Private Key Pair
 	D1, X1, Y1 := CreateKey(log)
 	// Unmarshal the Destination's Pubkey
@@ -29,7 +28,7 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) *objects.Enc
 	mac.Write(cipherText)
 	HMAC := mac.Sum(nil)
 
-	ret := new(objects.EncryptedData)
+	ret := new(EncryptedMessage)
 	copy(ret.IV[:], IV[:])
 	copy(ret.PublicKey[:], elliptic.Marshal(elliptic.P256(), X1, Y1))
 	ret.CipherText = cipherText
@@ -46,7 +45,7 @@ func checkMAC(message, messageMAC, key []byte) bool {
 	return hmac.Equal(messageMAC, expectedMAC)
 }
 
-func Decrypt(log chan string, privKey []byte, encrypted *objects.EncryptedData) []byte {
+func Decrypt(log chan string, privKey []byte, encrypted *EncryptedMessage) []byte {
 	if encrypted == nil  || privKey == nil || log == nil{
 		return nil
 	}

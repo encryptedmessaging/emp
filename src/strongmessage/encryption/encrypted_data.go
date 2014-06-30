@@ -1,6 +1,8 @@
-package objects
+package encryption
 
-type EncryptedData struct {
+import "errors"
+
+type EncryptedMessage struct {
 	IV         [16]byte
 	PublicKey  [65]byte
 	CipherText []byte
@@ -14,22 +16,23 @@ const (
 	minLen    = ivLen + pubkeyLen + hmacLen
 )
 
-func EncryptedFromBytes(b []byte) *EncryptedData {
+func (ret *EncryptedMessage) FromBytes(b []byte) error {
 	if len(b) < minLen {
-		return nil
+		return errors.New("Bytes too short to create EncryptedMessage object.")
 	}
-
-	ret := new(EncryptedData)
+	if ret == nil {
+		return errors.New("Can't fill nil object.")
+	}
 
 	copy(ret.IV[:], b[:ivLen])
 	copy(ret.PublicKey[:], b[ivLen:ivLen+pubkeyLen])
 	ret.CipherText = append(ret.CipherText, b[ivLen+pubkeyLen:len(b)-hmacLen]...)
 	copy(ret.HMAC[:], b[len(b)-hmacLen:])
 
-	return ret
+	return nil
 }
 
-func (e *EncryptedData) GetBytes() []byte {
+func (e *EncryptedMessage) GetBytes() []byte {
 	ret := make([]byte, 0, 0)
 	ret = append(ret, e.IV[:]...)
 	ret = append(ret, e.PublicKey[:]...)

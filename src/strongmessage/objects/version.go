@@ -2,47 +2,56 @@ package objects
 
 import (
 	"bytes"
-	"encoding/gob"
-	"fmt"
+	"encoding/binary"
 	"net"
 	"time"
+	"errors"
 )
 
 const (
 	LOCAL_VERSION = 1
 	LOCAL_USER    = "strongmsgd v0.1"
+	verLen        = 28
 )
 
 type Version struct {
-	Version   uint32 `json:"version"`
+	Version   uint16 `json:"version"`
 	Timestamp time.Time `json:"timestamp"`
 	IpAddress net.IP `json:"ip_address"`
 	Port      uint16 `json:"port"`
-	AdminPort uint16 `json:"admin_port"`
 	UserAgent string `json:"user_agent"`
 }
 
-func (v *Version) FromBytes(log chan string, data []byte) error {
-	buffer := bytes.NewBuffer(data)
-	enc := gob.NewDecoder(buffer)
-	err := enc.Decode(v)
-	if err != nil {
-		log <- fmt.Sprintf("Version Decoding error: %s", err.Error())
-		return err
+func (v *Version) FromBytes(data []byte) error {
+	if len(data) < verLen {
+		return errors.New("Data too short!")
 	}
+	if v == nil {
+		return errors.New("Could not load nil version.")
+	}
+
+	buffer := bytes.NewBuffer(data)
+
+	v.Version = binary.BigEndian.Uint16(buffer.Next(2))
+	v.Timestamp = time.Unix(int64(binary.BigEndian.Uint64(buffer.Next(8))), 0)
+	v.IpAddress = net.IP(buffer.Next(16))
+	v.Port = binary.BigEndian.Uint16(buffer.Next(2))
+	v.UserAgent = buffer.String()
 	return nil
 }
 
-func (v *Version) GetBytes(log chan string) []byte {
-	var buffer bytes.Buffer
-	enc := gob.NewEncoder(&buffer)
-	err := enc.Encode(v)
-	if err != nil {
-		log <- "Encoding error!"
-		log <- err.Error()
+func (v *Version) GetBytes() []byte {
+	if v == nil {
 		return nil
-	} else {
-		return buffer.Bytes()
 	}
 
+	ret := make([]byte, verLen, verLen)
+	
+	binary.BigEndian.PutUint16(ret[:2], v.Version)
+	binary.BigEndian.PutUint64(ret[2:10], uint64(v.Timestamp.Unix()))
+	copy(ret[10:26], []byte(v.IpAddress))
+	binary.BigEndian.PutUint16(ret[26:28], v.Port)
+	ret = append(ret, v.UserAgent...)
+
+	return ret
 }
