@@ -29,7 +29,7 @@ func SymmetricEncrypt(key []byte, plainText string) ([aes.BlockSize]byte, []byte
 	if len(key) == 25 {
 		key = append(key, make([]byte, 7, 7)...)
 	}
-	
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		fmt.Println("Uh Oh: ", err)

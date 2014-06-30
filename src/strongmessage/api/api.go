@@ -11,18 +11,18 @@ import (
 )
 
 type ApiConfig struct {
-	SendChan     chan network.Frame
-	RecvChan     chan network.Frame
-	RepRecv      chan network.Frame
-	RepSend      chan network.Frame
-	PeerChan     chan network.Peer
-	PubkeyRegister chan []byte
+	SendChan        chan network.Frame
+	RecvChan        chan network.Frame
+	RepRecv         chan network.Frame
+	RepSend         chan network.Frame
+	PeerChan        chan network.Peer
+	PubkeyRegister  chan []byte
 	MessageRegister chan objects.Message
-	DBFile       string
-	LocalDB      string
-	Context      *zmq.Context
-	LocalPeer    *network.Peer
-	LocalVersion *objects.Version
+	DBFile          string
+	LocalDB         string
+	Context         *zmq.Context
+	LocalPeer       *network.Peer
+	LocalVersion    *objects.Version
 }
 
 func Start(log chan string, config *ApiConfig, peers *network.PeerList) {

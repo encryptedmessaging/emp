@@ -11,8 +11,8 @@ const (
 
 type EncryptedPubkey struct {
 	AddrHash Hash
-	IV [16]byte
-	Payload []byte
+	IV       [16]byte
+	Payload  []byte
 }
 
 func (e *EncryptedPubkey) GetBytes() []byte {

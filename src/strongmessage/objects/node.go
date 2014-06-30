@@ -3,9 +3,9 @@ package objects
 import (
 	"bytes"
 	"encoding/binary"
-	"time"
-	"net"
 	"errors"
+	"net"
+	"time"
 )
 
 const (
@@ -13,15 +13,14 @@ const (
 )
 
 type Node struct {
-	IP   net.IP
-	Port uint16
+	IP       net.IP
+	Port     uint16
 	LastSeen time.Time
 }
 
 type NodeList struct {
 	Nodes []Node
 }
-
 
 func (n *NodeList) GetBytes() []byte {
 	if n == nil {
@@ -31,7 +30,7 @@ func (n *NodeList) GetBytes() []byte {
 		return nil
 	}
 
-	ret := make([]byte, 0, nodeLen * len(n.Nodes))
+	ret := make([]byte, 0, nodeLen*len(n.Nodes))
 
 	for _, node := range n.Nodes {
 		nBytes := make([]byte, nodeLen, nodeLen)
@@ -45,7 +44,7 @@ func (n *NodeList) GetBytes() []byte {
 }
 
 func (n *NodeList) FromBytes(data []byte) error {
-	if len(data) % nodeLen != 0 {
+	if len(data)%nodeLen != 0 {
 		return errors.New("Incorrect length for a Node List.")
 	}
 	if n == nil {
@@ -53,7 +52,7 @@ func (n *NodeList) FromBytes(data []byte) error {
 	}
 
 	for i := 0; i < len(data); i += nodeLen {
-		b := bytes.NewBuffer(data[i:i+nodeLen])
+		b := bytes.NewBuffer(data[i : i+nodeLen])
 		node := new(Node)
 		node.IP = net.IP(b.Next(16))
 		node.Port = binary.BigEndian.Uint16(b.Next(2))

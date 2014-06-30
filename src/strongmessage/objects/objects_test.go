@@ -1,12 +1,12 @@
 package objects
 
 import (
+	"crypto/elliptic"
 	"fmt"
+	"net"
+	"strongmessage/encryption"
 	"testing"
 	"time"
-	"net"
-	"crypto/elliptic"
-	"strongmessage/encryption"
 )
 
 func TestVersion(t *testing.T) {
@@ -18,7 +18,7 @@ func TestVersion(t *testing.T) {
 	v.UserAgent = "Hello World!"
 
 	verBytes := v.GetBytes()
-	if len(verBytes) != verLen + 12 {
+	if len(verBytes) != verLen+12 {
 		fmt.Println("Incorrect Byte Length: ", verBytes)
 		t.Fail()
 	}

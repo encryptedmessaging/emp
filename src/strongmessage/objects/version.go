@@ -3,9 +3,9 @@ package objects
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"net"
 	"time"
-	"errors"
 )
 
 const (
@@ -15,11 +15,11 @@ const (
 )
 
 type Version struct {
-	Version   uint16 `json:"version"`
+	Version   uint16    `json:"version"`
 	Timestamp time.Time `json:"timestamp"`
-	IpAddress net.IP `json:"ip_address"`
-	Port      uint16 `json:"port"`
-	UserAgent string `json:"user_agent"`
+	IpAddress net.IP    `json:"ip_address"`
+	Port      uint16    `json:"port"`
+	UserAgent string    `json:"user_agent"`
 }
 
 func (v *Version) FromBytes(data []byte) error {
@@ -46,7 +46,7 @@ func (v *Version) GetBytes() []byte {
 	}
 
 	ret := make([]byte, verLen, verLen)
-	
+
 	binary.BigEndian.PutUint16(ret[:2], v.Version)
 	binary.BigEndian.PutUint64(ret[2:10], uint64(v.Timestamp.Unix()))
 	copy(ret[10:26], []byte(v.IpAddress))

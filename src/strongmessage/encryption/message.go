@@ -46,7 +46,7 @@ func checkMAC(message, messageMAC, key []byte) bool {
 }
 
 func Decrypt(log chan string, privKey []byte, encrypted *EncryptedMessage) []byte {
-	if encrypted == nil  || privKey == nil || log == nil{
+	if encrypted == nil || privKey == nil || log == nil {
 		return nil
 	}
 

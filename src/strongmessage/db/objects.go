@@ -141,7 +141,7 @@ func GetMessage(log chan string, hash []byte) (*objects.Message, error) {
 func RemoveHash(log chan string, hash []byte) error {
 	mutex.Lock()
 	defer mutex.Unlock()
-	
+
 	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}

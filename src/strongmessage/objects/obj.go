@@ -1,10 +1,9 @@
 package objects
 
 import (
-	"errors"
 	"crypto/sha512"
+	"errors"
 )
-
 
 const (
 	hashLen = 48
@@ -32,7 +31,7 @@ func (h *Hash) FromBytes(data []byte) error {
 	if len(data) != hashLen {
 		return errors.New("Invalid hash length.")
 	}
-	for i:=0; i < hashLen; i++ {
+	for i := 0; i < hashLen; i++ {
 		(*h)[i] = data[i]
 	}
 
@@ -43,7 +42,6 @@ type Obj struct {
 	HashList []Hash
 }
 
-
 func (o *Obj) GetBytes() []byte {
 	if o == nil {
 		return nil
@@ -52,7 +50,7 @@ func (o *Obj) GetBytes() []byte {
 		return nil
 	}
 
-	ret := make([]byte, 0, hashLen * len(o.HashList))
+	ret := make([]byte, 0, hashLen*len(o.HashList))
 	for _, hash := range o.HashList {
 		ret = append(ret, hash.GetBytes()...)
 	}
@@ -63,13 +61,13 @@ func (o *Obj) FromBytes(data []byte) error {
 	if o == nil {
 		return errors.New("Can't fill nil Obj Object.")
 	}
-	if len(data) % hashLen != 0 {
+	if len(data)%hashLen != 0 {
 		return errors.New("Invalid hashlist Length!")
 	}
 
 	for i := 0; i < len(data); i += hashLen {
 		h := new(Hash)
-		err := h.FromBytes(data[i:i+hashLen])
+		err := h.FromBytes(data[i : i+hashLen])
 		if err != nil {
 			return err
 		}

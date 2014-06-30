@@ -3,9 +3,9 @@ package objects
 import (
 	"bytes"
 	"encoding/binary"
-	"time"
 	"errors"
 	"strongmessage/encryption"
+	"time"
 )
 
 type Message struct {
@@ -49,4 +49,3 @@ func (m *Message) GetBytes() []byte {
 	ret = append(ret, m.Content.GetBytes()...)
 	return ret
 }
-
