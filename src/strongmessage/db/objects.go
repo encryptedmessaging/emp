@@ -7,12 +7,13 @@ import (
 )
 
 func AddPubkey(log chan string, hash, payload []byte) error {
-	if hashList == nil || dbConn == nil {
+	mutex.Lock()
+	defer mutex.Unlock()
 
+	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
 	if Contains(string(hash)) == PUBKEY {
-
 		return nil
 	}
 
@@ -28,6 +29,9 @@ func AddPubkey(log chan string, hash, payload []byte) error {
 }
 
 func GetPubkey(log chan string, hash []byte) ([]byte, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
 	}
@@ -45,6 +49,9 @@ func GetPubkey(log chan string, hash []byte) ([]byte, error) {
 }
 
 func AddPurge(log chan string, hash, txid []byte) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
@@ -63,6 +70,9 @@ func AddPurge(log chan string, hash, txid []byte) error {
 }
 
 func GetPurge(log chan string, hash []byte) ([]byte, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
 	}
@@ -80,6 +90,9 @@ func GetPurge(log chan string, hash []byte) ([]byte, error) {
 }
 
 func AddMessage(log chan string, msg *objects.Message) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
@@ -99,6 +112,9 @@ func AddMessage(log chan string, msg *objects.Message) error {
 }
 
 func GetMessage(log chan string, hash []byte) (*objects.Message, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
 	}
@@ -123,6 +139,9 @@ func GetMessage(log chan string, hash []byte) (*objects.Message, error) {
 }
 
 func RemoveHash(log chan string, hash []byte) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+	
 	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}

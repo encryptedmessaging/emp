@@ -3,16 +3,20 @@ package db
 import (
 	"fmt"
 	"github.com/mxk/go-sqlite/sqlite3"
+	"sync"
 )
 
 // Database Connection
 var dbConn *sqlite3.Conn
+var mutex *sync.Mutex
 
 func Initialize(log chan string, dbFile string) error {
 	var err error
 	if dbConn != nil {
 		return nil
 	}
+
+	mutex = new(sync.Mutex)
 
 	// Create Database Connection
 	dbConn, err = sqlite3.Open(dbFile)
@@ -71,6 +75,7 @@ func Initialize(log chan string, dbFile string) error {
 }
 
 func populateHashes() error {
+	mutex.Lock()
 
 	for s, err := dbConn.Query("SELECT hash FROM pubkey"); err == nil; err = s.Next() {
 		var hash []byte
@@ -90,6 +95,7 @@ func populateHashes() error {
 		hashList[string(hash)] = PURGE
 	}
 
+	mutex.Unlock()
 	return nil
 }
 
