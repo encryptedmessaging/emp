@@ -11,8 +11,7 @@ type Serializer interface {
 
 func MakeFrame(command, t uint8, payload Serializer) *quibit.Frame {
 	frame := new(quibit.Frame)
-	frame.Configure(payload.GetBytes(), command)
-	frame.Header.Type = t
+	frame.Configure(payload.GetBytes(), command, t)
 
 	return frame
 }

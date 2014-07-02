@@ -155,7 +155,7 @@ func TestMessage(t *testing.T) {
 	log := make(chan string, 100)
 	priv, x, y := encryption.CreateKey(log)
 	pub := elliptic.Marshal(elliptic.P256(), x, y)
-	address, _ := encryption.GetAddress(log, x, y)
+	address := encryption.GetAddress(log, x, y)
 
 	msg := new(Message)
 	msg.AddrHash = MakeHash(address)
