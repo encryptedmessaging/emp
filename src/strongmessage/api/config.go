@@ -1,9 +1,9 @@
 package api
 
 import (
+	"os"
 	"quibit"
 	"strongmessage/objects"
-	"os"
 )
 
 type ApiConfig struct {
@@ -13,26 +13,26 @@ type ApiConfig struct {
 	PeerQueue chan quibit.Peer
 
 	// Local Logic
-	DbFile string
-	NodeList objects.NodeList
+	DbFile       string
+	NodeList     objects.NodeList
 	LocalVersion objects.Version
 
 	// Administration
-	Log chan string
+	Log  chan string
 	Quit chan os.Signal
 }
 
 // Message Commands
 const (
 	VERSION = iota
-	PEER = iota
-	OBJ = iota
-	GETOBJ = iota
+	PEER    = iota
+	OBJ     = iota
+	GETOBJ  = iota
 
 	PUBKEY_REQUEST = iota
-	PUBKEY = iota
-	MSG = iota
-	PURGE = iota
+	PUBKEY         = iota
+	MSG            = iota
+	PURGE          = iota
 
 	SHUN = iota
 )
@@ -40,6 +40,33 @@ const (
 // Message Types
 const (
 	BROADCAST = iota
-	REQUEST = iota
-	REPLY = iota
+	REQUEST   = iota
+	REPLY     = iota
 )
+
+func CmdString(cmd uint8) string {
+	var ret string
+
+	switch cmd {
+	case VERSION:
+		ret = "version"
+	case PEER:
+		ret = "peer list"
+	case OBJ:
+		ret = "object vector"
+	case GETOBJ:
+		ret = "object request"
+	case PUBKEY_REQUEST:
+		ret = "public key request"
+	case PUBKEY:
+		ret = "public key"
+	case MSG:
+		ret = "encrypted message"
+	case PURGE:
+		ret = "purge notification"
+	default:
+		ret = "unknown"
+	}
+
+	return ret
+}
