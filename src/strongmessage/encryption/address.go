@@ -6,8 +6,8 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
-	"strconv"
 	"math/big"
+	"strconv"
 )
 
 // This type is a placeholder for returns.  It hasn't been implemented yet.
@@ -63,7 +63,7 @@ func ValidateAddress(addr []byte) bool {
 	sum := sha512.Sum384(ripe)
 	sum = sha512.Sum384(sum[:])
 
-	for i:=0; i < 4; i++ {
+	for i := 0; i < 4; i++ {
 		if sum[i] != addr[i+21] {
 			return false
 		}
