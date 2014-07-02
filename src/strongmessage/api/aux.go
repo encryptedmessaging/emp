@@ -1,10 +1,10 @@
 package api
 
 import (
-	"quibit"
-	"strongmessage/objects"
-	"strongmessage/db"
 	"fmt"
+	"quibit"
+	"strongmessage/db"
+	"strongmessage/objects"
 	"time"
 )
 
@@ -28,7 +28,7 @@ func fVERSION(config *ApiConfig, frame quibit.Frame, version *objects.Version) {
 
 	// Verify Timestamp (5 minute window), else Disconnect
 	dur := time.Since(version.Timestamp)
-	if dur.Hours() != 0 || dur.Minutes() + 5 > 10 {
+	if dur.Hours() != 0 || dur.Minutes()+5 > 10 {
 		config.Log <- fmt.Sprintf("Peer timestamp too far off local time: %s", dur.String())
 		quibit.KillPeer(frame.Peer)
 		return
@@ -49,7 +49,7 @@ func fVERSION(config *ApiConfig, frame quibit.Frame, version *objects.Version) {
 			quibit.KillPeer(frame.Peer)
 			return
 		}
-		
+
 		// Add to Master Node List
 		var node objects.Node
 
@@ -58,7 +58,6 @@ func fVERSION(config *ApiConfig, frame quibit.Frame, version *objects.Version) {
 		node.LastSeen = time.Now().Round(time.Second)
 		config.NodeList.Nodes[node.String()] = node
 	}
-
 
 	var sending *quibit.Frame
 	if frame.Header.Type == REQUEST {
@@ -126,12 +125,12 @@ func fOBJ(config *ApiConfig, frame quibit.Frame, obj *objects.Obj) {
 		// If a REQUEST, send local object list as REPLY
 		sending = objects.MakeFrame(OBJ, REPLY, db.ObjList())
 		sending.Peer = frame.Peer
-		config.SendQueue <- *sending 
+		config.SendQueue <- *sending
 	}
 
 	// For each object in object list:
-		// If object not stored locally, send GETOBJ REQUEST
-	for _, hash  := range obj.HashList {
+	// If object not stored locally, send GETOBJ REQUEST
+	for _, hash := range obj.HashList {
 		if db.Contains(hash) == db.NOTFOUND {
 			sending = objects.MakeFrame(GETOBJ, REQUEST, &hash)
 			sending.Peer = frame.Peer
@@ -177,7 +176,7 @@ func fPUBKEY_REQUEST(config *ApiConfig, frame quibit.Frame, pubHash *objects.Has
 	switch db.Contains(*pubHash) {
 	// If request is Not in List, store the request
 	case db.NOTFOUND:
-			// If a BROADCAST, send out another BROADCAST
+		// If a BROADCAST, send out another BROADCAST
 		db.Add(*pubHash, db.PUBKEYRQ)
 		if frame.Header.Type == BROADCAST {
 			config.SendQueue <- *objects.MakeFrame(PUBKEY_REQUEST, BROADCAST, pubHash)
@@ -261,5 +260,5 @@ func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 		if frame.Header.Type == BROADCAST {
 			config.SendQueue <- *objects.MakeFrame(PURGE, BROADCAST, purge)
 		}
-	} // End Switch 
+	} // End Switch
 } // End fPURGE
