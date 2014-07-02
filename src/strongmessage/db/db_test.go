@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"os/exec"
+	"strongmessage/objects"
 	"testing"
 	"time"
 )
@@ -27,25 +28,31 @@ func TestDatabase(t *testing.T) {
 		t.FailNow()
 	}
 
-	purgeHash := []byte{'a', 'b', 'c', 'd'}
-	pubHash := []byte{'e', 'f', 'g', 'h'}
+	txid := []byte{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'}
+	purgeHash := objects.MakeHash(txid)
+	pubHash := objects.MakeHash([]byte{'e', 'f', 'g', 'h'})
 
-	if Contains(string(purgeHash)) != NOTFOUND {
+	if Contains(purgeHash) != NOTFOUND {
 		fmt.Println("Purge Hash already in list...")
 		t.FailNow()
 	}
-	if Contains(string(pubHash)) != NOTFOUND {
+	if Contains(pubHash) != NOTFOUND {
 		fmt.Println("Pubkey Hash already in list...")
 		t.FailNow()
 	}
 
-	err = AddPubkey(log, pubHash, pubHash)
+	pub := new(objects.EncryptedPubkey)
+	pub.AddrHash = pubHash
+	pub.IV = [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	pub.Payload = []byte{'a', 'b', 'c', 'd'}
+
+	err = AddPubkey(log, *pub)
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err)
 		t.FailNow()
 	}
 
-	if Contains(string(pubHash)) != PUBKEY {
+	if Contains(pubHash) != PUBKEY {
 		fmt.Println("Pubkey not in hash list")
 		time.Sleep(time.Millisecond)
 		t.FailNow()
@@ -53,25 +60,28 @@ func TestDatabase(t *testing.T) {
 
 	RemoveHash(log, pubHash)
 
-	if Contains(string(pubHash)) != NOTFOUND {
+	if Contains(pubHash) != NOTFOUND {
 		fmt.Println("Pubkey stuck in hash list")
 		t.FailNow()
 	}
 
-	err = AddPurge(log, purgeHash, purgeHash)
+	purge := new(objects.Purge)
+	copy(purge.Txid[:], txid)
+
+	err = AddPurge(log, *purge)
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err)
 		t.FailNow()
 	}
 
-	if Contains(string(purgeHash)) != PURGE {
+	if Contains(purgeHash) != PURGE {
 		fmt.Println("Purge not in hash list")
 		t.FailNow()
 	}
 
 	RemoveHash(log, purgeHash)
 
-	if Contains(string(purgeHash)) != NOTFOUND {
+	if Contains(purgeHash) != NOTFOUND {
 		fmt.Println("Purge stuck in hash list")
 		t.FailNow()
 	}

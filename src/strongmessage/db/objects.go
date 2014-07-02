@@ -1,19 +1,23 @@
 package db
 
 import (
+	"crypto/sha512"
 	"fmt"
 	"strongmessage/objects"
 	"time"
 )
 
-func AddPubkey(log chan string, hash, payload []byte) error {
+func AddPubkey(log chan string, pubkey objects.EncryptedPubkey) error {
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	hash := pubkey.AddrHash.GetBytes()
+	payload := append(pubkey.IV[:], pubkey.Payload...)
 
 	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
-	if Contains(string(hash)) == PUBKEY {
+	if Contains(pubkey.AddrHash) == PUBKEY {
 		return nil
 	}
 
@@ -24,13 +28,15 @@ func AddPubkey(log chan string, hash, payload []byte) error {
 		return err
 	}
 
-	Add(string(hash), PUBKEY)
+	Add(pubkey.AddrHash, PUBKEY)
 	return nil
 }
 
-func GetPubkey(log chan string, hash []byte) ([]byte, error) {
+func GetPubkey(log chan string, addrHash objects.Hash) (*objects.EncryptedPubkey, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	hash := addrHash.GetBytes()
 
 	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
@@ -42,20 +48,31 @@ func GetPubkey(log chan string, hash []byte) ([]byte, error) {
 	for s, err := dbConn.Query("SELECT payload FROM pubkey WHERE hash=?", hash); err == nil; err = s.Next() {
 		var payload []byte
 		s.Scan(&payload) // Assigns 1st column to rowid, the rest to row
-		return payload, nil
+		pub := new(objects.EncryptedPubkey)
+		pub.AddrHash = addrHash
+		copy(pub.IV[:], payload[:16])
+		pub.Payload = payload[16:]
+		return pub, nil
 	}
 	// Not Found
 	return nil, nil
 }
 
-func AddPurge(log chan string, hash, txid []byte) error {
+func AddPurge(log chan string, p objects.Purge) error {
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	txid := p.GetBytes()
+	hashArr := sha512.Sum384(txid)
+	hash := hashArr[:]
 
 	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
-	if Contains(string(hash)) == PURGE {
+	hashObj := new(objects.Hash)
+	hashObj.FromBytes(hash)
+
+	if Contains(*hashObj) == PURGE {
 		return nil
 	}
 
@@ -65,13 +82,15 @@ func AddPurge(log chan string, hash, txid []byte) error {
 		return err
 	}
 
-	Add(string(hash), PURGE)
+	Add(*hashObj, PURGE)
 	return nil
 }
 
-func GetPurge(log chan string, hash []byte) ([]byte, error) {
+func GetPurge(log chan string, txidHash objects.Hash) (*objects.Purge, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	hash := txidHash.GetBytes()
 
 	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
@@ -83,7 +102,9 @@ func GetPurge(log chan string, hash []byte) ([]byte, error) {
 	for s, err := dbConn.Query("SELECT txid FROM purge WHERE hash=?", hash); err == nil; err = s.Next() {
 		var txid []byte
 		s.Scan(&txid) // Assigns 1st column to rowid, the rest to row
-		return txid, nil
+		p := new(objects.Purge)
+		p.FromBytes(txid)
+		return p, nil
 	}
 	// Not Found
 	return nil, nil
@@ -96,7 +117,7 @@ func AddMessage(log chan string, msg *objects.Message) error {
 	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
 	}
-	if Contains(string(msg.TxidHash)) == MSG {
+	if Contains(msg.TxidHash) == MSG {
 		return nil
 	}
 
@@ -106,14 +127,16 @@ func AddMessage(log chan string, msg *objects.Message) error {
 		return err
 	}
 
-	Add(string(msg.TxidHash), MSG)
+	Add(msg.TxidHash, MSG)
 	return nil
 
 }
 
-func GetMessage(log chan string, hash []byte) (*objects.Message, error) {
+func GetMessage(log chan string, txidHash objects.Hash) (*objects.Message, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	hash := txidHash.GetBytes()
 
 	if hashList == nil || dbConn == nil {
 		return nil, DBError(EUNINIT)
@@ -130,7 +153,7 @@ func GetMessage(log chan string, hash []byte) (*objects.Message, error) {
 		s.Scan(&msg.TxidHash, &msg.AddrHash, &timestamp, &encrypted)
 
 		msg.Timestamp = time.Unix(timestamp, 0)
-		msg.Content = *objects.EncryptedFromBytes(encrypted)
+		msg.Content.FromBytes(encrypted)
 
 		return msg, nil
 	}
@@ -138,9 +161,11 @@ func GetMessage(log chan string, hash []byte) (*objects.Message, error) {
 	return nil, nil
 }
 
-func RemoveHash(log chan string, hash []byte) error {
+func RemoveHash(log chan string, hashObj objects.Hash) error {
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	hash := hashObj.GetBytes()
 
 	if hashList == nil || dbConn == nil {
 		return DBError(EUNINIT)
@@ -148,7 +173,7 @@ func RemoveHash(log chan string, hash []byte) error {
 
 	var sql string
 
-	switch Contains(string(hash)) {
+	switch Contains(hashObj) {
 	case PUBKEY:
 		sql = "DELETE FROM pubkey WHERE hash=?"
 	case MSG:
@@ -165,6 +190,6 @@ func RemoveHash(log chan string, hash []byte) error {
 		return nil
 	}
 
-	Delete(string(hash))
+	Delete(hashObj)
 	return nil
 }

@@ -1,5 +1,7 @@
 package db
 
+import "strongmessage/objects"
+
 const (
 	PUBKEY   = iota
 	PURGE    = iota
@@ -11,19 +13,22 @@ const (
 // Hash List
 var hashList map[string]int
 
-func Add(hash string, hashType int) {
+func Add(hashObj objects.Hash, hashType int) {
+	hash := string(hashObj.GetBytes())
 	if hashList != nil {
 		hashList[hash] = hashType
 	}
 }
 
-func Delete(hash string) {
+func Delete(hashObj objects.Hash) {
+	hash := string(hashObj.GetBytes())
 	if hashList != nil {
 		delete(hashList, hash)
 	}
 }
 
-func Contains(hash string) int {
+func Contains(hashObj objects.Hash) int {
+	hash := string(hashObj.GetBytes())
 	if hashList != nil {
 		hashType, ok := hashList[hash]
 		if ok {
