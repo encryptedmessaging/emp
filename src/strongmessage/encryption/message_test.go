@@ -21,7 +21,6 @@ func TestCrypt(t *testing.T) {
 
 	plainBytes := Decrypt(log, priv, enc)
 	plainBytes = bytes.Split(plainBytes, []byte{0})[0]
-	fmt.Println(string(plainBytes))
 	if message != string(plainBytes) {
 		t.Fail()
 	}
@@ -33,11 +32,21 @@ func TestSampleAddr(t *testing.T) {
 	// Generate Key
 	_, x, y := CreateKey(log)
 
-	byteAddr, strAddr := GetAddress(log, x, y)
+	byteAddr := GetAddress(log, x, y)
 
 	//Check lengths
-	if len(byteAddr) != 25 || len(strAddr) != 33 {
-		fmt.Println("Bad lengths: ", len(byteAddr), len(strAddr))
+	if len(byteAddr) != 25 {
+		fmt.Println("Bad length: ", len(byteAddr))
+		t.Fail()
+	}
+
+	if !ValidateAddress(byteAddr) {
+		fmt.Println("Address validation falied!")
+		t.Fail()
+	}
+
+	if string(StringToAddress(AddressToString(byteAddr))) != string(byteAddr) {
+		fmt.Println("Error in the address/string conversion functions: ", StringToAddress(AddressToString(byteAddr)))
 		t.Fail()
 	}
 

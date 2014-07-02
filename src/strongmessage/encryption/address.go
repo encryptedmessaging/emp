@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
+	"strconv"
 	"math/big"
 )
 
@@ -25,7 +26,7 @@ func CreateKey(log chan string) ([]byte, *big.Int, *big.Int) {
 	return priv, x, y
 }
 
-func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
+func GetAddress(log chan string, x, y *big.Int) []byte {
 	pubKey := elliptic.Marshal(elliptic.P256(), x, y)
 	ripemd := ripemd160.New()
 
@@ -51,5 +52,44 @@ func GetAddress(log chan string, x, y *big.Int) ([]byte, string) {
 		address = append(address, sum[i])
 	}
 
-	return address, "1" + base64.StdEncoding.EncodeToString(address[1:])
+	return address
+}
+
+func ValidateAddress(addr []byte) bool {
+	if len(addr) != 25 {
+		return false
+	}
+	ripe := addr[:21]
+	sum := sha512.Sum384(ripe)
+	sum = sha512.Sum384(sum[:])
+
+	for i:=0; i < 4; i++ {
+		if sum[i] != addr[i+21] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func AddressToString(addr []byte) string {
+	if !ValidateAddress(addr) {
+		return ""
+	}
+
+	return strconv.Itoa(int(addr[0])) + base64.StdEncoding.EncodeToString(addr[1:])
+}
+
+func StringToAddress(addr string) []byte {
+	data, err := base64.StdEncoding.DecodeString(addr[1:])
+	if err != nil {
+		return nil
+	}
+	version := make([]byte, 1, 1)
+	version[0] = byte(addr[0] - 48)
+	address := append(version, data...)
+	if !ValidateAddress(address) {
+		return nil
+	}
+	return address
 }
