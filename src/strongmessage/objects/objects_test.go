@@ -38,7 +38,9 @@ func TestVersion(t *testing.T) {
 
 func TestNodes(t *testing.T) {
 	n := new(NodeList)
+	n.Nodes = make(map[string]Node)
 	n2 := new(NodeList)
+	n2.Nodes = make(map[string]Node)
 	node1 := new(Node)
 	node2 := new(Node)
 
@@ -50,8 +52,8 @@ func TestNodes(t *testing.T) {
 	node2.Port = uint16(5555)
 	node2.LastSeen = time.Now().Round(time.Second)
 
-	n.Nodes = append(n.Nodes, *node1)
-	n.Nodes = append(n.Nodes, *node2)
+	n.Nodes[node1.String()] = *node1
+	n.Nodes[node2.String()] = *node2
 
 	nBytes := n.GetBytes()
 	if len(nBytes) != 2*nodeLen {
@@ -64,9 +66,11 @@ func TestNodes(t *testing.T) {
 		fmt.Println("Error Decoding: ", err)
 	}
 
-	if n2.Nodes[0].IP.String() != n.Nodes[0].IP.String() || n2.Nodes[1].IP.String() != n.Nodes[1].IP.String() || n2.Nodes[0].Port != n.Nodes[0].Port || n2.Nodes[1].Port != n.Nodes[1].Port {
-		fmt.Println("Nodes don't match!", n2.Nodes)
-		t.Fail()
+	for key, _ := range n.Nodes {
+		if n2.Nodes[key].IP.String() != n.Nodes[key].IP.String() || n2.Nodes[key].Port != n.Nodes[key].Port {
+			fmt.Println("Nodes don't match!", n2.Nodes)
+			t.FailNow()
+		}
 	}
 }
 

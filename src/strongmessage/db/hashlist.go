@@ -40,22 +40,16 @@ func Contains(hashObj objects.Hash) int {
 	return NOTFOUND
 }
 
-func HashCache() []string {
+func ObjList() *objects.Obj {
 	if hashList == nil {
 		return nil
 	}
-	ret := make([]string, 0, len(hashList))
+
+	ret := new(objects.Obj)
+	ret.HashList = make([]objects.Hash, 0, 0)
+
 	for key, _ := range hashList {
-		ret = append(ret, key)
+		ret.HashList = append(ret.HashList, objects.MakeHash([]byte(key)))
 	}
 	return ret
-}
-
-func HashCopy() map[string]int {
-	cpy := make(map[string]int)
-	for k, v := range hashList {
-		cpy[k] = v
-	}
-
-	return cpy
 }

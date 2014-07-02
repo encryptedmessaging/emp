@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -19,7 +20,14 @@ type Node struct {
 }
 
 type NodeList struct {
-	Nodes []Node
+	Nodes map[string]Node
+}
+
+func (n *Node) String() string {
+	if n == nil {
+		return ""
+	}
+	return net.JoinHostPort(n.IP.String(), strconv.Itoa(int(n.Port)))
 }
 
 func (n *NodeList) GetBytes() []byte {
@@ -57,7 +65,7 @@ func (n *NodeList) FromBytes(data []byte) error {
 		node.IP = net.IP(b.Next(16))
 		node.Port = binary.BigEndian.Uint16(b.Next(2))
 		node.LastSeen = time.Unix(int64(binary.BigEndian.Uint64(b.Next(8))), 0)
-		n.Nodes = append(n.Nodes, *node)
+		n.Nodes[node.String()] = *node
 	}
 
 	return nil
