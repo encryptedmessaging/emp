@@ -28,7 +28,7 @@ func fVERSION(config *ApiConfig, frame quibit.Frame, version *objects.Version) {
 
 	// Verify Timestamp (5 minute window), else Disconnect
 	dur := time.Since(version.Timestamp)
-	if dur.Hours() != 0 || dur.Minutes()+5 > 10 {
+	if dur.Minutes()+5 > 10 {
 		config.Log <- fmt.Sprintf("Peer timestamp too far off local time: %s", dur.String())
 		quibit.KillPeer(frame.Peer)
 		return
@@ -90,7 +90,9 @@ func fPEER(config *ApiConfig, frame quibit.Frame, nodeList *objects.NodeList) {
 		// If a REPLY, send an object list as a REQUEST
 		sending = objects.MakeFrame(OBJ, REQUEST, db.ObjList())
 	}
+
 	sending.Peer = frame.Peer
+
 	config.SendQueue <- *sending
 
 	// Merge incoming list with current list

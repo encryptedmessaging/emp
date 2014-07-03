@@ -22,14 +22,6 @@ func Start(config *ApiConfig) {
 		return
 	}
 
-	// Start Network Services
-	err = quibit.Initialize(config.Log, config.RecvQueue, config.SendQueue, config.PeerQueue, config.LocalVersion.Port)
-	defer quibit.Cleanup()
-	if err != nil {
-		config.Log <- fmt.Sprintf("Error initializing network: %s", err)
-		return
-	}
-
 	// Initialize Map
 	config.NodeList.Nodes = make(map[string]objects.Node)
 
