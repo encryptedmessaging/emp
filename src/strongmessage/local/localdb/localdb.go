@@ -2,17 +2,22 @@ package localdb
 
 import (
 	"fmt"
+	"strongmessage/objects"
 	"github.com/mxk/go-sqlite/sqlite3"
+	"sync"
 )
 
 // Database Connection
 var LocalDB *sqlite3.Conn
+var localMutex *sync.Mutex
 
 func Initialize(log chan string, dbFile string) error {
 	var err error
 	if LocalDB != nil {
 		return nil
 	}
+
+	localMutex = new(sync.Mutex)
 
 	// Create Database Connection
 	LocalDB, err = sqlite3.Open(dbFile)
@@ -31,30 +36,9 @@ func Initialize(log chan string, dbFile string) error {
 		return err
 	}
 
-	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS msg (txid_hash BLOB NOT NULL, encrypted BLOB, decrypted BLOB, purged INTEGER, PRIMARY KEY (txid_hash) ON CONFLICT REPLACE)")
+	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS msg (txid_hash BLOB NOT NULL, recipient BLOB, timestamp INTEGER, box INTEGER, encrypted BLOB, decrypted BLOB, purged INTEGER, sender BLOB, PRIMARY KEY (txid_hash) ON CONFLICT REPLACE)")
 	if err != nil {
 		log <- fmt.Sprintf("Error setting up msg schema... %s", err)
-		LocalDB = nil
-		return err
-	}
-
-	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS inbox (txid_hash BLOB NOT NULL, timestamp INTEGER NOT NULL, sender BLOB, recipient BLOB NOT NULL, UNIQUE(txid_hash) ON CONFLICT REPLACE)")
-	if err != nil {
-		log <- fmt.Sprintf("Error setting up inbox schema... %s", err)
-		LocalDB = nil
-		return err
-	}
-
-	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS outbox (txid_hash BLOB NOT NULL, timestamp INTEGER NOT NULL, sender BLOB, recipient BLOB NOT NULL, UNIQUE(txid_hash) ON CONFLICT REPLACE)")
-	if err != nil {
-		log <- fmt.Sprintf("Error setting up outbox schema... %s", err)
-		LocalDB = nil
-		return err
-	}
-
-	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS sendbox (txid_hash BLOB NOT NULL, timestamp INTEGER NOT NULL, sender BLOB, recipient BLOB NOT NULL, UNIQUE(txid_hash) ON CONFLICT REPLACE)")
-	if err != nil {
-		log <- fmt.Sprintf("Error setting up sendbox schema... %s", err)
 		LocalDB = nil
 		return err
 	}
@@ -72,28 +56,17 @@ func Initialize(log chan string, dbFile string) error {
 }
 
 func populateHashes() error {
-
-	for s, err := LocalDB.Query("SELECT txid_hash FROM outbox"); err == nil; err = s.Next() {
-		var hash []byte
-		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
-		hashList[string(hash)] = OUTBOX
-	}
-
-	for s, err := LocalDB.Query("SELECT txid_hash FROM sendbox"); err == nil; err = s.Next() {
-		var hash []byte
-		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
-		hashList[string(hash)] = SENDBOX
-	}
 	for s, err := LocalDB.Query("SELECT hash FROM addressbook"); err == nil; err = s.Next() {
 		var hash []byte
 		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = ADDRESS
 	}
 
-	for s, err := LocalDB.Query("SELECT txid_hash FROM inbox"); err == nil; err = s.Next() {
+	for s, err := LocalDB.Query("SELECT txid_hash, box FROM msg"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
-		hashList[string(hash)] = INBOX
+		var box int
+		s.Scan(&hash, &box) // Assigns 1st column to rowid, the rest to row
+		hashList[string(hash)] = box
 	}
 
 	return nil
@@ -116,19 +89,22 @@ const (
 // Hash List
 var hashList map[string]int
 
-func Add(hash string, hashType int) {
+func Add(hashObj objects.Hash, hashType int) {
+	hash := string(hashObj.GetBytes()) 
 	if hashList != nil {
 		hashList[hash] = hashType
 	}
 }
 
-func Del(hash string) {
+func Del(hashObj objects.Hash) {
+	hash := string(hashObj.GetBytes())
 	if hashList != nil {
 		delete(hashList, hash)
 	}
 }
 
-func Contains(hash string) int {
+func Contains(hashObj objects.Hash) int {
+	hash := string(hashObj.GetBytes())
 	if hashList != nil {
 		hashType, ok := hashList[hash]
 		if ok {

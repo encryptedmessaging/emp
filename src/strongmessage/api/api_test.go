@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"quibit"
 	"strongmessage/objects"
 	"testing"
@@ -44,6 +45,8 @@ func cleanup(config *ApiConfig) {
 		str = <-config.Log
 	}
 
+	exec.Command("rm", "testdb.db").Run()
+
 }
 
 func TestHandshake(t *testing.T) {
@@ -53,14 +56,14 @@ func TestHandshake(t *testing.T) {
 	var err error
 
 	// Test Version
-	frame = *objects.MakeFrame(VERSION, REQUEST, &config.LocalVersion)
+	frame = *objects.MakeFrame(objects.VERSION, objects.REQUEST, &config.LocalVersion)
 	frame.Peer = "127.0.0.1:4444"
 
 	config.RecvQueue <- frame
 
 	frame = <-config.SendQueue
 
-	if frame.Header.Command != VERSION || frame.Header.Type != REPLY {
+	if frame.Header.Command != objects.VERSION || frame.Header.Type != objects.REPLY {
 		fmt.Println("Frame is not a proper reply to a version request: ", frame.Header)
 		t.FailNow()
 	}
@@ -73,27 +76,27 @@ func TestHandshake(t *testing.T) {
 	}
 
 	// Test Peer
-	frame = *objects.MakeFrame(PEER, REQUEST, &config.NodeList)
+	frame = *objects.MakeFrame(objects.PEER, objects.REQUEST, &config.NodeList)
 	frame.Peer = "127.0.0.1:4444"
 
 	config.RecvQueue <- frame
 
 	frame = <-config.SendQueue
 
-	if frame.Header.Command != PEER || frame.Header.Type != REPLY || frame.Header.Length != 0 {
+	if frame.Header.Command != objects.PEER || frame.Header.Type != objects.REPLY || frame.Header.Length != 0 {
 		fmt.Println("Frame is not a proper reply to a peer request: ", frame.Header)
 		t.FailNow()
 	}
 
 	// Test Obj
-	frame = *objects.MakeFrame(OBJ, REQUEST, &config.NodeList)
+	frame = *objects.MakeFrame(objects.OBJ, objects.REQUEST, &config.NodeList)
 	frame.Peer = "127.0.0.1:4444"
 
 	config.RecvQueue <- frame
 
 	frame = <-config.SendQueue
 
-	if frame.Header.Command != OBJ || frame.Header.Type != REPLY || frame.Header.Length != 0 {
+	if frame.Header.Command != objects.OBJ || frame.Header.Type != objects.REPLY || frame.Header.Length != 0 {
 		fmt.Println("Frame is not a proper reply to a peer request: ", frame.Header)
 		t.FailNow()
 	}

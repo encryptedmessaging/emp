@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strongmessage"
 	"strongmessage/api"
+	"strongmessage/local/localapi"
 	"quibit"
-	"time"
 	"os"
 	"os/signal"
 )
@@ -26,8 +26,10 @@ func main() {
 
 	// Local Logic
 	config.DbFile = "inventory.db"
+	config.LocalDB = "local.db"
 
 	config.LocalVersion.Port = uint16(4444)
+	config.RPCPort = uint16(8080)
 
 	// Administration
 	config.Log = make(chan string, bufLen)
@@ -47,11 +49,13 @@ func main() {
 	// Start API
 	go api.Start(config)
 
+	go localapi.Initialize(config)
+
 	// Start Logger
 	fmt.Println("Starting logger...")
 	strongmessage.BlockingLogger(config.Log)
 
 	// Give some time for cleanup...
 	fmt.Println("Cleaning up...")
-	time.Sleep(time.Millisecond)
+	localapi.Cleanup()
 }

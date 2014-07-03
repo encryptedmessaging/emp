@@ -14,55 +14,37 @@ type ApiConfig struct {
 
 	// Local Logic
 	DbFile       string
+	LocalDB      string
 	NodeList     objects.NodeList
 	LocalVersion objects.Version
 
 	// Administration
 	Log  chan string
 	Quit chan os.Signal
+
+	// Network
+	RPCPort uint16
 }
-
-// Message Commands
-const (
-	VERSION = iota
-	PEER    = iota
-	OBJ     = iota
-	GETOBJ  = iota
-
-	PUBKEY_REQUEST = iota
-	PUBKEY         = iota
-	MSG            = iota
-	PURGE          = iota
-
-	SHUN = iota
-)
-
-// Message Types
-const (
-	BROADCAST = iota
-	REQUEST   = iota
-	REPLY     = iota
-)
 
 func CmdString(cmd uint8) string {
 	var ret string
 
 	switch cmd {
-	case VERSION:
+	case objects.VERSION:
 		ret = "version"
-	case PEER:
+	case objects.PEER:
 		ret = "peer list"
-	case OBJ:
+	case objects.OBJ:
 		ret = "object vector"
-	case GETOBJ:
+	case objects.GETOBJ:
 		ret = "object request"
-	case PUBKEY_REQUEST:
+	case objects.PUBKEY_REQUEST:
 		ret = "public key request"
-	case PUBKEY:
+	case objects.PUBKEY:
 		ret = "public key"
-	case MSG:
+	case objects.MSG:
 		ret = "encrypted message"
-	case PURGE:
+	case objects.PURGE:
 		ret = "purge notification"
 	default:
 		ret = "unknown"

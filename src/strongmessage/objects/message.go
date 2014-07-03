@@ -19,6 +19,28 @@ const (
 	msgLen = 2*hashLen + 8
 )
 
+// Message Commands
+const (
+	VERSION = iota
+	PEER    = iota
+	OBJ     = iota
+	GETOBJ  = iota
+
+	PUBKEY_REQUEST = iota
+	PUBKEY         = iota
+	MSG            = iota
+	PURGE          = iota
+
+	SHUN = iota
+)
+
+// Message Types
+const (
+	BROADCAST = iota
+	REQUEST   = iota
+	REPLY     = iota
+)
+
 func (m *Message) FromBytes(data []byte) error {
 	if len(data) < msgLen {
 		return errors.New("Data too short to create message!")

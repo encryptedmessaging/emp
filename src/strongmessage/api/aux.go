@@ -11,8 +11,8 @@ import (
 // Handle a Version Request or Reply
 func fVERSION(config *ApiConfig, frame quibit.Frame, version *objects.Version) {
 
-	// Verify not BROADCAST
-	if frame.Header.Type == BROADCAST {
+	// Verify not objects.BROADCAST
+	if frame.Header.Type == objects.BROADCAST {
 		// SHUN THE NODE! SHUN IT WITH FIRE!
 		config.Log <- "Node sent a version message as a broadcast. Disconnecting..."
 		quibit.KillPeer(frame.Peer)
@@ -60,12 +60,12 @@ func fVERSION(config *ApiConfig, frame quibit.Frame, version *objects.Version) {
 	}
 
 	var sending *quibit.Frame
-	if frame.Header.Type == REQUEST {
-		// If a REQUEST, send local version as a REPLY
-		sending = objects.MakeFrame(VERSION, REPLY, &config.LocalVersion)
+	if frame.Header.Type == objects.REQUEST {
+		// If a objects.REQUEST, send local version as a objects.REPLY
+		sending = objects.MakeFrame(objects.VERSION, objects.REPLY, &config.LocalVersion)
 	} else {
-		// If a REPLY, send a peer list as a REQUEST
-		sending = objects.MakeFrame(PEER, REQUEST, &config.NodeList)
+		// If a objects.REPLY, send a peer list as a objects.REQUEST
+		sending = objects.MakeFrame(objects.PEER, objects.REQUEST, &config.NodeList)
 	}
 	sending.Peer = frame.Peer
 	config.SendQueue <- *sending
@@ -74,8 +74,8 @@ func fVERSION(config *ApiConfig, frame quibit.Frame, version *objects.Version) {
 // Handle Peer List Requests or Replies
 func fPEER(config *ApiConfig, frame quibit.Frame, nodeList *objects.NodeList) {
 
-	// Verify not BROADCAST
-	if frame.Header.Type == BROADCAST {
+	// Verify not objects.BROADCAST
+	if frame.Header.Type == objects.BROADCAST {
 		// SHUN THE NODE! SHUN IT WITH FIRE!
 		config.Log <- "Node sent a peer frame as a broadcast. Disconnecting..."
 		quibit.KillPeer(frame.Peer)
@@ -83,12 +83,12 @@ func fPEER(config *ApiConfig, frame quibit.Frame, nodeList *objects.NodeList) {
 	}
 
 	var sending *quibit.Frame
-	if frame.Header.Type == REQUEST {
-		// If a REQUEST, send back peer REPLY
-		sending = objects.MakeFrame(PEER, REPLY, &config.NodeList)
+	if frame.Header.Type == objects.REQUEST {
+		// If a objects.REQUEST, send back peer objects.REPLY
+		sending = objects.MakeFrame(objects.PEER, objects.REPLY, &config.NodeList)
 	} else {
-		// If a REPLY, send an object list as a REQUEST
-		sending = objects.MakeFrame(OBJ, REQUEST, db.ObjList())
+		// If a objects.REPLY, send an object list as a objects.REQUEST
+		sending = objects.MakeFrame(objects.OBJ, objects.REQUEST, db.ObjList())
 	}
 
 	sending.Peer = frame.Peer
@@ -105,7 +105,7 @@ func fPEER(config *ApiConfig, frame quibit.Frame, nodeList *objects.NodeList) {
 			p.Port = node.Port
 			config.PeerQueue <- *p
 			time.Sleep(time.Millisecond)
-			newVer := objects.MakeFrame(VERSION, REQUEST, &config.LocalVersion)
+			newVer := objects.MakeFrame(objects.VERSION, objects.REQUEST, &config.LocalVersion)
 			config.SendQueue <- *newVer
 		} // End if
 	} // End for
@@ -115,26 +115,26 @@ func fPEER(config *ApiConfig, frame quibit.Frame, nodeList *objects.NodeList) {
 func fOBJ(config *ApiConfig, frame quibit.Frame, obj *objects.Obj) {
 	var sending *quibit.Frame
 
-	// Verify not BROADCAST
-	if frame.Header.Type == BROADCAST {
+	// Verify not objects.BROADCAST
+	if frame.Header.Type == objects.BROADCAST {
 		// SHUN THE NODE! SHUN IT WITH FIRE!
 		config.Log <- "Node sent an obj frame as a broadcast. Disconnecting..."
 		quibit.KillPeer(frame.Peer)
 		return
 	}
 
-	if frame.Header.Type == REQUEST {
-		// If a REQUEST, send local object list as REPLY
-		sending = objects.MakeFrame(OBJ, REPLY, db.ObjList())
+	if frame.Header.Type == objects.REQUEST {
+		// If a objects.REQUEST, send local object list as objects.REPLY
+		sending = objects.MakeFrame(objects.OBJ, objects.REPLY, db.ObjList())
 		sending.Peer = frame.Peer
 		config.SendQueue <- *sending
 	}
 
 	// For each object in object list:
-	// If object not stored locally, send GETOBJ REQUEST
+	// If object not stored locally, send GETOBJ objects.REQUEST
 	for _, hash := range obj.HashList {
 		if db.Contains(hash) == db.NOTFOUND {
-			sending = objects.MakeFrame(GETOBJ, REQUEST, &hash)
+			sending = objects.MakeFrame(objects.GETOBJ, objects.REQUEST, &hash)
 			sending.Peer = frame.Peer
 			config.SendQueue <- *sending
 		}
@@ -143,28 +143,28 @@ func fOBJ(config *ApiConfig, frame quibit.Frame, obj *objects.Obj) {
 
 // Handle Object Detail Requests
 func fGETOBJ(config *ApiConfig, frame quibit.Frame, hash *objects.Hash) {
-	// Verify not BROADCAST
-	if frame.Header.Type == BROADCAST {
+	// Verify not objects.BROADCAST
+	if frame.Header.Type == objects.BROADCAST {
 		// SHUN THE NODE! SHUN IT WITH FIRE!
 		config.Log <- "Node sent a getobj message as a broadcast. Disconnecting..."
 		quibit.KillPeer(frame.Peer)
 		return
 	}
 
-	// If object stored locally, send object as a REPLY
+	// If object stored locally, send object as a objects.REPLY
 	var sending *quibit.Frame
-	if frame.Header.Type == REQUEST {
+	if frame.Header.Type == objects.REQUEST {
 		switch db.Contains(*hash) {
 		case db.PUBKEY:
-			sending = objects.MakeFrame(PUBKEY, REPLY, db.GetPubkey(config.Log, *hash))
+			sending = objects.MakeFrame(objects.PUBKEY, objects.REPLY, db.GetPubkey(config.Log, *hash))
 		case db.PURGE:
-			sending = objects.MakeFrame(PURGE, REPLY, db.GetPurge(config.Log, *hash))
+			sending = objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, *hash))
 		case db.MSG:
-			sending = objects.MakeFrame(MSG, REPLY, db.GetMessage(config.Log, *hash))
+			sending = objects.MakeFrame(objects.MSG, objects.REPLY, db.GetMessage(config.Log, *hash))
 		case db.PUBKEYRQ:
-			sending = objects.MakeFrame(PUBKEY_REQUEST, REPLY, hash)
+			sending = objects.MakeFrame(objects.PUBKEY_REQUEST, objects.REPLY, hash)
 		default:
-			sending = objects.MakeFrame(GETOBJ, REPLY, new(objects.NilPayload))
+			sending = objects.MakeFrame(objects.GETOBJ, objects.REPLY, new(objects.NilPayload))
 		} // End switch
 		sending.Peer = frame.Peer
 		config.SendQueue <- *sending
@@ -178,16 +178,16 @@ func fPUBKEY_REQUEST(config *ApiConfig, frame quibit.Frame, pubHash *objects.Has
 	switch db.Contains(*pubHash) {
 	// If request is Not in List, store the request
 	case db.NOTFOUND:
-		// If a BROADCAST, send out another BROADCAST
+		// If a objects.BROADCAST, send out another objects.BROADCAST
 		db.Add(*pubHash, db.PUBKEYRQ)
-		if frame.Header.Type == BROADCAST {
-			config.SendQueue <- *objects.MakeFrame(PUBKEY_REQUEST, BROADCAST, pubHash)
+		if frame.Header.Type == objects.BROADCAST {
+			config.SendQueue <- *objects.MakeFrame(objects.PUBKEY_REQUEST, objects.BROADCAST, pubHash)
 		}
 
 	// If request is a Public Key in List:
 	case db.PUBKEY:
-		// Send out the PUBKEY as a BROADCAST
-		config.SendQueue <- *objects.MakeFrame(PUBKEY, BROADCAST, db.GetPubkey(config.Log, *pubHash))
+		// Send out the PUBKEY as a objects.BROADCAST
+		config.SendQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, db.GetPubkey(config.Log, *pubHash))
 	}
 }
 
@@ -206,9 +206,9 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 			config.Log <- fmt.Sprintf("Error adding pubkey to database: %s", err)
 			break
 		}
-		// If a BROADCAST, send a BROADCAST
-		if frame.Header.Type == BROADCAST {
-			config.SendQueue <- *objects.MakeFrame(PUBKEY, BROADCAST, pubkey)
+		// If a objects.BROADCAST, send a objects.BROADCAST
+		if frame.Header.Type == objects.BROADCAST {
+			config.SendQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, pubkey)
 		}
 	}
 } // End fPUBKEY
@@ -217,19 +217,19 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 	// Check Hash in Object List
 	switch db.Contains(msg.TxidHash) {
-	// If Not in List, Store and BROADCAST
+	// If Not in List, Store and objects.BROADCAST
 	case db.NOTFOUND:
 		err := db.AddMessage(config.Log, msg)
 		if err != nil {
 			config.Log <- fmt.Sprintf("Error adding message to database: %s", err)
 			break
 		}
-		if frame.Header.Type == BROADCAST {
-			config.SendQueue <- *objects.MakeFrame(MSG, BROADCAST, msg)
+		if frame.Header.Type == objects.BROADCAST {
+			config.SendQueue <- *objects.MakeFrame(objects.MSG, objects.BROADCAST, msg)
 		}
 	// If found as PURGE, reply with PURGE
 	case db.PURGE:
-		sending := objects.MakeFrame(PURGE, REPLY, db.GetPurge(config.Log, msg.TxidHash))
+		sending := objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, msg.TxidHash))
 		sending.Peer = frame.Peer
 		config.SendQueue <- *sending
 	}
@@ -258,9 +258,9 @@ func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 			break
 		}
 
-		// Re-BROADCAST if necessary
-		if frame.Header.Type == BROADCAST {
-			config.SendQueue <- *objects.MakeFrame(PURGE, BROADCAST, purge)
+		// Re-objects.BROADCAST if necessary
+		if frame.Header.Type == objects.BROADCAST {
+			config.SendQueue <- *objects.MakeFrame(objects.PURGE, objects.BROADCAST, purge)
 		}
 	} // End Switch
 } // End fPURGE

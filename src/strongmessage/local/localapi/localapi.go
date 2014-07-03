@@ -5,32 +5,28 @@ import (
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 	"net"
-	"time"
 	"net/http"
 	"strongmessage/api"
 	"strongmessage/local/localdb"
 	"strongmessage/objects"
 	"strongmessage/db"
 	"strongmessage/encryption"
-	"strongmessage/network"
-	"crypto/elliptic"
 )
 
 type StrongService struct {
 	Config *api.ApiConfig
-	Log    chan string
 }
 
 type NilParam struct{}
 
 func (s *StrongService) Version(r *http.Request, args *NilParam, reply *objects.Version) error {
-	*reply = *s.Config.LocalVersion
+	*reply = s.Config.LocalVersion
 	return nil
 }
 
-func Initialize(log chan string, config *api.ApiConfig, port uint16) error {
+func Initialize(config *api.ApiConfig) error {
 
-	e := localdb.Initialize(log, config.LocalDB)
+	e := localdb.Initialize(config.Log, config.LocalDB)
 
 	if e != nil {
 		return e
@@ -40,26 +36,30 @@ func Initialize(log chan string, config *api.ApiConfig, port uint16) error {
 	s.RegisterCodec(json.NewCodec(), "application/json")
 	service := new(StrongService)
 	service.Config = config
-	service.Log = log
 	s.RegisterService(service, "StrongService")
 
 	http.Handle("/", s)
 
-	l, e := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	l, e := net.Listen("tcp", fmt.Sprintf(":%d", config.RPCPort))
 	if e != nil {
-		log <- fmt.Sprintf("RPC Listen Error: %s", e)
+		config.Log <- fmt.Sprintf("RPC Listen Error: %s", e)
 		return e
 	}
 
 	go http.Serve(l, nil)
 
-	go register(log, config)
+	//go register(config)
 
-	log <- fmt.Sprintf("Started RPC Server on: %s", fmt.Sprintf(":%d", port))
+	config.Log <- fmt.Sprintf("Started RPC Server on: %s", fmt.Sprintf(":%d", config.RPCPort))
 	return nil
 }
 
+func Cleanup() {
+	localdb.Cleanup()
+}
+
 // Handle Pubkey and Message Registration
+/*
 func register(log chan string, config *api.ApiConfig) {
 	var addrHash []byte
 	var message objects.Message
@@ -73,7 +73,7 @@ func register(log chan string, config *api.ApiConfig) {
 			 * 2. Decrypt and store public key
 			 * 3. Check outbox for outgoing messages with recipient.
 			 * 4. Foreach from 3: send message and move to sendbox.
-			 */
+			 
 
 			 // Check if key is registered
 			 if localdb.Contains(string(addrHash)) != localdb.ADDRESS {
@@ -106,7 +106,7 @@ func register(log chan string, config *api.ApiConfig) {
 				msg.Content = *encryption.Encrypt(log, pubkey, string(decrypted))
 				err = localdb.LocalDB.Exec("UPDATE msg SET encrypted=? WHERE txid_hash=?", msg.Content.GetBytes(), msg.TxidHash)
 				if err != nil {
-					log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
+					config.Log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
 					break
 				}
 
@@ -114,7 +114,7 @@ func register(log chan string, config *api.ApiConfig) {
 
 				err = localdb.LocalDB.Exec("DELETE FROM outbox WHERE txid_hash=?", msg.TxidHash)
 				if err != nil {
-					log <- fmt.Sprintf("Error updating local outbox database... %s", err.Error())
+					config.Log <- fmt.Sprintf("Error updating local outbox database... %s", err.Error())
 					break
 				}
 
@@ -122,7 +122,7 @@ func register(log chan string, config *api.ApiConfig) {
 
 				err = localdb.LocalDB.Exec("INSERT INTO sendbox VALUES(?, ?, ?, ?)", msg.TxidHash, msg.Timestamp, sender, recipient)
 				if err != nil {
-					log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
+					config.Log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
 					break
 				}
 
@@ -147,62 +147,74 @@ func register(log chan string, config *api.ApiConfig) {
 			}
 			err = localdb.LocalDB.Exec("INSERT INTO msg VALUES(?, ?, NULL, 0)", message.TxidHash, message.Content.GetBytes())
 			if err != nil {
-				log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
+				config.Log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
 				break
 			}
 			err = localdb.LocalDB.Exec("INSERT INTO inbox VALUES(?, ?, NULL, ?)", message.TxidHash, message.Timestamp.Unix(), recipient)
 			if err != nil {
-				log <- fmt.Sprintf("Error updating local inbox database... %s", err.Error())
+				config.Log <- fmt.Sprintf("Error updating local inbox database... %s", err.Error())
 				break
 			}
 			localdb.Add(string(message.TxidHash), localdb.INBOX)
 		}
 	}
 }
+*/
 
-func getPubkey(log chan string, config *api.ApiConfig, addrHash, address []byte) []byte {
-	payload := make([]byte, 0, 90)
 
-	for s, err := localdb.LocalDB.Query("SELECT pubkey FROM addressbook WHERE hash=?", addrHash); err == nil; err = s.Next() {
-		s.Scan(&payload)
-		if len(payload) > 0 {
-			return payload
+func checkPubkey(config *api.ApiConfig, addrHash objects.Hash) []byte {
+
+	// First check local DB
+	detail, err := localdb.GetAddressDetail(addrHash)
+	if err != nil {
+		// If not in database, won't be able to decrypt anyway!
+		return nil
+	}
+	if len(detail.Pubkey) > 0 {
+		if db.Contains(addrHash) != db.PUBKEY {
+			enc := new(objects.EncryptedPubkey)
+
+			enc.IV, enc.Payload, _ = encryption.SymmetricEncrypt(detail.Address, string(detail.Pubkey))
+			enc.AddrHash = objects.MakeHash(detail.Address)
+
+			config.RecvQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, enc)
 		}
+		return detail.Pubkey
 	}
 
-	if db.Contains(string(addrHash)) == db.PUBKEY {
-		payload, _ = db.GetPubkey(log, addrHash)
-	}
 
-	if len(payload) > 0 {
-		var IV [16]byte
-		for i := 0; i < 16; i++ {
-			IV[i] = payload[i]
-		}
-		pubkey := encryption.SymmetricDecrypt(IV, address, payload[16:])
+
+	// If not there, check local database
+	if db.Contains(addrHash) == db.PUBKEY {
+		enc := db.GetPubkey(config.Log, addrHash)
+
+		pubkey := encryption.SymmetricDecrypt(enc.IV, detail.Address, enc.Payload)
 		pubkey = pubkey[:65]
 
 		// Check public Key
-		x, y := elliptic.Unmarshal(elliptic.P256(), pubkey)
+		x, y := encryption.UnmarshalPubkey(pubkey)
 		if x == nil {
-			log <- "Decrypted Public Key Invalid"
+			config.Log <- "Decrypted Public Key Invalid"
 			return nil
 		}
 
-		address2, _ := encryption.GetAddress(log, x, y)
-		if string(address) != string(address2) {
-			log <- "Decrypted Public Key doesn't match provided address!"
+		address2 := encryption.GetAddress(config.Log, x, y)
+		if string(detail.Address) != string(address2) {
+			config.Log <- "Decrypted Public Key doesn't match provided address!"
 			return nil
 		}
 
-		// Add public key to local db
-		err := localdb.LocalDB.Exec("UPDATE addressbook SET pubkey=? WHERE hash=?", pubkey, addrHash)
+		detail.Pubkey = pubkey
+		err := localdb.AddUpdateAddress(detail)
 		if err != nil {
-			log <- fmt.Sprintf("Error updating pubkey in localdb... %s", err)
+			config.Log <- "Error adding pubkey to local database!"
+			return nil
 		}
+
 		return pubkey
 	}
 
-	config.RecvChan <- *network.NewFrame("pubkeyrq", addrHash)
+	// If not there, send a pubkey request
+	config.RecvQueue <- *objects.MakeFrame(objects.PUBKEY_REQUEST, objects.BROADCAST, &addrHash)
 	return nil
 }

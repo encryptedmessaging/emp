@@ -10,13 +10,6 @@ import (
 	"strconv"
 )
 
-// This type is a placeholder for returns.  It hasn't been implemented yet.
-type Address struct {
-	PrivateKey []byte
-	X          *big.Int
-	Y          *big.Int
-}
-
 func CreateKey(log chan string) ([]byte, *big.Int, *big.Int) {
 	priv, x, y, err := elliptic.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -24,6 +17,14 @@ func CreateKey(log chan string) ([]byte, *big.Int, *big.Int) {
 		return nil, nil, nil
 	}
 	return priv, x, y
+}
+
+func MarshalPubkey(x, y *big.Int) []byte {
+	return elliptic.Marshal(elliptic.P256(), x, y)
+}
+
+func UnmarshalPubkey(data []byte) (x, y *big.Int) {
+	return elliptic.Unmarshal(elliptic.P256(), data)
 }
 
 func GetAddress(log chan string, x, y *big.Int) []byte {

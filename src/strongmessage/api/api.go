@@ -30,7 +30,7 @@ func Start(config *ApiConfig) {
 		case frame = <-config.RecvQueue:
 			config.Log <- fmt.Sprintf("Received %s frame...", CmdString(frame.Header.Command))
 			switch frame.Header.Command {
-			case VERSION:
+			case objects.VERSION:
 				version := new(objects.Version)
 				err = version.FromBytes(frame.Payload)
 				if err != nil {
@@ -38,7 +38,7 @@ func Start(config *ApiConfig) {
 				} else {
 					go fVERSION(config, frame, version)
 				}
-			case PEER:
+			case objects.PEER:
 				nodeList := new(objects.NodeList)
 				err = nodeList.FromBytes(frame.Payload)
 				if err != nil {
@@ -46,7 +46,7 @@ func Start(config *ApiConfig) {
 				} else {
 					go fPEER(config, frame, nodeList)
 				}
-			case OBJ:
+			case objects.OBJ:
 				obj := new(objects.Obj)
 				err = obj.FromBytes(frame.Payload)
 				if err != nil {
@@ -54,7 +54,7 @@ func Start(config *ApiConfig) {
 				} else {
 					go fOBJ(config, frame, obj)
 				}
-			case GETOBJ:
+			case objects.GETOBJ:
 				getObj := new(objects.Hash)
 				err = getObj.FromBytes(frame.Payload)
 				if err != nil {
@@ -62,7 +62,7 @@ func Start(config *ApiConfig) {
 				} else {
 					go fGETOBJ(config, frame, getObj)
 				}
-			case PUBKEY_REQUEST:
+			case objects.PUBKEY_REQUEST:
 				pubReq := new(objects.Hash)
 				err = pubReq.FromBytes(frame.Payload)
 				if err != nil {
@@ -70,7 +70,7 @@ func Start(config *ApiConfig) {
 				} else {
 					go fPUBKEY_REQUEST(config, frame, pubReq)
 				}
-			case PUBKEY:
+			case objects.PUBKEY:
 				pub := new(objects.EncryptedPubkey)
 				err = pub.FromBytes(frame.Payload)
 				if err != nil {
@@ -78,7 +78,7 @@ func Start(config *ApiConfig) {
 				} else {
 					go fPUBKEY(config, frame, pub)
 				}
-			case MSG:
+			case objects.MSG:
 				msg := new(objects.Message)
 				err = msg.FromBytes(frame.Payload)
 				if err != nil {
@@ -86,7 +86,7 @@ func Start(config *ApiConfig) {
 				} else {
 					go fMSG(config, frame, msg)
 				}
-			case PURGE:
+			case objects.PURGE:
 				purge := new(objects.Purge)
 				err = purge.FromBytes(frame.Payload)
 				if err != nil {
