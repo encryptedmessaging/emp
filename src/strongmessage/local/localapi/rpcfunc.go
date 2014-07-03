@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strongmessage/encryption"
-	"strongmessage/objects"
 	"strongmessage/local/localdb"
+	"strongmessage/objects"
 )
 
 var logChan chan string
@@ -80,8 +80,6 @@ func (service *StrongService) GetAddress(r *http.Request, args *string, reply *o
 
 	return nil
 }
-
-
 
 func (service *StrongService) AddUpdateAddress(r *http.Request, args *objects.AddressDetail, reply *NilParam) error {
 	err := localdb.AddUpdateAddress(args)

@@ -7,10 +7,10 @@ import (
 	"net"
 	"net/http"
 	"strongmessage/api"
-	"strongmessage/local/localdb"
-	"strongmessage/objects"
 	"strongmessage/db"
 	"strongmessage/encryption"
+	"strongmessage/local/localdb"
+	"strongmessage/objects"
 )
 
 type StrongService struct {
@@ -73,7 +73,7 @@ func register(log chan string, config *api.ApiConfig) {
 			 * 2. Decrypt and store public key
 			 * 3. Check outbox for outgoing messages with recipient.
 			 * 4. Foreach from 3: send message and move to sendbox.
-			 
+
 
 			 // Check if key is registered
 			 if localdb.Contains(string(addrHash)) != localdb.ADDRESS {
@@ -161,7 +161,6 @@ func register(log chan string, config *api.ApiConfig) {
 }
 */
 
-
 func checkPubkey(config *api.ApiConfig, addrHash objects.Hash) []byte {
 
 	// First check local DB
@@ -181,8 +180,6 @@ func checkPubkey(config *api.ApiConfig, addrHash objects.Hash) []byte {
 		}
 		return detail.Pubkey
 	}
-
-
 
 	// If not there, check local database
 	if db.Contains(addrHash) == db.PUBKEY {

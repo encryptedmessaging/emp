@@ -1,34 +1,34 @@
 package objects
 
 import (
-	"strongmessage/encryption"
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"strongmessage/encryption"
 	"time"
 )
 
 type MetaMessage struct {
-	TxidHash Hash `json:"txid_hash"`
+	TxidHash  Hash      `json:"txid_hash"`
 	Timestamp time.Time `json:"sent"`
-	Purged bool `json:"read"`
-	Sender string `json:"sender"`
-	Recipient string `json:"recipient"`
+	Purged    bool      `json:"read"`
+	Sender    string    `json:"sender"`
+	Recipient string    `json:"recipient"`
 }
 
 type FullMessage struct {
-	MetaMessage MetaMessage `json:"info"`
-	Encrypted *encryption.EncryptedMessage `json:"encrypted"`
-	Decrypted *DecryptedMessage `json:"decrypted"`
+	MetaMessage MetaMessage                  `json:"info"`
+	Encrypted   *encryption.EncryptedMessage `json:"encrypted"`
+	Decrypted   *DecryptedMessage            `json:"decrypted"`
 }
 
 type DecryptedMessage struct {
-	Txid [16]byte
-	Pubkey [65]byte
-	Subject string
-	MimeType string
-	Length uint32
-	Content string
+	Txid      [16]byte
+	Pubkey    [65]byte
+	Subject   string
+	MimeType  string
+	Length    uint32
+	Content   string
 	Signature [65]byte
 }
 

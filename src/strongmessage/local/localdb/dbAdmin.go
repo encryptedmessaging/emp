@@ -1,9 +1,9 @@
 package localdb
 
 import (
-	"strongmessage/objects"
-	"strongmessage/encryption"
 	"errors"
+	"strongmessage/encryption"
+	"strongmessage/objects"
 	"time"
 )
 
@@ -129,7 +129,7 @@ func AddUpdateMessage(msg *objects.FullMessage, box int) error {
 
 	if Contains(msg.MetaMessage.TxidHash) > SENDBOX { // Insert Message Into Database!
 
-		err = LocalDB.Exec("INSERT INTO msg VALUES (?, ?, ?, ?, ?, ?, ?, ?)", msg.MetaMessage.TxidHash.GetBytes(), encryption.StringToAddress(msg.MetaMessage.Recipient), 
+		err = LocalDB.Exec("INSERT INTO msg VALUES (?, ?, ?, ?, ?, ?, ?, ?)", msg.MetaMessage.TxidHash.GetBytes(), encryption.StringToAddress(msg.MetaMessage.Recipient),
 			msg.MetaMessage.Timestamp.Unix(), box, msg.Encrypted.GetBytes(), msg.Decrypted.GetBytes(), msg.MetaMessage.Purged, encryption.StringToAddress(msg.MetaMessage.Sender))
 		if err != nil {
 			return err

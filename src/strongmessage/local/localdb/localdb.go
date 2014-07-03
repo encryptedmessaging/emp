@@ -2,8 +2,8 @@ package localdb
 
 import (
 	"fmt"
-	"strongmessage/objects"
 	"github.com/mxk/go-sqlite/sqlite3"
+	"strongmessage/objects"
 	"sync"
 )
 
@@ -90,7 +90,7 @@ const (
 var hashList map[string]int
 
 func Add(hashObj objects.Hash, hashType int) {
-	hash := string(hashObj.GetBytes()) 
+	hash := string(hashObj.GetBytes())
 	if hashList != nil {
 		hashList[hash] = hashType
 	}
