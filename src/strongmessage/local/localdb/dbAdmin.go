@@ -104,16 +104,21 @@ func GetMessageDetail(txidHash objects.Hash) (*objects.FullMessage, error) {
 		sender := make([]byte, 0, 0)
 		encrypted := make([]byte, 0, 0)
 		decrypted := make([]byte, 0, 0)
+		txidHash := make([]byte, 0, 0)
 		var timestamp int64
 		var box int
 
-		s.Scan(&ret.MetaMessage.TxidHash, &recipient, &timestamp, &box, &encrypted, &decrypted, &ret.MetaMessage.Purged, &sender)
+		s.Scan(&txidHash, &recipient, &timestamp, &box, &encrypted, &decrypted, &ret.MetaMessage.Purged, &sender)
+		ret.MetaMessage.TxidHash = objects.MakeHash(txidHash)
 		ret.MetaMessage.Recipient = encryption.AddressToString(recipient)
 		ret.MetaMessage.Sender = encryption.AddressToString(sender)
 		ret.MetaMessage.Timestamp = time.Unix(timestamp, 0)
 		ret.Encrypted.FromBytes(encrypted)
-		ret.Decrypted.FromBytes(decrypted)
-
+		if len(decrypted) > 0 {
+			ret.Decrypted.FromBytes(decrypted)
+		} else {
+			ret.Decrypted = nil
+		}
 		return ret, nil
 	}
 

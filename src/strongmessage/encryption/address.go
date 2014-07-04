@@ -27,6 +27,10 @@ func UnmarshalPubkey(data []byte) (x, y *big.Int) {
 	return elliptic.Unmarshal(elliptic.P256(), data)
 }
 
+func GetCurve() elliptic.Curve {
+	return elliptic.P256()
+}
+
 func GetAddress(log chan string, x, y *big.Int) []byte {
 	pubKey := elliptic.Marshal(elliptic.P256(), x, y)
 	ripemd := ripemd160.New()

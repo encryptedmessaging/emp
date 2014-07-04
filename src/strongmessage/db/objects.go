@@ -121,9 +121,9 @@ func AddMessage(log chan string, msg *objects.Message) error {
 		return nil
 	}
 
-	err := dbConn.Exec("INSERT INTO msg VALUES (?, ?, ?, ?)", msg.TxidHash, msg.AddrHash, msg.Timestamp.Unix(), msg.Content.GetBytes())
+	err := dbConn.Exec("INSERT INTO msg VALUES (?, ?, ?, ?)", msg.TxidHash.GetBytes(), msg.AddrHash.GetBytes(), msg.Timestamp.Unix(), msg.Content.GetBytes())
 	if err != nil {
-		log <- fmt.Sprintf("Error inserting purge into db... %s", err)
+		log <- fmt.Sprintf("Error inserting message into db... %s", err)
 		return err
 	}
 

@@ -18,8 +18,8 @@ type MetaMessage struct {
 
 type FullMessage struct {
 	MetaMessage MetaMessage                  `json:"info"`
-	Encrypted   *encryption.EncryptedMessage `json:"encrypted"`
 	Decrypted   *DecryptedMessage            `json:"decrypted"`
+	Encrypted   *encryption.EncryptedMessage `json:"encrypted"`
 }
 
 type DecryptedMessage struct {
