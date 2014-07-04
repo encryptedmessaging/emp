@@ -1,20 +1,20 @@
 package localapi
 
 import (
+	"crypto/ecdsa"
+	"crypto/rand"
 	"errors"
+	"fmt"
+	"math/big"
+	"net/http"
+	"strongmessage/encryption"
 	"strongmessage/local/localdb"
 	"strongmessage/objects"
-	"strongmessage/encryption"
-	"crypto/ecdsa"
-	"net/http"
-	"crypto/rand"
-	"math/big"
 	"time"
-	"fmt"
 )
 
 type SendMsg struct {
-	Sender string `json:"sender"`
+	Sender    string `json:"sender"`
 	Recipient string `json:"recipient"`
 	Subject   string `json:"subject"`
 	Plaintext string `json:"content"`
@@ -22,7 +22,7 @@ type SendMsg struct {
 
 type SendResponse struct {
 	TxidHash []byte `json:"txid_hash"`
-	IsSent bool `json:"sent"`
+	IsSent   bool   `json:"sent"`
 }
 
 func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply *SendResponse) error {
@@ -62,7 +62,6 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error pulling recipient address from Database: %s", err))
 	}
-	
 
 	// Create New Message
 	msg := new(objects.FullMessage)
@@ -93,7 +92,7 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 	priv.D.SetBytes(sender.Privkey)
 
 	sign := msg.Decrypted.GetBytes()
-	sign = sign[:len(sign) - 65]
+	sign = sign[:len(sign)-65]
 	signHash := objects.MakeHash(sign)
 
 	x, y, err := ecdsa.Sign(rand.Reader, priv, signHash.GetBytes())
@@ -101,8 +100,7 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 		return err
 	}
 
-	copy(msg.Decrypted.Signature[:], encryption.MarshalPubkey(x,y))
-	
+	copy(msg.Decrypted.Signature[:], encryption.MarshalPubkey(x, y))
 
 	// Check for pubkey
 	if recipient.Pubkey == nil {
