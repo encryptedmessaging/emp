@@ -18,6 +18,11 @@ type ApiConfig struct {
 	NodeList     objects.NodeList
 	LocalVersion objects.Version
 
+	// Local Register
+	PubkeyRegister  chan objects.Hash
+	MessageRegister chan objects.Message
+	PurgeRegister   chan [16]byte
+
 	// Administration
 	Log  chan string
 	Quit chan os.Signal

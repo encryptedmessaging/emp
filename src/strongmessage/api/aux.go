@@ -210,6 +210,8 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 		if frame.Header.Type == objects.BROADCAST {
 			config.SendQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, pubkey)
 		}
+
+		config.PubkeyRegister <- pubkey.AddrHash
 	}
 } // End fPUBKEY
 
@@ -227,6 +229,9 @@ func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 		if frame.Header.Type == objects.BROADCAST {
 			config.SendQueue <- *objects.MakeFrame(objects.MSG, objects.BROADCAST, msg)
 		}
+
+		config.MessageRegister <- *msg
+
 	// If found as PURGE, reply with PURGE
 	case db.PURGE:
 		sending := objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, msg.TxidHash))
@@ -262,5 +267,7 @@ func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 		if frame.Header.Type == objects.BROADCAST {
 			config.SendQueue <- *objects.MakeFrame(objects.PURGE, objects.BROADCAST, purge)
 		}
+
+		config.PurgeRegister <- purge.Txid
 	} // End Switch
 } // End fPURGE

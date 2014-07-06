@@ -143,9 +143,16 @@ func AddUpdateMessage(msg *objects.FullMessage, box int) error {
 		Add(msg.MetaMessage.TxidHash, box)
 
 	} else { // Update recipient, sender, purged, encrypted, decrypted, box
-		err = LocalDB.Exec("UPDATE msg SET box=?, purged=? WHERE txid_hash=?", box, msg.MetaMessage.Purged, msg.MetaMessage.TxidHash.GetBytes())
-		if err != nil {
-			return err
+		if box < 0 {
+			err = LocalDB.Exec("UPDATE msg SET purged=? WHERE txid_hash=?", msg.MetaMessage.Purged, msg.MetaMessage.TxidHash.GetBytes())
+			if err != nil {
+				return err
+			}
+		} else {
+			err = LocalDB.Exec("UPDATE msg SET box=?, purged=? WHERE txid_hash=?", box, msg.MetaMessage.Purged, msg.MetaMessage.TxidHash.GetBytes())
+			if err != nil {
+				return err
+			}
 		}
 
 		if len(msg.MetaMessage.Sender) > 0 {

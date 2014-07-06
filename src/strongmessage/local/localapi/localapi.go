@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 	"net"
+	"time"
 	"net/http"
 	"strongmessage/api"
 	"strongmessage/db"
@@ -48,7 +49,7 @@ func Initialize(config *api.ApiConfig) error {
 
 	go http.Serve(l, nil)
 
-	//go register(config)
+	go register(config)
 
 	config.Log <- fmt.Sprintf("Started RPC Server on: %s", fmt.Sprintf(":%d", config.RPCPort))
 	return nil
@@ -58,108 +59,84 @@ func Cleanup() {
 	localdb.Cleanup()
 }
 
-// Handle Pubkey and Message Registration
-/*
-func register(log chan string, config *api.ApiConfig) {
-	var addrHash []byte
+// Handle Pubkey, Message, and Purge Registration
+func register(config *api.ApiConfig) {
 	var message objects.Message
+	var txid [16]byte
 
 	for {
 		select {
-		case addrHash = <-config.PubkeyRegister:
-			var address []byte
-			/* Received Public Key!
-			 * 1. Check if associated address exists
-			 * 2. Decrypt and store public key
-			 * 3. Check outbox for outgoing messages with recipient.
-			 * 4. Foreach from 3: send message and move to sendbox.
+		case pubHash := <-config.PubkeyRegister:
 
+			// Check if pubkey is in database...
+			pubkey := checkPubkey(config, pubHash)
 
-			 // Check if key is registered
-			 if localdb.Contains(string(addrHash)) != localdb.ADDRESS {
-			 	break
-			 }
-			 s, err := localdb.LocalDB.Query("SELECT address FROM addressbook WHERE hash=?", addrHash)
-			 if err != nil {
-			 	break
-			 }
-			 s.Scan(&address)
-			 if len(address) == 0 {
-			 	break
-			 }
+			if pubkey == nil {
+				break
+			}
 
+			outbox := localdb.GetBox(localdb.OUTBOX)
+			for _, metamsg := range outbox {
+				recvHash := objects.MakeHash([]byte(metamsg.Recipient))
+				if string(pubHash.GetBytes()) == string(recvHash.GetBytes()) {
+					// Send message and move to sendbox
+					msg, err := localdb.GetMessageDetail(metamsg.TxidHash)
+					if err != nil {
+						config.Log <- err.Error()
+						break
+					}
+					msg.Encrypted = encryption.Encrypt(config.Log, pubkey, string(msg.Decrypted.GetBytes()))
+					msg.MetaMessage.Timestamp = time.Now().Round(time.Second)
+					err = localdb.AddUpdateMessage(msg, localdb.SENDBOX)
+					if err != nil {
+						config.Log <- err.Error()
+						break
+					}
 
-			 // Decrypt and store public key
-			 pubkey := getPubkey(log, config, addrHash, address)
-			 if pubkey == nil {
-			 	break
-			 }
-			 // Check outbox for outgoing messages with recipient.
-			 for s, err := localdb.LocalDB.Query("SELECT msg.txid_hash, outbox.timestamp, msg.decrypted, outbox.sender, outbox.recipient FROM outbox INNER JOIN msg ON outbox.txid_hash=msg.txid_hash WHERE outbox.recipient=?", address); err == nil; err = s.Next() {
-			 	msg := new(objects.Message)
-			 	var timestamp int64
-			 	var decrypted []byte
-			 	var sender, recipient []byte
-				s.Scan(&msg.TxidHash, &timestamp, &decrypted, &sender, &recipient)
-				msg.AddrHash = addrHash
-				msg.Timestamp = time.Unix(timestamp, 0)
-				msg.Content = *encryption.Encrypt(log, pubkey, string(decrypted))
-				err = localdb.LocalDB.Exec("UPDATE msg SET encrypted=? WHERE txid_hash=?", msg.Content.GetBytes(), msg.TxidHash)
-				if err != nil {
-					config.Log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
-					break
+					sendMsg := new(objects.Message)
+					sendMsg.Timestamp = msg.MetaMessage.Timestamp
+					sendMsg.TxidHash = msg.MetaMessage.TxidHash
+					sendMsg.AddrHash = recvHash
+					sendMsg.Content = *msg.Encrypted
+
+					config.RecvQueue <- *objects.MakeFrame(objects.MSG, objects.BROADCAST, sendMsg)
 				}
-
-				// Send Message and move to sendbox
-
-				err = localdb.LocalDB.Exec("DELETE FROM outbox WHERE txid_hash=?", msg.TxidHash)
-				if err != nil {
-					config.Log <- fmt.Sprintf("Error updating local outbox database... %s", err.Error())
-					break
-				}
-
-				config.RecvChan <- *network.NewFrame("msg", msg.GetBytes(log))
-
-				err = localdb.LocalDB.Exec("INSERT INTO sendbox VALUES(?, ?, ?, ?)", msg.TxidHash, msg.Timestamp, sender, recipient)
-				if err != nil {
-					config.Log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
-					break
-				}
-
-
 			}
 
 		case message = <-config.MessageRegister:
-			if localdb.Contains(string(message.AddrHash)) != localdb.ADDRESS {
+			// If address is registered, store message in inbox
+			detail, err := localdb.GetAddressDetail(message.AddrHash)
+			if err != nil {
+				break
+			}
+			if !detail.IsRegistered {
 				break
 			}
 
-			// Check registration, then store message in inbox
-			s, err := localdb.LocalDB.Query("SELECT registered, address from addressbook WHERE hash=?", message.AddrHash)
+			msg := new(objects.FullMessage)
+			msg.MetaMessage.TxidHash = message.TxidHash
+			msg.MetaMessage.Timestamp = message.Timestamp
+			msg.MetaMessage.Recipient = detail.String
+			msg.Encrypted = &message.Content
+
+			err = localdb.AddUpdateMessage(msg, localdb.INBOX)
+			if err != nil {
+				config.Log <- err.Error()
+			}
+		case txid = <-config.PurgeRegister:
+			// If Message in database, mark as purged
+			detail, err := localdb.GetMessageDetail(objects.MakeHash(txid[:]))
 			if err != nil {
 				break
 			}
-			var recipient []byte
-			var isRegistered bool
-			s.Scan(&isRegistered, &recipient)
-			if !isRegistered {
-				break
-			}
-			err = localdb.LocalDB.Exec("INSERT INTO msg VALUES(?, ?, NULL, 0)", message.TxidHash, message.Content.GetBytes())
+			detail.MetaMessage.Purged = true
+			err = localdb.AddUpdateMessage(detail, -1)
 			if err != nil {
-				config.Log <- fmt.Sprintf("Error updating local msg database... %s", err.Error())
-				break
+				config.Log <- fmt.Sprintf("Error registering purge: %s", err)
 			}
-			err = localdb.LocalDB.Exec("INSERT INTO inbox VALUES(?, ?, NULL, ?)", message.TxidHash, message.Timestamp.Unix(), recipient)
-			if err != nil {
-				config.Log <- fmt.Sprintf("Error updating local inbox database... %s", err.Error())
-				break
-			}
-			localdb.Add(string(message.TxidHash), localdb.INBOX)
-		}
-	}
-}
-*/
+		} // End select
+	} // End for
+} // End register
 
 func checkPubkey(config *api.ApiConfig, addrHash objects.Hash) []byte {
 

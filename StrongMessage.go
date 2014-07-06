@@ -6,6 +6,7 @@ import (
 	"strongmessage/api"
 	"strongmessage/local/localapi"
 	"quibit"
+	"strongmessage/objects"
 	"os"
 	"os/signal"
 )
@@ -25,14 +26,19 @@ func main() {
 	config.PeerQueue = make(chan quibit.Peer)
 
 	// Local Logic
-	config.DbFile = "inventory.db"
+	config.DbFile  = "inventory.db"
 	config.LocalDB = "local.db"
 
 	config.LocalVersion.Port = uint16(4444)
-	config.RPCPort = uint16(8080)
+	config.RPCPort           = uint16(8080)
+
+	// Local Registers
+	config.PubkeyRegister  = make(chan objects.Hash, bufLen)
+	config.MessageRegister = make(chan objects.Message, bufLen)
+	config.PurgeRegister   = make(chan [16]byte, bufLen)
 
 	// Administration
-	config.Log = make(chan string, bufLen)
+	config.Log  = make(chan string, bufLen)
 	config.Quit = make(chan os.Signal, 1)
 
 	// Start Network Services
