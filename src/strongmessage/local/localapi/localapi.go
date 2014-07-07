@@ -1,19 +1,19 @@
 package localapi
 
 import (
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 	"net"
-	"time"
 	"net/http"
-	"encoding/base64"
 	"strongmessage/api"
 	"strongmessage/db"
 	"strongmessage/encryption"
 	"strongmessage/local/localdb"
 	"strongmessage/objects"
-	"errors"
+	"time"
 )
 
 type StrongService struct {
@@ -39,7 +39,7 @@ func basicAuth(config *api.ApiConfig, r *http.Request) bool {
 
 	auth := r.Header.Get("Authorization")
 
-	auth2 := "Basic " + base64.StdEncoding.EncodeToString([]byte(config.RPCUser + ":" + config.RPCPass))
+	auth2 := "Basic " + base64.StdEncoding.EncodeToString([]byte(config.RPCUser+":"+config.RPCPass))
 
 	return (auth == auth2)
 }

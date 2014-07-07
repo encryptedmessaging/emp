@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"quibit"
 	"strongmessage"
 	"strongmessage/api"
 	"strongmessage/local/localapi"
-	"quibit"
-	"os"
-	"os/signal"
 )
 
 func main() {
 
-    confFile := api.GetConfDir() + "msg.conf"
+	confFile := api.GetConfDir() + "msg.conf"
 
 	config := api.GetConfig(confFile)
 
@@ -20,7 +20,6 @@ func main() {
 		fmt.Println("Error Loading Config, exiting...")
 		return
 	}
-
 
 	// Start Network Services
 	err := quibit.Initialize(config.Log, config.RecvQueue, config.SendQueue, config.PeerQueue, config.LocalVersion.Port)

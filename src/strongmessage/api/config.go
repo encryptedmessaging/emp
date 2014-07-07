@@ -1,14 +1,14 @@
 package api
 
 import (
-	"os"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"net"
-	"time"
+	"os"
+	"os/user"
 	"quibit"
 	"strongmessage/objects"
-	"os/user"
-	"github.com/BurntSushi/toml"
+	"time"
 )
 
 type ApiConfig struct {
@@ -70,11 +70,10 @@ const (
 )
 
 type tomlConfig struct {
-
 	Inventory string `toml:"inventory"`
-	Local string `toml:"local"`
+	Local     string `toml:"local"`
 
-	IP string
+	IP   string
 	Port uint16
 
 	Peers []string `toml:"bootstrap"`
@@ -90,11 +89,11 @@ type RPCConf struct {
 
 func GetConfDir() string {
 	usr, err := user.Current()
-    if err != nil {
-        return "./"
-    }
+	if err != nil {
+		return "./"
+	}
 
-    return usr.HomeDir + "/.config/strongmsgd/"
+	return usr.HomeDir + "/.config/strongmsgd/"
 }
 
 func GetConfig(confFile string) *ApiConfig {
@@ -106,16 +105,15 @@ func GetConfig(confFile string) *ApiConfig {
 		return nil
 	}
 
-
 	config := new(ApiConfig)
 
 	// Network Channels
 	config.RecvQueue = make(chan quibit.Frame, bufLen)
 	config.SendQueue = make(chan quibit.Frame, bufLen)
-	config.PeerQueue = make(chan quibit.Peer , bufLen)
+	config.PeerQueue = make(chan quibit.Peer, bufLen)
 
 	// Local Logic
-	config.DbFile  = GetConfDir() + tomlConf.Inventory
+	config.DbFile = GetConfDir() + tomlConf.Inventory
 	config.LocalDB = GetConfDir() + tomlConf.Local
 	if len(config.DbFile) == 0 || len(config.LocalDB) == 0 {
 		fmt.Println("Database file not found in config!")
@@ -131,17 +129,17 @@ func GetConfig(confFile string) *ApiConfig {
 	config.LocalVersion.UserAgent = objects.LOCAL_USER
 
 	// RPC
-	config.RPCPort           = tomlConf.RPCConf.Port
-	config.RPCUser           = tomlConf.RPCConf.User
-	config.RPCPass           = tomlConf.RPCConf.Pass
+	config.RPCPort = tomlConf.RPCConf.Port
+	config.RPCUser = tomlConf.RPCConf.User
+	config.RPCPass = tomlConf.RPCConf.Pass
 
 	// Local Registers
-	config.PubkeyRegister  = make(chan objects.Hash, bufLen)
+	config.PubkeyRegister = make(chan objects.Hash, bufLen)
 	config.MessageRegister = make(chan objects.Message, bufLen)
-	config.PurgeRegister   = make(chan [16]byte, bufLen)
+	config.PurgeRegister = make(chan [16]byte, bufLen)
 
 	// Administration
-	config.Log  = make(chan string, bufLen)
+	config.Log = make(chan string, bufLen)
 	config.Quit = make(chan os.Signal, 1)
 
 	// Initialize Map

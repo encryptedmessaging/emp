@@ -181,7 +181,7 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
 		return errors.New("Unauthorized")
 	}
-	
+
 	var txidHash objects.Hash
 	txidHash.FromBytes(*args)
 

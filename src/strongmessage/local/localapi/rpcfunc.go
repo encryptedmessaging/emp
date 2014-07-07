@@ -112,7 +112,7 @@ func (service *StrongService) ListAddresses(r *http.Request, args *bool, reply *
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
 		return errors.New("Unauthorized")
 	}
-	
+
 	strs := localdb.ListAddresses(*args)
 	*reply = strs
 	return nil
