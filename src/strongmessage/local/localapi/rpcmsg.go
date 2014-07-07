@@ -215,6 +215,7 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 			*reply = *msg
 			return nil
 		}
+		msg.Decrypted = new(objects.DecryptedMessage)
 		msg.Decrypted.FromBytes(decrypted)
 
 		// Send Purge Request
