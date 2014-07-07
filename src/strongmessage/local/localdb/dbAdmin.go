@@ -5,7 +5,6 @@ import (
 	"strongmessage/encryption"
 	"strongmessage/objects"
 	"time"
-	"fmt"
 )
 
 func AddUpdateAddress(address *objects.AddressDetail) error {
@@ -136,7 +135,6 @@ func AddUpdateMessage(msg *objects.FullMessage, box int) error {
 	var err error
 
 	if Contains(msg.MetaMessage.TxidHash) > SENDBOX { // Insert Message Into Database!
-		fmt.Println("Inserting Message: ", msg.MetaMessage.TxidHash)
 
 		err = LocalDB.Exec("INSERT INTO msg VALUES (?, ?, ?, ?, ?, ?, ?, ?)", msg.MetaMessage.TxidHash.GetBytes(), encryption.StringToAddress(msg.MetaMessage.Recipient),
 			msg.MetaMessage.Timestamp.Unix(), box, msg.Encrypted.GetBytes(), msg.Decrypted.GetBytes(), msg.MetaMessage.Purged, encryption.StringToAddress(msg.MetaMessage.Sender))
@@ -149,9 +147,6 @@ func AddUpdateMessage(msg *objects.FullMessage, box int) error {
 	} else { // Update recipient, sender, purged, encrypted, decrypted, box
 		if box < 0 {
 			err = LocalDB.Exec("UPDATE msg SET purged=? WHERE txid_hash=?", msg.MetaMessage.Purged, msg.MetaMessage.TxidHash.GetBytes())
-			if msg.MetaMessage.Purged != true {
-				fmt.Println("WTF!!!!")
-			}
 			if err != nil {
 				return err
 			}
