@@ -86,6 +86,9 @@ func AddressToString(addr []byte) string {
 }
 
 func StringToAddress(addr string) []byte {
+	if len(addr) < 2 {
+		return nil
+	}
 	data, err := base64.StdEncoding.DecodeString(addr[1:])
 	if err != nil {
 		return nil
