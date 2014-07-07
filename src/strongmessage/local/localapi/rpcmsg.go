@@ -125,6 +125,8 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 		msg.Encrypted = encryption.Encrypt(service.Config.Log, recipient.Pubkey, string(msg.Decrypted.GetBytes()))
 		msg.MetaMessage.Timestamp = time.Now().Round(time.Second)
 
+		fmt.Println("Adding... ", msg.MetaMessage.TxidHash.GetBytes())
+
 		err = localdb.AddUpdateMessage(msg, localdb.SENDBOX)
 		if err != nil {
 			return err
@@ -143,6 +145,7 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 
 	// Finish by setting msg's txid
 	reply.TxidHash = msg.MetaMessage.TxidHash.GetBytes()
+	fmt.Println("Adding Again... ", msg.MetaMessage.TxidHash.GetBytes())
 	return nil
 }
 
@@ -182,6 +185,8 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 		return errors.New("Unauthorized")
 	}
 
+	fmt.Println("Getting... ", *args)
+
 	var txidHash objects.Hash
 	txidHash.FromBytes(*args)
 
@@ -190,6 +195,7 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 	if err != nil {
 		return err
 	}
+	fmt.Println("Getting 2... ", msg.MetaMessage.TxidHash.GetBytes())
 
 	if msg.Encrypted == nil {
 		*reply = *msg

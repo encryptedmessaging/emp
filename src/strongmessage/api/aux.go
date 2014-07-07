@@ -267,7 +267,6 @@ func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 		if frame.Header.Type == objects.BROADCAST {
 			config.SendQueue <- *objects.MakeFrame(objects.PURGE, objects.BROADCAST, purge)
 		}
-
 		config.PurgeRegister <- purge.Txid
 	} // End Switch
 } // End fPURGE
