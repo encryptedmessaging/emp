@@ -83,6 +83,7 @@ func Start(config *ApiConfig) {
 				} else {
 					go fMSG(config, frame, msg)
 				}
+				fmt.Println("Finished select!")
 			case objects.PURGE:
 				purge := new(objects.Purge)
 				err = purge.FromBytes(frame.Payload)
