@@ -198,7 +198,6 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 
 	// If not decrypted, decrypt message and purge
 	if msg.Decrypted == nil {
-		fmt.Println(msg)
 		recipient, err := localdb.GetAddressDetail(objects.MakeHash(encryption.StringToAddress(msg.MetaMessage.Recipient)))
 		if err != nil {
 			return err
@@ -217,6 +216,16 @@ func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *
 		}
 		msg.Decrypted = new(objects.DecryptedMessage)
 		msg.Decrypted.FromBytes(decrypted)
+
+		// Update Sender
+		detail := new(objects.AddressDetail)
+		detail.Pubkey = msg.Decrypted.Pubkey[:]
+		x, y := encryption.UnmarshalPubkey(detail.Pubkey)
+		detail.Address = encryption.GetAddress(service.Config.Log, x, y)
+		detail.String = encryption.AddressToString(detail.Address)
+
+		localdb.AddUpdateAddress(detail)
+		msg.MetaMessage.Sender = detail.String
 
 		// Send Purge Request
 		purge := new(objects.Purge)
