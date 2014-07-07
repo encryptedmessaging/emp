@@ -22,9 +22,6 @@ func Start(config *ApiConfig) {
 		return
 	}
 
-	// Initialize Map
-	config.NodeList.Nodes = make(map[string]objects.Node)
-
 	for {
 		select {
 		case frame = <-config.RecvQueue:

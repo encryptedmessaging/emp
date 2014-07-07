@@ -23,6 +23,26 @@ type NodeList struct {
 	Nodes map[string]Node
 }
 
+func (n *Node) FromString(hostPort string) error {
+	if n == nil {
+		return errors.New("Can't fill nil object.")
+	}
+
+	ip, port, err := net.SplitHostPort(hostPort)
+	if err != nil {
+		return nil
+	}
+
+	n.IP = net.ParseIP(ip)
+	prt, err := strconv.Atoi(port)
+	if err != nil {
+		return err
+	}
+	n.Port = uint16(prt)
+	n.LastSeen = time.Now().Round(time.Second)
+	return nil
+}
+
 func (n *Node) String() string {
 	if n == nil {
 		return ""

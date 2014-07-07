@@ -26,6 +26,11 @@ type SendResponse struct {
 }
 
 func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply *SendResponse) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
 	// Nil Check
 	if len(args.Sender) == 0 || len(args.Recipient) == 0 || len(args.Plaintext) == 0 {
 		return errors.New("All fields required except signature.")
@@ -142,21 +147,41 @@ func (service *StrongService) SendMessage(r *http.Request, args *SendMsg, reply 
 }
 
 func (service *StrongService) Inbox(r *http.Request, args *NilParam, reply *[]objects.MetaMessage) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
 	*reply = localdb.GetBox(localdb.INBOX)
 	return nil
 }
 
 func (service *StrongService) Outbox(r *http.Request, args *NilParam, reply *[]objects.MetaMessage) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
 	*reply = localdb.GetBox(localdb.OUTBOX)
 	return nil
 }
 
 func (service *StrongService) Sendbox(r *http.Request, args *NilParam, reply *[]objects.MetaMessage) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
 	*reply = localdb.GetBox(localdb.SENDBOX)
 	return nil
 }
 
 func (service *StrongService) OpenMessage(r *http.Request, args *[]byte, reply *objects.FullMessage) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+	
 	var txidHash objects.Hash
 	txidHash.FromBytes(*args)
 

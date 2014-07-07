@@ -7,11 +7,13 @@ import (
 	"net"
 	"time"
 	"net/http"
+	"encoding/base64"
 	"strongmessage/api"
 	"strongmessage/db"
 	"strongmessage/encryption"
 	"strongmessage/local/localdb"
 	"strongmessage/objects"
+	"errors"
 )
 
 type StrongService struct {
@@ -21,8 +23,25 @@ type StrongService struct {
 type NilParam struct{}
 
 func (s *StrongService) Version(r *http.Request, args *NilParam, reply *objects.Version) error {
+	if !basicAuth(s.Config, r) {
+		s.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
 	*reply = s.Config.LocalVersion
 	return nil
+}
+
+func basicAuth(config *api.ApiConfig, r *http.Request) bool {
+	if config == nil || r == nil {
+		return false
+	}
+
+	auth := r.Header.Get("Authorization")
+
+	auth2 := "Basic " + base64.StdEncoding.EncodeToString([]byte(config.RPCUser + ":" + config.RPCPass))
+
+	return (auth == auth2)
 }
 
 func Initialize(config *api.ApiConfig) error {

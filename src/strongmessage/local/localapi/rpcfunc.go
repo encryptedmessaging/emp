@@ -11,11 +11,15 @@ import (
 
 var logChan chan string
 
-func (s *StrongService) CreateAddress(r *http.Request, args *NilParam, reply *objects.AddressDetail) error {
+func (service *StrongService) CreateAddress(r *http.Request, args *NilParam, reply *objects.AddressDetail) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
 
 	// Create Address
 
-	priv, x, y := encryption.CreateKey(s.Config.Log)
+	priv, x, y := encryption.CreateKey(service.Config.Log)
 	reply.Privkey = priv
 	if x == nil {
 		return errors.New("Key Pair Generation Error")
@@ -25,7 +29,7 @@ func (s *StrongService) CreateAddress(r *http.Request, args *NilParam, reply *ob
 
 	reply.IsRegistered = true
 
-	reply.Address = encryption.GetAddress(s.Config.Log, x, y)
+	reply.Address = encryption.GetAddress(service.Config.Log, x, y)
 
 	if reply.Address == nil {
 		return errors.New("Could not create address, function returned nil.")
@@ -36,7 +40,7 @@ func (s *StrongService) CreateAddress(r *http.Request, args *NilParam, reply *ob
 	// Add Address to Database
 	err := localdb.AddUpdateAddress(reply)
 	if err != nil {
-		s.Config.Log <- fmt.Sprintf("Error Adding Address: ", err)
+		service.Config.Log <- fmt.Sprintf("Error Adding Address: ", err)
 		return err
 	}
 
@@ -47,16 +51,22 @@ func (s *StrongService) CreateAddress(r *http.Request, args *NilParam, reply *ob
 
 	encPub.IV, encPub.Payload, err = encryption.SymmetricEncrypt(reply.Address, string(reply.Pubkey))
 	if err != nil {
-		s.Config.Log <- fmt.Sprintf("Error Encrypting Pubkey: ", err)
+		service.Config.Log <- fmt.Sprintf("Error Encrypting Pubkey: ", err)
 		return nil
 	}
 
 	// Record Pubkey for Network
-	s.Config.RecvQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, encPub)
+	service.Config.RecvQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, encPub)
 	return nil
 }
 
 func (service *StrongService) GetAddress(r *http.Request, args *string, reply *objects.AddressDetail) error {
+
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
 	var err error
 
 	address := encryption.StringToAddress(*args)
@@ -82,6 +92,11 @@ func (service *StrongService) GetAddress(r *http.Request, args *string, reply *o
 }
 
 func (service *StrongService) AddUpdateAddress(r *http.Request, args *objects.AddressDetail, reply *NilParam) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
 	err := localdb.AddUpdateAddress(args)
 	if err != nil {
 		return err
@@ -93,6 +108,11 @@ func (service *StrongService) AddUpdateAddress(r *http.Request, args *objects.Ad
 }
 
 func (service *StrongService) ListAddresses(r *http.Request, args *bool, reply *([]string)) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+	
 	strs := localdb.ListAddresses(*args)
 	*reply = strs
 	return nil

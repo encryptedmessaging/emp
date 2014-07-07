@@ -1,0 +1,27 @@
+#### StrongMessage Config File
+#### Version 1
+
+
+# Database
+inventory = "inventory.db"
+local     = "local.db"
+
+# Network
+
+# If a backbone node, change to a custom IP (v4 or v6)
+# ip = <custom_ip>
+ip = "0.0.0.0"
+port = 4444
+
+# Bootstrap Peers
+bootstrap = [
+  "162.243.175.207:4444"
+]
+
+# RPC
+[rpc]
+user = "rpcUser"
+pass = "rpcPass"
+port = 8080
+
+

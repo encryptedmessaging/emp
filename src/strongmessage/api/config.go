@@ -2,8 +2,13 @@ package api
 
 import (
 	"os"
+	"fmt"
+	"net"
+	"time"
 	"quibit"
 	"strongmessage/objects"
+	"os/user"
+	"github.com/BurntSushi/toml"
 )
 
 type ApiConfig struct {
@@ -29,6 +34,8 @@ type ApiConfig struct {
 
 	// Network
 	RPCPort uint16
+	RPCUser string
+	RPCPass string
 }
 
 func CmdString(cmd uint8) string {
@@ -56,4 +63,109 @@ func CmdString(cmd uint8) string {
 	}
 
 	return ret
+}
+
+const (
+	bufLen = 10
+)
+
+type tomlConfig struct {
+
+	Inventory string `toml:"inventory"`
+	Local string `toml:"local"`
+
+	IP string
+	Port uint16
+
+	Peers []string `toml:"bootstrap"`
+
+	RPCConf RPCConf `toml:"rpc"`
+}
+
+type RPCConf struct {
+	User string
+	Pass string
+	Port uint16
+}
+
+func GetConfDir() string {
+	usr, err := user.Current()
+    if err != nil {
+        return "./"
+    }
+
+    return usr.HomeDir + "/.config/strongmsgd/"
+}
+
+func GetConfig(confFile string) *ApiConfig {
+
+	var tomlConf tomlConfig
+
+	if _, err := toml.DecodeFile(confFile, &tomlConf); err != nil {
+		fmt.Println("Config Error: ", err)
+		return nil
+	}
+
+
+	config := new(ApiConfig)
+
+	// Network Channels
+	config.RecvQueue = make(chan quibit.Frame, bufLen)
+	config.SendQueue = make(chan quibit.Frame, bufLen)
+	config.PeerQueue = make(chan quibit.Peer , bufLen)
+
+	// Local Logic
+	config.DbFile  = GetConfDir() + tomlConf.Inventory
+	config.LocalDB = GetConfDir() + tomlConf.Local
+	if len(config.DbFile) == 0 || len(config.LocalDB) == 0 {
+		fmt.Println("Database file not found in config!")
+		return nil
+	}
+
+	config.LocalVersion.Port = tomlConf.Port
+	if tomlConf.IP != "0.0.0.0" {
+		config.LocalVersion.IpAddress = net.ParseIP(tomlConf.IP)
+	}
+	config.LocalVersion.Timestamp = time.Now().Round(time.Second)
+	config.LocalVersion.Version = objects.LOCAL_VERSION
+	config.LocalVersion.UserAgent = objects.LOCAL_USER
+
+	// RPC
+	config.RPCPort           = tomlConf.RPCConf.Port
+	config.RPCUser           = tomlConf.RPCConf.User
+	config.RPCPass           = tomlConf.RPCConf.Pass
+
+	// Local Registers
+	config.PubkeyRegister  = make(chan objects.Hash, bufLen)
+	config.MessageRegister = make(chan objects.Message, bufLen)
+	config.PurgeRegister   = make(chan [16]byte, bufLen)
+
+	// Administration
+	config.Log  = make(chan string, bufLen)
+	config.Quit = make(chan os.Signal, 1)
+
+	// Initialize Map
+	config.NodeList.Nodes = make(map[string]objects.Node)
+
+	// Bootstrap Nodes
+	for i, str := range tomlConf.Peers {
+		if i >= bufLen {
+			break
+		}
+
+		p := new(quibit.Peer)
+		n := new(objects.Node)
+		err := n.FromString(str)
+		if err != nil {
+			fmt.Println("Error Decoding Peer ", str, ": ", err)
+			continue
+		}
+
+		p.IP = n.IP
+		p.Port = n.Port
+		config.PeerQueue <- *p
+		config.NodeList.Nodes[n.String()] = *n
+	}
+
+	return config
 }
