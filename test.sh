@@ -1,6 +1,6 @@
 #!/bin/bash
 go test quibit
-go test strongmessage/encryption
-go test strongmessage/objects
-go test strongmessage/db
-go test strongmessage/api
+go test emp/encryption
+go test emp/objects
+go test emp/db
+go test emp/api

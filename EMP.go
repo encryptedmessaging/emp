@@ -5,9 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"quibit"
-	"strongmessage"
-	"strongmessage/api"
-	"strongmessage/local/localapi"
+	"emp"
+	"emp/api"
+	"emp/local/localapi"
 )
 
 func main() {
@@ -39,7 +39,7 @@ func main() {
 
 	// Start Logger
 	fmt.Println("Starting logger...")
-	strongmessage.BlockingLogger(config.Log)
+	emp.BlockingLogger(config.Log)
 
 	// Give some time for cleanup...
 	fmt.Println("Cleaning up...")
