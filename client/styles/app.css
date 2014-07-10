@@ -1,4 +1,4 @@
 .datarow :hover {
-	cursor: pointer; 
-	cursor: hand;
+	cursor: pointer !important;
+	cursor: hand !important;
 }

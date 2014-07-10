@@ -24,8 +24,12 @@
     <link rel="stylesheet" href="styles/h5bp.css">
     <link rel="stylesheet" href="styles/components/components.css">
     <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/app.css"
+    <link rel="stylesheet" href="styles/app.css">
     <!-- endbuild -->
+
+    <link rel="stylesheet" href="styles/colorbox.css">
+    <script src="scripts/jquery.min.js"></script>
+    <script src="scripts/jquery.colorbox.js"></script>
   </head>
   <body>
     <header class="app-bar promote-layer">
@@ -41,7 +45,7 @@
     <nav class="navdrawer-container promote-layer">
       <h4>Navigation</h4>
       <ul>
-        <li><a href="/">Inbox</a></li>
+        <li><a href="#inbox">Inbox</a></li>
         <li><a href="#outbox">Outbox</a></li>
         <li><a href="#sendbox">Sendbox</a></li>
         <li><a href="#address">Address Book</a></li>
@@ -50,40 +54,66 @@
 
     <main>
       <header class="container">
-        <h3 class="xlarge">Inbox</h3>
-        <a href="#ignore-click" class="button--primary">Refresh</a>
-        <a href="#ignore-click" class="button--primary">New Message</a>
+        <h3 class="xlarge" id="box">Loading...</h3>
+        <a onclick="reloadPage()" class="button--primary" id="refresh">Refresh</a>
+        <a href="" class="button--primary">New Message</a>
       </header>
-      <table class="table-4">
+      <table id="main">
         <colgroup>
-          <col span="1">
-          <col span="1">
-          <col span="1">
-          <col span="1">
         </colgroup>
         <thead>
-          <tr>
-            <th>Date</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Subject</th>
-          </tr>
         </thead>
         <tbody>
-            <tr class="datarow">
-              <td data-th="date">July 1, 2014, 10:00am</td>
-              <td data-th="from">1aismevsemap32nvapsi38</td>
-              <td data-th="to">1aismevsemap32nvapsi38</td>
-              <td data-th="subject">Thiis is a test message...</td>
-            </tr>
         </tbody>
       </table>
     </main>
 
+    <!-- Modals -->
+
+    <div id="messageModal">
+      <h4 class="medium">
+        From: <span id="sender"></span><br />
+        To: <span id="recipient"></span><br />
+        Sent: <span id="sent"></span>
+      </h4>
+      <h3 class="large"><b id="subject"></b></h3>
+      <p class="base" id="text"></p>
+      <p class="small">MIME Type: <span id="mime"></span></p>
+    </div>
+
+
+    <!-- End Modals -->
+
     <!-- build:js scripts/main.min.js -->
     <script src="scripts/main.js"></script>
+    <script src="scripts/app.js"></script>
     <!-- endbuild -->
 
-    <!-- Built with love using Web Starter Kit -->
+    <script type="text/javascript">
+    $(document).ready(function() {
+      // Hide Modals
+      $("#messageModal").hide();
+
+      window.emplogin = getCookie("emplogin")
+      if (!isLoggedIn()) {
+        LogIn("rpcUser", "rpcPass")
+      }
+      reloadPage();
+    });
+
+    if ("onhashchange" in window) { // event supported?
+      window.onhashchange = function () {
+        reloadPage();
+      } 
+    } else { // event not supported:
+      var storedHash = window.location.hash;
+      window.setInterval(function () {
+        if (window.location.hash != storedHash) {
+          storedHash = window.location.hash;
+          reloadPage();
+        }
+      }, 100);
+    }
+    </script>
   </body>
 </html>
