@@ -78,6 +78,9 @@ func (n *NodeList) FromBytes(data []byte) error {
 	if n == nil {
 		return errors.New("Can't configure nil Node List")
 	}
+	if n.Nodes == nil {
+		n.Nodes = make(map[string]Node)
+	}
 
 	for i := 0; i < len(data); i += nodeLen {
 		b := bytes.NewBuffer(data[i : i+nodeLen])
