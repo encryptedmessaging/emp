@@ -48,8 +48,11 @@ func ObjList() *objects.Obj {
 	ret := new(objects.Obj)
 	ret.HashList = make([]objects.Hash, 0, 0)
 
+	hash := new(objects.Hash)
+
 	for key, _ := range hashList {
-		ret.HashList = append(ret.HashList, objects.MakeHash([]byte(key)))
+		hash.FromBytes([]byte(key))
+		ret.HashList = append(ret.HashList, *hash)
 	}
 	return ret
 }
