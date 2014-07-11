@@ -33,11 +33,7 @@ func Start(config *ApiConfig) {
 	for {
 		select {
 		case frame = <-config.RecvQueue:
-			if frame.Header.Command != objects.GETOBJ {
-				config.Log <- fmt.Sprintf("Received %s frame...", CmdString(frame.Header.Command))
-			} else {
-				config.Log <- fmt.Sprintf("Received %s frame for %s...", CmdString(frame.Header.Command), frame.Payload)
-			}
+			config.Log <- fmt.Sprintf("Received %s frame...", CmdString(frame.Header.Command))
 			switch frame.Header.Command {
 			case objects.VERSION:
 				version := new(objects.Version)
