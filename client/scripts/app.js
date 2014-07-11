@@ -46,8 +46,28 @@ function LogIn(user, pass) {
 	return isLoggedIn();
 }
 
-function addUpdateAddress() {
-	
+function addUpdateAddress(formName) {
+	var form = document.forms[formName]
+	if (form == null) {
+		alert("Error: Could not read form.")
+		return false
+	}
+
+	alert(form["addr"].value)
+
+	res = rpcSend("AddUpdateAddress", [{
+		address: form["addr"].value,
+		address_bytes: null,
+		pubkey: form["pubkey"].value,
+		privkey: form["privkey"].value
+	}])
+
+	if (res.error != null) {
+		alert("Error Updating Address: " + res.error)
+	}
+
+	$.colorbox.close()
+
 	return false
 }
 
@@ -124,7 +144,7 @@ function addrDetailModal(address) {
 
 	modal.children().children("#address").text(addrDetail.address)
 
-	modal.children("form").children().children("#addr").attr("value", addrDetail.address)
+	modal.children("form").children("#addr").attr("value", addrDetail.address)
 	modal.children("form").children().children("#pubkey").attr("value", addrDetail.public_key)
 	modal.children("form").children().children("#privkey").attr("value", addrDetail.private_key)
 

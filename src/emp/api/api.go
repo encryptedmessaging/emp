@@ -5,6 +5,7 @@ import (
 	"emp/objects"
 	"fmt"
 	"quibit"
+	"time"
 )
 
 func Start(config *ApiConfig) {
@@ -20,6 +21,13 @@ func Start(config *ApiConfig) {
 		config.Log <- fmt.Sprintf("Error initializing database: %s", err)
 		config.Log <- "Quit"
 		return
+	}
+	config.LocalVersion.Timestamp = time.Now().Round(time.Second)
+
+	locVersion := objects.MakeFrame(objects.VERSION, objects.REQUEST, &config.LocalVersion)
+	for str, _ := range config.NodeList.Nodes {
+		locVersion.Peer = str
+		config.SendQueue <- *locVersion
 	}
 
 	for {

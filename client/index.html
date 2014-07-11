@@ -108,7 +108,7 @@
       <h2 class="large">Address Detail</h2>
       <hr />
       <h3>Address: <span id="address"></span></h3>
-      <form name="addrDetail" onsubmit="return addUpdateAddress()">
+      <form name="addrDetail" onsubmit="return addUpdateAddress('addrDetail')">
         <input type="hidden" id="addr" name="addr" />
       <p class="medium"> Public Key:<br />
         <input type="text" id="pubkey" name="pubkey" class="formText" />
@@ -129,7 +129,7 @@
         <a onclick="createAddress()" class="button--primary">Generate New</a>
       </div>
       <h3>Import New:</h3>
-      <form onsubmit="return addUpdateAddress()" method="post">
+      <form onsubmit="return addUpdateAddress('addrForm')" name="addrForm">
       <p class="medium"> Address:<br />
         <input type="text" name="addr" class="formText" />
       </p> 

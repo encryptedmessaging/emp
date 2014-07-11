@@ -62,6 +62,7 @@ func fVERSION(config *ApiConfig, frame quibit.Frame, version *objects.Version) {
 	var sending *quibit.Frame
 	if frame.Header.Type == objects.REQUEST {
 		// If a objects.REQUEST, send local version as a objects.REPLY
+		config.LocalVersion.Timestamp = time.Now().Round(time.Second)
 		sending = objects.MakeFrame(objects.VERSION, objects.REPLY, &config.LocalVersion)
 	} else {
 		// If a objects.REPLY, send a peer list as a objects.REQUEST

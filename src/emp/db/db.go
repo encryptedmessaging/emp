@@ -79,19 +79,19 @@ func populateHashes() error {
 
 	for s, err := dbConn.Query("SELECT hash FROM pubkey"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = PUBKEY
 	}
 
 	for s, err := dbConn.Query("SELECT hash FROM msg"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = MSG
 	}
 
 	for s, err := dbConn.Query("SELECT hash FROM purge"); err == nil; err = s.Next() {
 		var hash []byte
-		s.Scan(hash) // Assigns 1st column to rowid, the rest to row
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = PURGE
 	}
 

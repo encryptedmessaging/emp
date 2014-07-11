@@ -23,7 +23,6 @@ func AddPubkey(log chan string, pubkey objects.EncryptedPubkey) error {
 
 	err := dbConn.Exec("INSERT INTO pubkey VALUES (?, ?)", hash, payload)
 	if err != nil {
-		fmt.Println("UH OH!", err)
 		log <- fmt.Sprintf("Error inserting pubkey into db... %s", err)
 		return err
 	}
