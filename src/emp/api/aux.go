@@ -235,6 +235,7 @@ func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 			break
 		}
 		if frame.Header.Type == objects.BROADCAST {
+			config.Log <- "Rebroadcasting encrypted message..."
 			config.SendQueue <- *objects.MakeFrame(objects.MSG, objects.BROADCAST, msg)
 		}
 

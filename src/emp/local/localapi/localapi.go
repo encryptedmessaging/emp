@@ -131,6 +131,7 @@ func register(config *api.ApiConfig) {
 			// If address is registered, store message in inbox
 			detail, err := localdb.GetAddressDetail(message.AddrHash)
 			if err != nil {
+				config.Log <- "Could not find address in database..."
 				break
 			}
 			if !detail.IsRegistered {
