@@ -104,6 +104,47 @@
       </form>
     </div>
 
+    <div id="addrDetailModal">
+      <h2 class="large">Address Detail</h2>
+      <hr />
+      <h3>Address: <span id="address"></span></h3>
+      <form name="addrDetail" onsubmit="return addUpdateAddress()">
+        <input type="hidden" id="addr" name="addr" />
+      <p class="medium"> Public Key:<br />
+        <input type="text" id="pubkey" name="pubkey" class="formText" />
+      </p>
+      <p class="medium"> Private Key:<br />
+        <input type="text" id="privkey" name="privkey" class="formText" />
+      </p>
+      <p>
+        <input type="submit" value="Update Address" />
+      </p>
+      </form>
+    </div>
+
+    <div id="addrModal">
+      <h2 class="large">New Address</h2>
+      <hr />
+      <div class="datarow">
+        <a onclick="createAddress()" class="button--primary">Generate New</a>
+      </div>
+      <h3>Import New:</h3>
+      <form onsubmit="return addUpdateAddress()" method="post">
+      <p class="medium"> Address:<br />
+        <input type="text" name="addr" class="formText" />
+      </p> 
+      <p class="medium"> Public Key (optional):<br />
+        <input type="text" name="pubkey" class="formText" />
+      </p>
+      <p class="medium"> Private Key (optional):<br />
+        <input type="text" name="privkey" class="formText" />
+      </p>
+      <p>
+        <input type="submit" value="Update Address" />
+      </p>
+      </form>
+    </div>
+
 
     <!-- End Modals -->
 
@@ -117,6 +158,8 @@
       // Hide Modals
       $("#messageModal").hide();
       $("#newModal").hide();
+      $("#addrDetailModal").hide();
+      $("#addrModal").hide();
 
       window.emplogin = getCookie("emplogin")
       if (!isLoggedIn()) {

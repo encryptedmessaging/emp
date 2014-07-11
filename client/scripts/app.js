@@ -1,5 +1,6 @@
 
 var emplogin = ""
+var openBox
 
 //////////// RPC Functions ///////////////
 function rpcSend(command, params) {
@@ -43,6 +44,19 @@ function isLoggedIn() {
 function LogIn(user, pass) {
 	window.emplogin = window.btoa(user + ":" + pass);
 	return isLoggedIn();
+}
+
+function addUpdateAddress() {
+	
+	return false
+}
+
+function createAddress() {
+	res = rpcSend("CreateAddress", [])
+	if (res.error != null) {
+		alert("Error Creating Address: " + res.error)
+	}
+	$.colorbox.close()
 }
 
 //////////// Cookie Functions (from W3Schools) /////////////
@@ -101,6 +115,30 @@ function newModal() {
 	$.colorbox({inline:true, href:"#newModal", width:"50%",
 				onLoad:function(){ $("#newModal").show(); },
 				onCleanup:function(){ $("#newModal").hide(); reloadPage(); }
+				});
+}
+
+function addrDetailModal(address) {
+	addrDetail = rpcSend("GetAddress", [address]).result
+	var modal = $("#addrDetailModal")
+
+	modal.children().children("#address").text(addrDetail.address)
+
+	modal.children("form").children().children("#addr").attr("value", addrDetail.address)
+	modal.children("form").children().children("#pubkey").attr("value", addrDetail.public_key)
+	modal.children("form").children().children("#privkey").attr("value", addrDetail.private_key)
+
+	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
+				onLoad:function(){ $("#addrDetailModal").show(); },
+				onCleanup:function(){ $("#addrDetailModal").hide(); reloadPage(); }
+				});
+}
+
+function addrModal() {
+
+	openBox = $.colorbox({inline:true, href:"#addrModal", width:"50%",
+				onLoad:function(){ $("#addrModal").show(); },
+				onCleanup:function(){ $("#addrModal").hide(); reloadPage(); }
 				});
 }
 
