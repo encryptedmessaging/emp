@@ -86,13 +86,13 @@
     <div id="newModal">
       <h2 class="large">New Message</h2>
       <hr />
-      <form onsubmit="sendMessage()">
+      <form onsubmit="return sendMessage()"name="sendmsg">
         <p class="medium"> From:
-          <select name="from" class="formSelect">
+          <select name="from" id="from" class="formSelect">
           </select>
         </p>
         <p class="medium"> To:
-          <select name="from" class="formSelect">
+          <select name="to" id="to" class="formSelect">
           </select>
         </p>
         <p class="medium"> Subject:
@@ -100,7 +100,9 @@
         </p>
         <h4 class="medium"><b>Message:</b></h4>
         <textarea name="message" class="formText" ></textarea>
+        <p class="medium">
         <input type="submit" value="Send" />
+        </p>
       </form>
     </div>
 
@@ -116,6 +118,7 @@
       <p class="medium"> Private Key:<br />
         <input type="text" id="privkey" name="privkey" class="formText" />
       </p>
+      <p class="medium">Registered: <input type="checkbox" name="registered" id="registered" /></p>
       <p>
         <input type="submit" value="Update Address" />
       </p>
@@ -139,6 +142,7 @@
       <p class="medium"> Private Key (optional):<br />
         <input type="text" name="privkey" class="formText" />
       </p>
+      <p class="medium">Registered: <input type="checkbox" name="registered" id="registered" /></p>
       <p>
         <input type="submit" value="Update Address" />
       </p>

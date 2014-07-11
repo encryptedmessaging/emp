@@ -53,11 +53,10 @@ function addUpdateAddress(formName) {
 		return false
 	}
 
-	alert(form["addr"].value)
-
 	res = rpcSend("AddUpdateAddress", [{
 		address: form["addr"].value,
 		address_bytes: null,
+		registered: form["registered"].checked,
 		pubkey: form["pubkey"].value,
 		privkey: form["privkey"].value
 	}])
@@ -77,6 +76,29 @@ function createAddress() {
 		alert("Error Creating Address: " + res.error)
 	}
 	$.colorbox.close()
+}
+
+function sendMessage() {
+	var form = document.forms["sendmsg"]
+	if (form == null) {
+		alert("Error: Could not read form.")
+		return false
+	}
+
+	res = rpcSend("SendMessage", [{
+		sender: form["from"].options[form["from"].selectedIndex].value,
+		recipient: form["to"].options[form["to"].selectedIndex].value,
+		subject: form["subject"].value,
+		content: form["message"].value
+	}])
+
+	if (res.error != null) {
+		alert("Error Sending Message: " + res.error)
+	}
+
+	$.colorbox.close()
+
+	return false
 }
 
 //////////// Cookie Functions (from W3Schools) /////////////
@@ -132,6 +154,24 @@ function messageModal(txidHash) {
 }
 
 function newModal() {
+
+	registered = rpcSend("ListAddresses", [true])
+	unregistered = rpcSend("ListAddresses", [false])
+
+	$("#newModal").children().children().children("#from").html("")
+	$("#newModal").children().children().children("#to").html("")
+
+	for (var i = 0; i < unregistered.result.length; i++) {
+		$("#newModal").children().children().children("#to").append("<option value='"+unregistered.result[i]+"'>"+unregistered.result[i]+"</option>")
+	}
+
+	for (var i = 0; i < registered.result.length; i++) {
+		$("#newModal").children().children().children("#to").append("<option value='"+registered.result[i]+"'>"+registered.result[i]+"</option>")
+		$("#newModal").children().children().children("#from").append("<option value='"+registered.result[i]+"'>"+registered.result[i]+"</option>")
+	}
+
+
+
 	$.colorbox({inline:true, href:"#newModal", width:"50%",
 				onLoad:function(){ $("#newModal").show(); },
 				onCleanup:function(){ $("#newModal").hide(); reloadPage(); }
@@ -147,6 +187,7 @@ function addrDetailModal(address) {
 	modal.children("form").children("#addr").attr("value", addrDetail.address)
 	modal.children("form").children().children("#pubkey").attr("value", addrDetail.public_key)
 	modal.children("form").children().children("#privkey").attr("value", addrDetail.private_key)
+	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
 
 	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
 				onLoad:function(){ $("#addrDetailModal").show(); },
