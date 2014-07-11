@@ -217,6 +217,8 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 		// If a objects.BROADCAST, send a objects.BROADCAST
 		if frame.Header.Type == objects.BROADCAST {
 			config.SendQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, pubkey)
+		} else {
+			fmt.Println("Frame Header Type: ", frame.Header.Type)
 		}
 
 		config.PubkeyRegister <- pubkey.AddrHash
