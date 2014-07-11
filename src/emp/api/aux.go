@@ -96,20 +96,24 @@ func fPEER(config *ApiConfig, frame quibit.Frame, nodeList *objects.NodeList) {
 
 	config.SendQueue <- *sending
 
-	// Merge incoming list with current list
-	for key, node := range nodeList.Nodes {
-		_, ok := config.NodeList.Nodes[key]
-		if !ok {
-			config.NodeList.Nodes[key] = node
-			p := new(quibit.Peer)
-			p.IP = node.IP
-			p.Port = node.Port
-			config.PeerQueue <- *p
-			time.Sleep(time.Millisecond)
-			newVer := objects.MakeFrame(objects.VERSION, objects.REQUEST, &config.LocalVersion)
-			config.SendQueue <- *newVer
-		} // End if
-	} // End for
+	if nodeList != nil {
+
+		// Merge incoming list with current list
+		for key, node := range nodeList.Nodes {
+			_, ok := config.NodeList.Nodes[key]
+			if !ok {
+				config.NodeList.Nodes[key] = node
+				p := new(quibit.Peer)
+				p.IP = node.IP
+				p.Port = node.Port
+				config.PeerQueue <- *p
+				time.Sleep(time.Millisecond)
+				newVer := objects.MakeFrame(objects.VERSION, objects.REQUEST, &config.LocalVersion)
+				config.SendQueue <- *newVer
+			} // End if
+		} // End for
+
+	}
 } // End fPEER
 
 // Handle Object Vector Requests or Replies
