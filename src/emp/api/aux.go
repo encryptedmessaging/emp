@@ -100,6 +100,9 @@ func fPEER(config *ApiConfig, frame quibit.Frame, nodeList *objects.NodeList) {
 
 		// Merge incoming list with current list
 		for key, node := range nodeList.Nodes {
+			if node.IP.String() == config.LocalVersion.IpAddress.String() {
+				continue
+			}
 			_, ok := config.NodeList.Nodes[key]
 			if !ok {
 				config.NodeList.Nodes[key] = node

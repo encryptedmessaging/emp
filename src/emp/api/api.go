@@ -33,7 +33,11 @@ func Start(config *ApiConfig) {
 	for {
 		select {
 		case frame = <-config.RecvQueue:
-			config.Log <- fmt.Sprintf("Received %s frame...", CmdString(frame.Header.Command))
+			if frame.Header.Command != objects.GETOBJ {
+				config.Log <- fmt.Sprintf("Received %s frame...", CmdString(frame.Header.Command))
+			} else {
+				config.Log <- fmt.Sprintf("Received %s frame for %s...", CmdString(frame.Header.Command), frame.Payload)
+			}
 			switch frame.Header.Command {
 			case objects.VERSION:
 				version := new(objects.Version)
@@ -61,6 +65,9 @@ func Start(config *ApiConfig) {
 				}
 			case objects.GETOBJ:
 				getObj := new(objects.Hash)
+				if len(frame.Payload) == 0 {
+					break
+				}
 				err = getObj.FromBytes(frame.Payload)
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing getobj hash: %s", err)
