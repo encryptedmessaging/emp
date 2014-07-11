@@ -227,10 +227,12 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 
 // Handle Encrypted Message Broadcasts
 func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
+	fmt.Println("Handling Message...")
 	// Check Hash in Object List
 	switch db.Contains(msg.TxidHash) {
 	// If Not in List, Store and objects.BROADCAST
 	case db.NOTFOUND:
+		fmt.Println("Message not found, adding...")
 		err := db.AddMessage(config.Log, msg)
 		if err != nil {
 			config.Log <- fmt.Sprintf("Error adding message to database: %s", err)
