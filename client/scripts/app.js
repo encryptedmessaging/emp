@@ -97,9 +97,18 @@ function messageModal(txidHash) {
 				});
 }
 
+function newModal() {
+	$.colorbox({inline:true, href:"#newModal", width:"50%",
+				onLoad:function(){ $("#newModal").show(); },
+				onCleanup:function(){ $("#newModal").hide(); reloadPage(); }
+				});
+}
+
 /////////////// Main Functions //////////////////////
 function reloadPage() {
 	var msg
+	var addrRegistered
+	var addrNot
 	switch (window.location.hash) {
 		case "#outbox":
 			$("h3#box").text("Outbox");
@@ -114,6 +123,8 @@ function reloadPage() {
 		case "#address":
 			$("h3#box").text("Address Book");
 			msg = null
+			addrRegistered = rpcSend("ListAddresses", [true])
+			addrNot = rpcSend("ListAddresses", [false])
 			break;
 		case "":
 			window.location.hash = "#inbox"
@@ -129,7 +140,8 @@ function reloadPage() {
 	$("table#main").children("tbody").attr("class", "datarow")
 
 	if (msg != null) {
-		// Clear Everything
+		$("#new").text("New Message")
+		$("#new").attr("onclick", "newModal()")
 
 		$("table#main").attr("class", "table-4")
 		for (var i = 0; i < 4; i++) {
@@ -159,6 +171,32 @@ function reloadPage() {
             	<td data-th='to'>" + msg.result[i].recipient + "</td>\
             	<td data-th='status'>" + unread + "</td>\
 	        </tr>");
+		}
+	} else {
+		$("#new").text("New Address")
+		$("#new").attr("onclick", "addrModal()")
+		$("table#main").attr("class", "table-2")
+		for (var i = 0; i < 2; i++) {
+			$("table#main").children("colgroup").append("<col span='1'>");
+		}
+		$("table#main").children("thead").append("\
+			<tr>\
+            	<th>Address</th>\
+            	<th>Registered?</th>\
+	        </tr>");
+		for (var i = 0; i < addrRegistered.result.length; i++) {
+			$("table#main").children("tbody").prepend("\
+				<tr onclick='addrDetailModal(\"" + addrRegistered.result[i] + "\")'>\
+					<td data-th='address'>" + addrRegistered.result[i] + "</td>\
+            		<td data-th='registered'>Yes</td>\
+            	</tr>");
+		}
+		for (var i = 0; i < addrNot.result.length; i++) {
+			$("table#main").children("tbody").prepend("\
+				<tr onclick='addrDetailModal(\"" + addrNot.result[i] + "\")'>\
+					<td data-th='address'>" + addrNot.result[i] + "</td>\
+            		<td data-th='registered'>No</td>\
+            	</tr>");
 		}
 	}
 }

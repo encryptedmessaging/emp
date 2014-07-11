@@ -55,8 +55,10 @@
     <main>
       <header class="container">
         <h3 class="xlarge" id="box">Loading...</h3>
+        <div class="datarow">
         <a onclick="reloadPage()" class="button--primary" id="refresh">Refresh</a>
-        <a href="" class="button--primary">New Message</a>
+        <a onclick="newModal()" class="button--primary" id="new">New Message</a>
+        </div>
       </header>
       <table id="main">
         <colgroup>
@@ -72,13 +74,34 @@
 
     <div id="messageModal">
       <h4 class="medium">
-        From: <span id="sender"></span><br />
-        To: <span id="recipient"></span><br />
+        From: <span id="sender"></span> | 
+        To: <span id="recipient"></span> | 
         Sent: <span id="sent"></span>
       </h4>
       <h3 class="large"><b id="subject"></b></h3>
       <p class="base" id="text"></p>
       <p class="small">MIME Type: <span id="mime"></span></p>
+    </div>
+
+    <div id="newModal">
+      <h2 class="large">New Message</h2>
+      <hr />
+      <form onsubmit="sendMessage()">
+        <p class="medium"> From:
+          <select name="from" class="formSelect">
+          </select>
+        </p>
+        <p class="medium"> To:
+          <select name="from" class="formSelect">
+          </select>
+        </p>
+        <p class="medium"> Subject:
+          <input type="text" name="subject" class="formText"/>
+        </p>
+        <h4 class="medium"><b>Message:</b></h4>
+        <textarea name="message" class="formText" ></textarea>
+        <input type="submit" value="Send" />
+      </form>
     </div>
 
 
@@ -93,6 +116,7 @@
     $(document).ready(function() {
       // Hide Modals
       $("#messageModal").hide();
+      $("#newModal").hide();
 
       window.emplogin = getCookie("emplogin")
       if (!isLoggedIn()) {
