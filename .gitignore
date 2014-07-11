@@ -5,4 +5,4 @@ src/*.local
 src/quibit
 *~
 *.db
-emp
+./emp
