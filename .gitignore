@@ -2,6 +2,5 @@ pkg/
 src/github.com/
 src/code.google.com
 src/*.local
-src/quibit
 *~
 *.db
