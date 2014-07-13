@@ -13,3 +13,10 @@ This repository contains submodules.  You will need to run:
 git submodule init
 git submodule update
 ```
+
+Launching
+---------
+
+Running `./start.sh` will start empd and open a local browser.
+
+Running `./stop.sh` wil stop empd
