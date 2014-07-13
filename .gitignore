@@ -4,3 +4,5 @@ src/code.google.com
 src/*.local
 *~
 *.db
+log
+pid
