@@ -6,3 +6,4 @@ src/*.local
 *.db
 log
 pid
+EMP
