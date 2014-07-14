@@ -101,6 +101,27 @@ function sendMessage() {
 	return false
 }
 
+function credentialCheck() {
+	var form = document.forms["loginForm"]
+	if (form == null) {
+		alert("Error: Could not read form.")
+		return false
+	}
+	var user = form["user"].value
+	var pass = form["pass"].value
+
+	if(LogIn(user, pass)) {
+		if (form["remember"].checked) {
+			setCookie("emplogin", window.emplogin, 1)
+		}
+		$.colorbox.close();
+	} else {
+		$("#loginError").show();
+	}
+
+	return false
+}
+
 //////////// Cookie Functions (from W3Schools) /////////////
 function setCookie(cname, cvalue, exdays) {
     var d = new Date();
@@ -200,6 +221,16 @@ function addrModal() {
 	openBox = $.colorbox({inline:true, href:"#addrModal", width:"50%",
 				onLoad:function(){ $("#addrModal").show(); },
 				onCleanup:function(){ $("#addrModal").hide(); reloadPage(); }
+				});
+}
+
+function loginModal() {
+	$("#loginError").hide();
+
+	$.colorbox({inline:true, href:"#loginModal", width:"50%",
+				onLoad:function(){ $("#loginModal").show(); },
+				onCleanup:function(){ $("#loginModal").hide(); },
+				onClosed:function(){ if(!isLoggedIn()) { loginModal(); } else {reloadPage()}}
 				});
 }
 

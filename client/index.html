@@ -149,6 +149,25 @@
       </form>
     </div>
 
+    <div id="loginModal">
+      <h2 class="large">RPC Login</h2>
+      <hr />
+      <h3>RPC Credentials should be located in ~/.config/emp/msg.conf.</h3>
+      <h3 class="medium color--danger" style="height: 40px"><b id="loginError">Incorrect Credentials</b></h3>
+      <form name="loginForm" onsubmit="return credentialCheck()" >
+        <p class="medium">Username:<br />
+          <input type="text" name="user" class="formText" />
+        </p>
+        <p class="medium">Password:<br />
+          <input type="password" name="pass" class="formText" />
+        </p>
+        <p class="medium">Remember Me (Uses Cookies): <input type="checkbox" name="remember" /></p>
+        <p>
+          <input type="submit" value="Log In" />
+        </p>
+      </form>
+    </div>
+
 
     <!-- End Modals -->
 
@@ -164,12 +183,14 @@
       $("#newModal").hide();
       $("#addrDetailModal").hide();
       $("#addrModal").hide();
+      $("#loginModal").hide();
 
       window.emplogin = getCookie("emplogin")
       if (!isLoggedIn()) {
-        LogIn("rpcUser", "rpcPass")
+        loginModal();
+      } else {
+        reloadPage();
       }
-      reloadPage();
     });
 
     if ("onhashchange" in window) { // event supported?
