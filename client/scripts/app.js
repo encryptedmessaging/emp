@@ -56,6 +56,7 @@ function addUpdateAddress(formName) {
 	res = rpcSend("AddUpdateAddress", [{
 		address: form["addr"].value,
 		address_bytes: null,
+		label: form["label"].value,
 		registered: form["registered"].checked,
 		pubkey: form["pubkey"].value,
 		privkey: form["privkey"].value
@@ -159,6 +160,10 @@ function messageModal(txidHash) {
 	res = rpcSend("OpenMessage", [txidHash])
 	message = res.result
 	date = new Date(Date.parse(message.info.sent));
+
+	message.info.sender = rpcSend("GetLabel", [message.info.sender]).result
+	message.info.recipient = rpcSend("GetLabel", [message.info.recipient]).result
+
 	$("#messageModal").children().children("#sender").text(message.info.sender)
 	$("#messageModal").children().children("#recipient").text(message.info.recipient)
 	$("#messageModal").children().children("#sent").text(date.toLocaleString())
@@ -183,12 +188,24 @@ function newModal() {
 	$("#newModal").children().children().children("#to").html("")
 
 	for (var i = 0; i < unregistered.result.length; i++) {
-		$("#newModal").children().children().children("#to").append("<option value='"+unregistered.result[i]+"'>"+unregistered.result[i]+"</option>")
+		var str
+		if (unregistered.result[i][1].length > 0) {
+			str = unregistered.result[i][1]
+		} else {
+			str = unregistered.result[i][0]
+		}
+		$("#newModal").children().children().children("#to").append("<option value='"+unregistered.result[i][0]+"'>" + str + "</option>")
 	}
 
 	for (var i = 0; i < registered.result.length; i++) {
-		$("#newModal").children().children().children("#to").append("<option value='"+registered.result[i]+"'>"+registered.result[i]+"</option>")
-		$("#newModal").children().children().children("#from").append("<option value='"+registered.result[i]+"'>"+registered.result[i]+"</option>")
+		var str
+		if (registered.result[i][1].length > 0) {
+			str = registered.result[i][1]
+		} else {
+			str = registered.result[i][0]
+		}
+		$("#newModal").children().children().children("#to").append("<option value='"+registered.result[i][0]+"'>" + str + "</option>")
+		$("#newModal").children().children().children("#from").append("<option value='"+registered.result[i][0]+"'>" + str + "</option>")
 	}
 
 
@@ -208,6 +225,7 @@ function addrDetailModal(address) {
 	modal.children("form").children("#addr").attr("value", addrDetail.address)
 	modal.children("form").children().children("#pubkey").attr("value", addrDetail.public_key)
 	modal.children("form").children().children("#privkey").attr("value", addrDetail.private_key)
+	modal.children("form").children().children("#label").attr("value", addrDetail.label)
 	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
 
 	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
@@ -236,9 +254,9 @@ function loginModal() {
 
 /////////////// Main Functions //////////////////////
 function reloadPage() {
-	var msg
-	var addrRegistered
-	var addrNot
+	var msg = null
+	var addr = null
+	var registered
 	switch (window.location.hash) {
 		case "#outbox":
 			$("h3#box").text("Outbox");
@@ -250,11 +268,13 @@ function reloadPage() {
 			$("h3#box").text("Sendbox");
 			msg = rpcSend("Sendbox", [])
 			break;
+		case "#myaddr":
+			$("h3#box").text("My Addresses");
+			addr = rpcSend("ListAddresses", [true]);
+			break;
 		case "#address":
 			$("h3#box").text("Address Book");
-			msg = null
-			addrRegistered = rpcSend("ListAddresses", [true])
-			addrNot = rpcSend("ListAddresses", [false])
+			addr = rpcSend("ListAddresses", [false])
 			break;
 		case "":
 			window.location.hash = "#inbox"
@@ -294,6 +314,9 @@ function reloadPage() {
 
 			date = new Date(Date.parse(msg.result[i].sent));
 
+			msg.result[i].sender = rpcSend("GetLabel", [msg.result[i].sender]).result
+			msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
+
 			$("table#main").children("tbody").prepend("\
 			<tr onclick='messageModal(\"" + ArrayToBase64(msg.result[i].txid_hash) + "\")'>\
             	<td data-th='date'>" + date.toLocaleString() + "</td>\
@@ -312,20 +335,13 @@ function reloadPage() {
 		$("table#main").children("thead").append("\
 			<tr>\
             	<th>Address</th>\
-            	<th>Registered?</th>\
+            	<th>Label</th>\
 	        </tr>");
-		for (var i = 0; i < addrRegistered.result.length; i++) {
+		for (var i = 0; i < addr.result.length; i++) {
 			$("table#main").children("tbody").prepend("\
-				<tr onclick='addrDetailModal(\"" + addrRegistered.result[i] + "\")'>\
-					<td data-th='address'>" + addrRegistered.result[i] + "</td>\
-            		<td data-th='registered'>Yes</td>\
-            	</tr>");
-		}
-		for (var i = 0; i < addrNot.result.length; i++) {
-			$("table#main").children("tbody").prepend("\
-				<tr onclick='addrDetailModal(\"" + addrNot.result[i] + "\")'>\
-					<td data-th='address'>" + addrNot.result[i] + "</td>\
-            		<td data-th='registered'>No</td>\
+				<tr onclick='addrDetailModal(\"" + addr.result[i][0] + "\")'>\
+					<td data-th='address'>" + addr.result[i][0] + "</td>\
+            		<td data-th='registered'>" + addr.result[i][1] + "</td>\
             	</tr>");
 		}
 	}

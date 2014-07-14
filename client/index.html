@@ -48,6 +48,7 @@
         <li><a href="#inbox">Inbox</a></li>
         <li><a href="#outbox">Outbox</a></li>
         <li><a href="#sendbox">Sendbox</a></li>
+        <li><a href="#myaddr">My Addresses</a></li>
         <li><a href="#address">Address Book</a></li>
       </ul>
     </nav>
@@ -112,6 +113,9 @@
       <h3>Address: <span id="address"></span></h3>
       <form name="addrDetail" onsubmit="return addUpdateAddress('addrDetail')">
         <input type="hidden" id="addr" name="addr" />
+      <p class="medium"> Label:<br />
+        <input type="text" name="label" id="label" class="formText" />
+      </p>
       <p class="medium"> Public Key:<br />
         <input type="text" id="pubkey" name="pubkey" class="formText" />
       </p>
@@ -130,12 +134,16 @@
       <hr />
       <div class="datarow">
         <a onclick="createAddress()" class="button--primary">Generate New</a>
+        Note: Will appear under "My Addresses"
       </div>
       <h3>Import New:</h3>
       <form onsubmit="return addUpdateAddress('addrForm')" name="addrForm">
       <p class="medium"> Address:<br />
         <input type="text" name="addr" class="formText" />
       </p> 
+      <p class="medium"> Label (optional):<br />
+        <input type="text" name="label" class="formText" />
+      </p>
       <p class="medium"> Public Key (optional):<br />
         <input type="text" name="pubkey" class="formText" />
       </p>

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"emp/encryption"
 	"time"
-	"strings"
 )
 
 type MetaMessage struct {
@@ -69,12 +68,12 @@ func (d *DecryptedMessage) FromBytes(data []byte) error {
 	if err != nil {
 		return err
 	}
-	d.Subject = strings.TrimSpace(d.Subject)
+	d.Subject = d.Subject[:len(d.Subject)-1]
 	d.MimeType, err = buf.ReadString(0)
 	if err != nil {
 		return err
 	}
-	d.MimeType = strings.TrimSpace(d.MimeType)
+	d.MimeType = d.MimeType[:len(d.MimeType)-1]
 
 	d.Length = binary.BigEndian.Uint32(buf.Next(4))
 

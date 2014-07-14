@@ -11,6 +11,34 @@ import (
 
 var logChan chan string
 
+func (service *EMPService) GetLabel(r *http.Request, args *string, reply *string) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
+	var err error
+
+	address := encryption.StringToAddress(*args)
+	if len(address) != 25 {
+		return errors.New(fmt.Sprintf("Invalid Address: %s", address))
+	}
+
+	addrHash := objects.MakeHash(address)
+
+	detail, err := localdb.GetAddressDetail(addrHash)
+	if err != nil {
+		return err
+	}
+
+	if len(detail.Label) > 0 {
+		*reply = detail.Label
+	} else {
+		*reply = *args
+	}
+	return nil
+}
+
 func (service *EMPService) CreateAddress(r *http.Request, args *NilParam, reply *objects.AddressDetail) error {
 	if !basicAuth(service.Config, r) {
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
@@ -107,7 +135,7 @@ func (service *EMPService) AddUpdateAddress(r *http.Request, args *objects.Addre
 	return nil
 }
 
-func (service *EMPService) ListAddresses(r *http.Request, args *bool, reply *([]string)) error {
+func (service *EMPService) ListAddresses(r *http.Request, args *bool, reply *([][2]string)) error {
 	if !basicAuth(service.Config, r) {
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
 		return errors.New("Unauthorized")

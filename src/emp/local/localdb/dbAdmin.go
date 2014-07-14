@@ -24,7 +24,7 @@ func AddUpdateAddress(address *objects.AddressDetail) error {
 	addrHash := objects.MakeHash(address.Address)
 
 	if Contains(addrHash) == ADDRESS { // Exists in message database, update pubkey, privkey, and registration
-		err = LocalDB.Exec("UPDATE addressbook SET registered=? WHERE hash=?", address.IsRegistered, addrHash.GetBytes())
+		err = LocalDB.Exec("UPDATE addressbook SET registered=?, label=? WHERE hash=?", address.IsRegistered, address.Label, addrHash.GetBytes())
 		if err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ func AddUpdateAddress(address *objects.AddressDetail) error {
 		}
 
 	} else { // Doesn't exist yet, insert it!
-		err = LocalDB.Exec("INSERT INTO addressbook VALUES (?, ?, ?, ?, ?)", addrHash.GetBytes(), address.Address, address.IsRegistered, address.Pubkey, address.Privkey)
+		err = LocalDB.Exec("INSERT INTO addressbook VALUES (?, ?, ?, ?, ?, ?)", addrHash.GetBytes(), address.Address, address.IsRegistered, address.Pubkey, address.Privkey, address.Label)
 		if err != nil {
 			return err
 		}
@@ -64,9 +64,9 @@ func GetAddressDetail(addrHash objects.Hash) (*objects.AddressDetail, error) {
 
 	ret := new(objects.AddressDetail)
 
-	s, err := LocalDB.Query("SELECT address, registered, pubkey, privkey FROM addressbook WHERE hash=?", addrHash.GetBytes())
+	s, err := LocalDB.Query("SELECT address, registered, pubkey, privkey, label FROM addressbook WHERE hash=?", addrHash.GetBytes())
 	if err == nil {
-		s.Scan(&ret.Address, &ret.IsRegistered, &ret.Pubkey, &ret.Privkey)
+		s.Scan(&ret.Address, &ret.IsRegistered, &ret.Pubkey, &ret.Privkey, &ret.Label)
 		ret.String = encryption.AddressToString(ret.Address)
 		return ret, nil
 	}
@@ -74,13 +74,14 @@ func GetAddressDetail(addrHash objects.Hash) (*objects.AddressDetail, error) {
 	return nil, err
 }
 
-func ListAddresses(registered bool) []string {
-	ret := make([]string, 0, 0)
+func ListAddresses(registered bool) [][2]string {
+	ret := make([][2]string, 0, 0)
 
-	for s, err := LocalDB.Query("SELECT address FROM addressbook WHERE registered=?", registered); err == nil; err = s.Next() {
+	for s, err := LocalDB.Query("SELECT address, label FROM addressbook WHERE registered=?", registered); err == nil; err = s.Next() {
 		var addr []byte
-		s.Scan(&addr)
-		ret = append(ret, encryption.AddressToString(addr))
+		var label string
+		s.Scan(&addr, &label)
+		ret = append(ret, [2]string{encryption.AddressToString(addr), label})
 	}
 
 	return ret
