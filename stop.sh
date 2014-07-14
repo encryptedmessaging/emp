@@ -3,6 +3,6 @@
 # Kill existing process
 if [ -f ./pid ];
 then
-  kill -9 `cat ./pid`
+  kill -2 `cat ./pid`
   rm pid
 fi

@@ -9,7 +9,7 @@ then
 fi
 
 GOPATH=`pwd`:$GOPATH go build EMP.go
-./EMP >> log &
+./EMP > log_`date +%s` &
 echo $! >> ./pid
 sleep 1
 firefox http://localhost:8080/
