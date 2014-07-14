@@ -1,13 +1,13 @@
 package main
 
 import (
+	"emp"
+	"emp/api"
+	"emp/local/localapi"
 	"fmt"
 	"os"
 	"os/signal"
 	"quibit"
-	"emp"
-	"emp/api"
-	"emp/local/localapi"
 )
 
 func main() {
