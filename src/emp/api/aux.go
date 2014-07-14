@@ -182,6 +182,7 @@ func fGETOBJ(config *ApiConfig, frame quibit.Frame, hash *objects.Hash) {
 // Handle Public Key Request Broadcasts
 func fPUBKEY_REQUEST(config *ApiConfig, frame quibit.Frame, pubHash *objects.Hash) {
 	// Check Hash in Object List
+	var sending quibit.Frame
 
 	switch db.Contains(*pubHash) {
 	// If request is Not in List, store the request
@@ -189,13 +190,17 @@ func fPUBKEY_REQUEST(config *ApiConfig, frame quibit.Frame, pubHash *objects.Has
 		// If a objects.BROADCAST, send out another objects.BROADCAST
 		db.Add(*pubHash, db.PUBKEYRQ)
 		if frame.Header.Type == objects.BROADCAST {
-			config.SendQueue <- *objects.MakeFrame(objects.PUBKEY_REQUEST, objects.BROADCAST, pubHash)
+			sending = *objects.MakeFrame(objects.PUBKEY_REQUEST, objects.BROADCAST, pubHash)
+			sending.Peer = frame.Peer
+			config.SendQueue <- sending
 		}
 
 	// If request is a Public Key in List:
 	case db.PUBKEY:
 		// Send out the PUBKEY as a objects.BROADCAST
-		config.SendQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, db.GetPubkey(config.Log, *pubHash))
+		sending = *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, db.GetPubkey(config.Log, *pubHash))
+		sending.Peer = frame.Peer
+		config.SendQueue <- sending
 	}
 }
 
@@ -216,7 +221,9 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 		}
 		// If a objects.BROADCAST, send a objects.BROADCAST
 		if frame.Header.Type == objects.BROADCAST {
-			config.SendQueue <- *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, pubkey)
+			sending := *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, pubkey)
+			sending.Peer = frame.Peer
+			config.SendQueue <- sending
 		} else {
 			fmt.Println("Frame Header Type: ", frame.Header.Type)
 		}
@@ -227,6 +234,7 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 
 // Handle Encrypted Message Broadcasts
 func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
+	var sending quibit.Frame
 	fmt.Println("Handling Message...")
 	// Check Hash in Object List
 	switch db.Contains(msg.TxidHash) {
@@ -240,16 +248,18 @@ func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 		}
 		if frame.Header.Type == objects.BROADCAST {
 			config.Log <- "Rebroadcasting encrypted message..."
-			config.SendQueue <- *objects.MakeFrame(objects.MSG, objects.BROADCAST, msg)
+			sending = *objects.MakeFrame(objects.MSG, objects.BROADCAST, msg)
+			sending.Peer = frame.Peer
+			config.SendQueue <- sending
 		}
 
 		config.MessageRegister <- *msg
 
 	// If found as PURGE, reply with PURGE
 	case db.PURGE:
-		sending := objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, msg.TxidHash))
+		sending = *objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, msg.TxidHash))
 		sending.Peer = frame.Peer
-		config.SendQueue <- *sending
+		config.SendQueue <- sending
 	}
 } // End fMSG
 
@@ -278,7 +288,9 @@ func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 
 		// Re-objects.BROADCAST if necessary
 		if frame.Header.Type == objects.BROADCAST {
-			config.SendQueue <- *objects.MakeFrame(objects.PURGE, objects.BROADCAST, purge)
+			sending := *objects.MakeFrame(objects.PURGE, objects.BROADCAST, purge)
+			sending.Peer = frame.Peer
+			config.SendQueue <- sending
 		}
 		config.PurgeRegister <- purge.Txid
 	} // End Switch
