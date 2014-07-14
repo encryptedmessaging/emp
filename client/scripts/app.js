@@ -265,7 +265,7 @@ function reloadPage() {
 
 			break;
 		case "#sendbox":
-			$("h3#box").text("Sendbox");
+			$("h3#box").text("Sent");
 			msg = rpcSend("Sendbox", [])
 			break;
 		case "#myaddr":
@@ -273,7 +273,7 @@ function reloadPage() {
 			addr = rpcSend("ListAddresses", [true]);
 			break;
 		case "#address":
-			$("h3#box").text("Address Book");
+			$("h3#box").text("Contacts");
 			addr = rpcSend("ListAddresses", [false])
 			break;
 		case "":
