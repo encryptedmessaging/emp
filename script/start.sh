@@ -8,9 +8,8 @@ mkdir -p ~/.config/emp/log
 if [ ! -f ~/.config/emp/msg.conf ]; then
   cp $DIR/msg.conf.example ~/.config/emp/msg.conf
 fi
-if [ ! -f ~/.config/emp/client/index.html ]; then
-  cp -r $DIR/../client ~/.config/emp/
-fi
+rm -rf ~/.config/emp/client
+cp -r $DIR/../client ~/.config/emp/
 
 # Kill existing process
 if [ -f ~/.config/emp/pid ];
@@ -23,7 +22,5 @@ fi
 if `go install emp`; then
 	$GOPATH/bin/emp > ~/.config/emp/log/log_`date +%s` &
 	echo $! > ~/.config/emp/pid
-	sleep 1
-	xdg-open http://localhost:8080/
 else echo "Build Failed, could not start client."
 fi
