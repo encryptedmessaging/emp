@@ -135,7 +135,7 @@ func GetConfig(confFile string) *ApiConfig {
 	config.RPCPort = tomlConf.RPCConf.Port
 	config.RPCUser = tomlConf.RPCConf.User
 	config.RPCPass = tomlConf.RPCConf.Pass
-	config.HttpRoot = tomlConf.RPCConf.Local
+	config.HttpRoot = GetConfDir() + tomlConf.RPCConf.Local
 
 	// Local Registers
 	config.PubkeyRegister = make(chan objects.Hash, bufLen)

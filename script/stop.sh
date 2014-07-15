@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Kill existing process
-if [ -f ./pid ];
+if [ -f ~/.config/emp/pid ];
 then
-  kill -2 `cat ./pid`
-  rm pid
+  kill -2 `cat ~/.config/emp/pid`
+  rm ~/.config/emp/pid
 fi
