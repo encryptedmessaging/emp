@@ -41,13 +41,18 @@ echo "Building and running..."
 if `go install emp`; then
 	$GOPATH/bin/emp > ~/.config/emp/log/log_`date +%s` &
 	echo $! > ~/.config/emp/pid
+
+	# Get Ports
+	PORTS=$(sed -n 's/.*port *= *\([^ ]*.*\)/\1/p' < ~/.config/emp/msg.conf)
+	IFS=' ' read -a array <<< $PORTS
+
+	# Final Output
+	echo "Started EMP client on local port ${array[0]}."
+	echo "Access local client at: http://localhost:${array[1]}"
+
+	exit 0
+
 else echo "Build Failed, could not start client."
 fi
 
-# Get Ports
-PORTS=$(sed -n 's/.*port *= *\([^ ]*.*\)/\1/p' < ~/.config/emp/msg.conf)
-IFS=' ' read -a array <<< $PORTS
-
-# Final Output
-echo "Started EMP client on local port ${array[0]}."
-echo "Access local client at: http://localhost:${array[1]}"
+exit -1
