@@ -1,7 +1,6 @@
 package main
 
 import (
-	"emp"
 	"emp/api"
 	"emp/local/localapi"
 	"fmt"
@@ -9,6 +8,17 @@ import (
 	"os/signal"
 	"quibit"
 )
+
+func BlockingLogger(channel chan string) {
+        var log string
+        for {
+                log = <-channel
+                fmt.Println(log)
+                if log == "Quit" {
+                        break
+                }
+        }
+}
 
 func main() {
 
@@ -39,7 +49,7 @@ func main() {
 
 	// Start Logger
 	fmt.Println("Starting logger...")
-	emp.BlockingLogger(config.Log)
+	BlockingLogger(config.Log)
 
 	// Give some time for cleanup...
 	fmt.Println("Cleaning up...")
