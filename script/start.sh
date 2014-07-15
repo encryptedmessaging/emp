@@ -1,5 +1,7 @@
 #!/bin/bash
 
+TMPGOPATH=$GOPATH
+
 # Check for go
 echo "Checking for go command..."
 if ! which go > /dev/null; then
@@ -9,7 +11,7 @@ fi
 
 # Setup environment variables
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-GOPATH=$DIR/..
+export GOPATH=$DIR/..
 
 # Make and fill config directory
 echo "Checking config directory..."
@@ -50,9 +52,11 @@ if `go install emp`; then
 	echo "Started EMP client on local port ${array[0]}."
 	echo "Access local client at: http://localhost:${array[1]}"
 
+	export GOPATH=$TMPGOPATH
 	exit 0
 
 else echo "Build Failed, could not start client."
 fi
 
+export GOPATH=$TMPGOPATH
 exit -1
