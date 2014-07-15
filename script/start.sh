@@ -17,7 +17,7 @@ if [ -f ~/.config/emp/pid ];
 then
   echo 'killing existing process...'
   kill -15 `cat ~/.config/emp/pid`
-  rm pid
+  rm -f ~/.config/emp/pid
 fi
 
 if `go install emp`; then
