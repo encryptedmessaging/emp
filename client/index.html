@@ -204,7 +204,7 @@
       window.onhashchange = function () {
         reloadPage();
       }
-      setInterval(reloadPage(), 5000); 
+      setInterval(reloadPage, 3000); 
     } else { // event not supported:
       var storedHash = window.location.hash;
       window.setInterval(function () {
