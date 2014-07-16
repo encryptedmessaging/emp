@@ -14,7 +14,7 @@ git submodule init
 git submodule update
 ```
 
-Required Libraries
+Required Tools
 ---------
 In order to compile and run this software, you will need:
 
