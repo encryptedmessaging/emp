@@ -1,3 +1,5 @@
+build:
+	script/build.sh
 start:
 	script/start.sh
 stop:
