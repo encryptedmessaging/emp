@@ -127,11 +127,10 @@ func register(config *api.ApiConfig) {
 			}
 
 		case message = <-config.MessageRegister:
-			fmt.Println("Registered!")
 			// If address is registered, store message in inbox
 			detail, err := localdb.GetAddressDetail(message.AddrHash)
 			if err != nil {
-				config.Log <- "Could not find address in database..."
+				config.Log <- "Message not for registered address..."
 				break
 			}
 			if !detail.IsRegistered {

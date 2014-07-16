@@ -225,7 +225,7 @@ function addrDetailModal(address) {
 	modal.children("form").children("#addr").attr("value", addrDetail.address)
 	modal.children("form").children().children("#pubkey").attr("value", addrDetail.public_key)
 	modal.children("form").children().children("#privkey").attr("value", addrDetail.private_key)
-	modal.children("form").children().children("#label").attr("value", addrDetail.label)
+	modal.children("form").children().children("#label").attr("value", addrDetail.address_label)
 	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
 
 	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
