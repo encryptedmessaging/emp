@@ -56,7 +56,7 @@ function addUpdateAddress(formName) {
 	res = rpcSend("AddUpdateAddress", [{
 		address: form["addr"].value,
 		address_bytes: null,
-		label: form["label"].value,
+		address_label: form["addrlabel"].value,
 		registered: form["registered"].checked,
 		pubkey: form["pubkey"].value,
 		privkey: form["privkey"].value
@@ -225,7 +225,7 @@ function addrDetailModal(address) {
 	modal.children("form").children("#addr").attr("value", addrDetail.address)
 	modal.children("form").children().children("#pubkey").attr("value", addrDetail.public_key)
 	modal.children("form").children().children("#privkey").attr("value", addrDetail.private_key)
-	modal.children("form").children().children("#label").attr("value", addrDetail.address_label)
+	document.forms["addrDetail"]["addrlabel"].value = addrDetail.address_label
 	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
 
 	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
