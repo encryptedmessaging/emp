@@ -224,8 +224,6 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 			sending := *objects.MakeFrame(objects.PUBKEY, objects.BROADCAST, pubkey)
 			sending.Peer = frame.Peer
 			config.SendQueue <- sending
-		} else {
-			fmt.Println("Frame Header Type: ", frame.Header.Type)
 		}
 
 		config.PubkeyRegister <- pubkey.AddrHash
@@ -235,19 +233,16 @@ func fPUBKEY(config *ApiConfig, frame quibit.Frame, pubkey *objects.EncryptedPub
 // Handle Encrypted Message Broadcasts
 func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 	var sending quibit.Frame
-	fmt.Println("Handling Message...")
 	// Check Hash in Object List
 	switch db.Contains(msg.TxidHash) {
 	// If Not in List, Store and objects.BROADCAST
 	case db.NOTFOUND:
-		fmt.Println("Message not found, adding...")
 		err := db.AddMessage(config.Log, msg)
 		if err != nil {
 			config.Log <- fmt.Sprintf("Error adding message to database: %s", err)
 			break
 		}
 		if frame.Header.Type == objects.BROADCAST {
-			config.Log <- "Rebroadcasting encrypted message..."
 			sending = *objects.MakeFrame(objects.MSG, objects.BROADCAST, msg)
 			sending.Peer = frame.Peer
 			config.SendQueue <- sending
