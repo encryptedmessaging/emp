@@ -315,6 +315,9 @@ function reloadPage() {
 			date = new Date(Date.parse(msg.result[i].sent));
 
 			msg.result[i].sender = rpcSend("GetLabel", [msg.result[i].sender]).result
+			if (msg.result[i].sender == null) {
+				msg.result[i].sender = "<Not Decrypted Yet>"
+			}
 			msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
 
 			$("table#main").children("tbody").prepend("\
