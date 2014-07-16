@@ -5,6 +5,7 @@ import (
 	"emp/objects"
 	"fmt"
 	"quibit"
+	"runtime"
 	"time"
 )
 
@@ -110,8 +111,11 @@ func fPEER(config *ApiConfig, frame quibit.Frame, nodeList *objects.NodeList) {
 				p.IP = node.IP
 				p.Port = node.Port
 				config.PeerQueue <- *p
-				time.Sleep(time.Millisecond)
+				runtime.Gosched()
+
 				newVer := objects.MakeFrame(objects.VERSION, objects.REQUEST, &config.LocalVersion)
+				newVer.Peer = p.String()
+
 				config.SendQueue <- *newVer
 			} // End if
 		} // End for
