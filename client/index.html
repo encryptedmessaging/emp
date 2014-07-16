@@ -47,16 +47,18 @@
       <ul>
         <li><a href="#inbox">Inbox</a></li>
         <li><a href="#outbox">Outbox</a></li>
-        <li><a href="#sendbox">Sendbox</a></li>
-        <li><a href="#address">Address Book</a></li>
+        <li><a href="#sendbox">Sent</a></li>
+        <li><a href="#myaddr">My Addresses</a></li>
+        <li><a href="#address">Contacts</a></li>
       </ul>
     </nav>
-
     <main>
-      <header class="container">
+      <header>
         <h3 class="xlarge" id="box">Loading...</h3>
+        <div class="datarow">
         <a onclick="reloadPage()" class="button--primary" id="refresh">Refresh</a>
-        <a href="" class="button--primary">New Message</a>
+        <a onclick="newModal()" class="button--primary" id="new">New Message</a>
+        </div>
       </header>
       <table id="main">
         <colgroup>
@@ -72,13 +74,105 @@
 
     <div id="messageModal">
       <h4 class="medium">
-        From: <span id="sender"></span><br />
-        To: <span id="recipient"></span><br />
+        From: <span id="sender"></span> | 
+        To: <span id="recipient"></span> | 
         Sent: <span id="sent"></span>
       </h4>
       <h3 class="large"><b id="subject"></b></h3>
       <p class="base" id="text"></p>
       <p class="small">MIME Type: <span id="mime"></span></p>
+    </div>
+
+    <div id="newModal">
+      <h2 class="large">New Message</h2>
+      <hr />
+      <form onsubmit="return sendMessage()"name="sendmsg">
+        <p class="medium"> From:
+          <select name="from" id="from" class="formSelect">
+          </select>
+        </p>
+        <p class="medium"> To:
+          <select name="to" id="to" class="formSelect">
+          </select>
+        </p>
+        <p class="medium"> Subject:
+          <input type="text" name="subject" class="formText"/>
+        </p>
+        <h4 class="medium"><b>Message:</b></h4>
+        <textarea name="message" class="formText" ></textarea>
+        <p class="medium">
+        <input type="submit" value="Send" />
+        </p>
+      </form>
+    </div>
+
+    <div id="addrDetailModal">
+      <h2 class="large">Address Detail</h2>
+      <hr />
+      <h3>Address: <span id="address"></span></h3>
+      <form name="addrDetail" onsubmit="return addUpdateAddress('addrDetail')">
+        <input type="hidden" id="addr" name="addr" />
+      <p class="medium"> Label:<br />
+        <input type="text" name="addrlabel" id="addrlabel" class="formText" />
+      </p>
+      <p class="medium"> Public Key:<br />
+        <input type="text" id="pubkey" name="pubkey" class="formText" />
+      </p>
+      <p class="medium"> Private Key:<br />
+        <input type="text" id="privkey" name="privkey" class="formText" />
+      </p>
+      <p class="medium">Registered: <input type="checkbox" name="registered" id="registered" /></p>
+      <p>
+        <input type="submit" value="Update Address" />
+      </p>
+      </form>
+    </div>
+
+    <div id="addrModal">
+      <h2 class="large">New Address</h2>
+      <hr />
+      <div class="datarow">
+        <a onclick="createAddress()" class="button--primary">Generate New</a>
+        Note: Will appear under "My Addresses"
+      </div>
+      <h3>Import New:</h3>
+      <form onsubmit="return addUpdateAddress('addrForm')" name="addrForm">
+      <p class="medium"> Address:<br />
+        <input type="text" name="addr" class="formText" />
+      </p> 
+      <p class="medium"> Label (optional):<br />
+        <input type="text" name="addrlabel" class="formText" />
+      </p>
+      <p class="medium"> Public Key (optional):<br />
+        <input type="text" name="pubkey" class="formText" />
+      </p>
+      <p class="medium"> Private Key (optional):<br />
+        <input type="text" name="privkey" class="formText" />
+      </p>
+      <p class="medium">Registered: <input type="checkbox" name="registered" id="registered" /></p>
+      <p>
+        <input type="submit" value="Update Address" />
+      </p>
+      </form>
+    </div>
+
+    <div id="loginModal">
+      <h2 class="large">RPC Login</h2>
+      <hr />
+      <h3>RPC Credentials should be located in ~/.config/emp/msg.conf.</h3>
+      <h3 class="medium color--danger" style="height: 40px"><b id="loginError">Incorrect Credentials</b></h3>
+      <form name="loginForm" onsubmit="return credentialCheck()" >
+        <p class="medium">Username:<br />
+          <input type="text" name="user" class="formText" />
+        </p>
+        <p class="medium">Password:<br />
+          <input type="password" name="pass" class="formText" />
+        </p>
+        <p class="medium">Remember Me (Uses Cookies): <input type="checkbox" name="remember" /></p>
+        <p>
+          <input type="submit" value="Log In" />
+        </p>
+      </form>
     </div>
 
 
@@ -93,18 +187,24 @@
     $(document).ready(function() {
       // Hide Modals
       $("#messageModal").hide();
+      $("#newModal").hide();
+      $("#addrDetailModal").hide();
+      $("#addrModal").hide();
+      $("#loginModal").hide();
 
       window.emplogin = getCookie("emplogin")
       if (!isLoggedIn()) {
-        LogIn("rpcUser", "rpcPass")
+        loginModal();
+      } else {
+        reloadPage();
       }
-      reloadPage();
     });
 
     if ("onhashchange" in window) { // event supported?
       window.onhashchange = function () {
         reloadPage();
-      } 
+      }
+      setInterval(reloadPage, 3000); 
     } else { // event not supported:
       var storedHash = window.location.hash;
       window.setInterval(function () {

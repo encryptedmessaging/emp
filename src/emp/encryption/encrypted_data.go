@@ -33,6 +33,9 @@ func (ret *EncryptedMessage) FromBytes(b []byte) error {
 }
 
 func (e *EncryptedMessage) GetBytes() []byte {
+	if e == nil {
+		return nil
+	}
 	ret := make([]byte, 0, 0)
 	ret = append(ret, e.IV[:]...)
 	ret = append(ret, e.PublicKey[:]...)

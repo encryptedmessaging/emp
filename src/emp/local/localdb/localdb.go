@@ -1,9 +1,9 @@
 package localdb
 
 import (
+	"emp/objects"
 	"fmt"
 	"github.com/mxk/go-sqlite/sqlite3"
-	"emp/objects"
 	"sync"
 )
 
@@ -29,7 +29,7 @@ func Initialize(log chan string, dbFile string) error {
 
 	// Create Database Schema
 
-	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS addressbook (hash BLOB NOT NULL UNIQUE, address BLOB NOT NULL UNIQUE, registered INTEGER NOT NULL, pubkey BLOB, privkey BLOB, PRIMARY KEY (hash) ON CONFLICT REPLACE)")
+	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS addressbook (hash BLOB NOT NULL UNIQUE, address BLOB NOT NULL UNIQUE, registered INTEGER NOT NULL, pubkey BLOB, privkey BLOB, label TEXT, PRIMARY KEY (hash) ON CONFLICT REPLACE)")
 	if err != nil {
 		log <- fmt.Sprintf("Error setting up addressbook schema... %s", err)
 		LocalDB = nil

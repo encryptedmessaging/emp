@@ -2,3 +2,7 @@
 	cursor: pointer !important;
 	cursor: hand !important;
 }
+
+.formText {
+	width: 90%;
+}

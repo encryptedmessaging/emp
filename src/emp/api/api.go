@@ -5,6 +5,7 @@ import (
 	"emp/objects"
 	"fmt"
 	"quibit"
+	"time"
 )
 
 func Start(config *ApiConfig) {
@@ -21,6 +22,13 @@ func Start(config *ApiConfig) {
 		config.Log <- "Quit"
 		return
 	}
+	config.LocalVersion.Timestamp = time.Now().Round(time.Second)
+
+	locVersion := objects.MakeFrame(objects.VERSION, objects.REQUEST, &config.LocalVersion)
+	for str, _ := range config.NodeList.Nodes {
+		locVersion.Peer = str
+		config.SendQueue <- *locVersion
+	}
 
 	for {
 		select {
@@ -33,7 +41,7 @@ func Start(config *ApiConfig) {
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing version: %s", err)
 				} else {
-					go fVERSION(config, frame, version)
+					fVERSION(config, frame, version)
 				}
 			case objects.PEER:
 				nodeList := new(objects.NodeList)
@@ -41,7 +49,7 @@ func Start(config *ApiConfig) {
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing peer list: %s", err)
 				} else {
-					go fPEER(config, frame, nodeList)
+					fPEER(config, frame, nodeList)
 				}
 			case objects.OBJ:
 				obj := new(objects.Obj)
@@ -49,15 +57,18 @@ func Start(config *ApiConfig) {
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing obj list: %s", err)
 				} else {
-					go fOBJ(config, frame, obj)
+					fOBJ(config, frame, obj)
 				}
 			case objects.GETOBJ:
 				getObj := new(objects.Hash)
+				if len(frame.Payload) == 0 {
+					break
+				}
 				err = getObj.FromBytes(frame.Payload)
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing getobj hash: %s", err)
 				} else {
-					go fGETOBJ(config, frame, getObj)
+					fGETOBJ(config, frame, getObj)
 				}
 			case objects.PUBKEY_REQUEST:
 				pubReq := new(objects.Hash)
@@ -65,7 +76,7 @@ func Start(config *ApiConfig) {
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing pubkey request hash: %s", err)
 				} else {
-					go fPUBKEY_REQUEST(config, frame, pubReq)
+					fPUBKEY_REQUEST(config, frame, pubReq)
 				}
 			case objects.PUBKEY:
 				pub := new(objects.EncryptedPubkey)
@@ -73,7 +84,7 @@ func Start(config *ApiConfig) {
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing pubkey: %s", err)
 				} else {
-					go fPUBKEY(config, frame, pub)
+					fPUBKEY(config, frame, pub)
 				}
 			case objects.MSG:
 				msg := new(objects.Message)
@@ -81,16 +92,15 @@ func Start(config *ApiConfig) {
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing message: %s", err)
 				} else {
-					go fMSG(config, frame, msg)
+					fMSG(config, frame, msg)
 				}
-				fmt.Println("Finished select!")
 			case objects.PURGE:
 				purge := new(objects.Purge)
 				err = purge.FromBytes(frame.Payload)
 				if err != nil {
 					config.Log <- fmt.Sprintf("Error parsing purge: %s", err)
 				} else {
-					go fPURGE(config, frame, purge)
+					fPURGE(config, frame, purge)
 				}
 			default:
 				config.Log <- fmt.Sprintf("Received invalid frame for command: %d", frame.Header.Command)

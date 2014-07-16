@@ -23,4 +23,4 @@ bootstrap = [
 user = "rpcUser"
 pass = "rpcPass"
 port = 8080
-local_client = "/path/to/emp/client"
+local_client = "client"

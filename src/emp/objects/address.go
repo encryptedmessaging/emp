@@ -6,4 +6,5 @@ type AddressDetail struct {
 	IsRegistered bool   `json:"registered"`
 	Pubkey       []byte `json:"public_key"`
 	Privkey      []byte `json:"private_key"`
+	Label        string `json:"address_label"`
 }
