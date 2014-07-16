@@ -218,11 +218,20 @@ func (service *EMPService) OpenMessage(r *http.Request, args *[]byte, reply *obj
 		msg.Decrypted.FromBytes(decrypted)
 
 		// Update Sender
-		detail := new(objects.AddressDetail)
+
+		
+		x, y := encryption.UnmarshalPubkey(msg.Decrypted.Pubkey[:])
+		address := encryption.GetAddress(service.Config.Log, x, y)
+		addrStr := encryption.AddressToString(address)
+		addrHash := objects.MakeHash(address)
+
+		detail, _ := localdb.GetAddressDetail(addrHash)
+		if detail == nil {
+			detail = new(objects.AddressDetail)
+		}
+		detail.Address = address
+		detail.String = addrStr
 		detail.Pubkey = msg.Decrypted.Pubkey[:]
-		x, y := encryption.UnmarshalPubkey(detail.Pubkey)
-		detail.Address = encryption.GetAddress(service.Config.Log, x, y)
-		detail.String = encryption.AddressToString(detail.Address)
 
 		localdb.AddUpdateAddress(detail)
 		msg.MetaMessage.Sender = detail.String
