@@ -17,9 +17,10 @@ git submodule update
 Required Libraries
 ---------
 In order to compile and run this software, you will need:
-* [Go Compiler (gc)](http://golang.org/doc/install)
-* [Git](http://git-scm.com/book/en/Getting-Started-Installing-Git)
-* [Mercurial](http://mercurial.selenic.com/wiki/Download)
+
+* The [Go Compiler (gc)](http://golang.org/doc/install)
+* For Downloading Dependencies: [Git](http://git-scm.com/book/en/Getting-Started-Installing-Git)
+* For Downloading Dependencies: [Mercurial](http://mercurial.selenic.com/wiki/Download)
 
 Building and Launching
 ---------
