@@ -1,3 +1,0 @@
-[submodule "src/quibit"]
-	path = src/quibit
-	url = git@bitbucket.org:aosmith/quibit-src.git
