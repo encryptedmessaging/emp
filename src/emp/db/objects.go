@@ -158,8 +158,6 @@ func GetMessage(log chan string, txidHash objects.Hash) *objects.Message {
 		msg.Timestamp = time.Unix(timestamp, 0)
 		msg.Content.FromBytes(encrypted)
 
-		fmt.Println("Pulling Message from Database: ", msg)
-
 		return msg
 	}
 	// Not Found
