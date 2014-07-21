@@ -17,6 +17,7 @@ export GOPATH=$DIR/..
 echo "Checking config directory..."
 mkdir -p ~/.config/emp
 mkdir -p ~/.config/emp/log
+touch ~/.config/emp/known_nodes.dat
 if [ ! -f ~/.config/emp/msg.conf ]; then
   cp $DIR/msg.conf.example ~/.config/emp/msg.conf
 fi

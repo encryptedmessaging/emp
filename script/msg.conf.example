@@ -2,9 +2,10 @@
 #### Version 1
 
 
-# Database
+# Databases
 inventory = "inventory.db"
 local     = "local.db"
+nodes     = "known_nodes.dat"
 
 # Network
 
