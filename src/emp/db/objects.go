@@ -148,11 +148,17 @@ func GetMessage(log chan string, txidHash objects.Hash) *objects.Message {
 
 	for s, err := dbConn.Query("SELECT * FROM msg WHERE hash=?", hash); err == nil; err = s.Next() {
 		var timestamp int64
-		var encrypted []byte
-		s.Scan(&msg.TxidHash, &msg.AddrHash, &timestamp, &encrypted)
+		encrypted := make([]byte, 0, 0)
+		txidhash := make([]byte, 0, 0)
+		addrhash := make([]byte, 0, 0)
+		s.Scan(&txidhash, &addrhash, &timestamp, &encrypted)
 
+		msg.TxidHash.FromBytes(txidhash)
+		msg.AddrHash.FromBytes(addrhash)
 		msg.Timestamp = time.Unix(timestamp, 0)
 		msg.Content.FromBytes(encrypted)
+
+		fmt.Println("Pulling Message from Database: ", msg)
 
 		return msg
 	}
