@@ -172,7 +172,12 @@ func fGETOBJ(config *ApiConfig, frame quibit.Frame, hash *objects.Hash) {
 		case db.PURGE:
 			sending = objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, *hash))
 		case db.MSG:
-			sending = objects.MakeFrame(objects.MSG, objects.REPLY, db.GetMessage(config.Log, *hash))
+			message := db.GetMessage(config.Log, *hash)
+			if message != nil {
+				sending = objects.MakeFrame(objects.MSG, objects.REPLY, message)
+			} else {
+				config.Log <- "Error pulling message from database!"
+			}
 		case db.PUBKEYRQ:
 			sending = objects.MakeFrame(objects.PUBKEY_REQUEST, objects.REPLY, hash)
 		default:
@@ -251,11 +256,12 @@ func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 			sending.Peer = frame.Peer
 			config.SendQueue <- sending
 		}
-
+		config.Log <- "Registering message..."
 		config.MessageRegister <- *msg
 
 	// If found as PURGE, reply with PURGE
 	case db.PURGE:
+		config.Log <- "Received already-purged message!"
 		sending = *objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, msg.TxidHash))
 		sending.Peer = frame.Peer
 		config.SendQueue <- sending

@@ -130,12 +130,15 @@ func register(config *api.ApiConfig) {
 			// If address is registered, store message in inbox
 			detail, err := localdb.GetAddressDetail(message.AddrHash)
 			if err != nil {
-				config.Log <- "Message not for registered address..."
+				config.Log <- "Message address not in database..."
 				break
 			}
 			if !detail.IsRegistered {
+				config.Log <- "Message not for registered address..."
 				break
 			}
+
+			config.Log <- "Registering new encrypted message..."
 
 			msg := new(objects.FullMessage)
 			msg.MetaMessage.TxidHash = message.TxidHash
