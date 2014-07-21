@@ -107,6 +107,8 @@ func Start(config *ApiConfig) {
 			}
 		case <-config.Quit:
 			fmt.Println()
+			// Dump Nodes to File
+			DumpNodes(config)
 			return
 		}
 	}

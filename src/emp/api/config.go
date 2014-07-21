@@ -6,9 +6,11 @@ import (
 	"github.com/BurntSushi/toml"
 	"net"
 	"os"
+	"bufio"
 	"os/user"
 	"quibit"
 	"time"
+	"io/ioutil"
 )
 
 type ApiConfig struct {
@@ -20,6 +22,7 @@ type ApiConfig struct {
 	// Local Logic
 	DbFile       string
 	LocalDB      string
+	NodeFile     string
 	NodeList     objects.NodeList
 	LocalVersion objects.Version
 
@@ -74,6 +77,7 @@ const (
 type tomlConfig struct {
 	Inventory string `toml:"inventory"`
 	Local     string `toml:"local"`
+	Nodes     string `toml:"nodes"`
 
 	IP   string
 	Port uint16
@@ -122,6 +126,7 @@ func GetConfig(confFile string) *ApiConfig {
 		fmt.Println("Database file not found in config!")
 		return nil
 	}
+	config.NodeFile = GetConfDir() + tomlConf.Nodes
 
 	config.LocalVersion.Port = tomlConf.Port
 	if tomlConf.IP != "0.0.0.0" {
@@ -169,5 +174,66 @@ func GetConfig(confFile string) *ApiConfig {
 		config.NodeList.Nodes[n.String()] = *n
 	}
 
+	// Pull Nodes from node file
+	if len(config.NodeFile) > 0 {
+		ReadNodes(config)
+	}
+
 	return config
+}
+
+func ReadNodes(config *ApiConfig) {
+	file, err := os.Open(config.NodeFile);
+	defer file.Close()
+	if err != nil {
+		fmt.Println("Could not open node file: ", err)
+	}
+
+	var count int
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+    	str := scanner.Text()
+    	if len(str) < 0 || str == "<nil>" {
+    		continue
+    	}
+
+		p := new(quibit.Peer)
+		n := new(objects.Node)
+		err = n.FromString(str)
+		if err != nil {
+			fmt.Println("Error Decoding Peer ", str, ": ", err)
+			continue
+		}
+
+		p.IP = n.IP
+		p.Port = n.Port
+		config.PeerQueue <- *p
+		config.NodeList.Nodes[n.String()] = *n
+		count++
+	}
+	fmt.Println(count, "nodes pulled from node file.")
+}
+
+func DumpNodes(config *ApiConfig) {
+	if config == nil {
+		return
+	}
+	if len(config.NodeFile) < 1 {
+		return
+	}
+	writeBytes := make([]byte, 0, 0)
+
+	for key, _ := range config.NodeList.Nodes {
+		if quibit.GetPeer(key).IsConnected() {
+			writeBytes = append(writeBytes, key...)
+			writeBytes = append(writeBytes, byte('\n'))
+		}
+	}
+
+	err := ioutil.WriteFile(config.NodeFile, writeBytes, 0644)
+	if err != nil {
+		fmt.Println("Error writing peers to file: ", err)
+	}
 }
