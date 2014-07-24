@@ -63,6 +63,8 @@ func CmdString(cmd uint8) string {
 		ret = "encrypted message"
 	case objects.PURGE:
 		ret = "purge notification"
+	case objects.CHECKTXID:
+		ret = "purge check"
 	default:
 		ret = "unknown"
 	}
