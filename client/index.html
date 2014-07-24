@@ -56,7 +56,7 @@
       <header>
         <h3 class="xlarge" id="box">Loading...</h3>
         <div class="datarow">
-        <a onclick="reloadPage()" class="button--primary" id="refresh">Refresh</a>
+        <a onclick="reloadPage(true)" class="button--primary" id="refresh">Refresh</a>
         <a onclick="newModal()" class="button--primary" id="new">New Message</a>
         </div>
       </header>
@@ -196,15 +196,19 @@
       if (!isLoggedIn()) {
         loginModal();
       } else {
-        reloadPage();
+        reloadPage(true);
       }
     });
 
+    function unForceReload() {
+        reloadPage(false);
+    }
+
     if ("onhashchange" in window) { // event supported?
       window.onhashchange = function () {
-        reloadPage();
+        reloadPage(false);
       }
-      setInterval(reloadPage, 3000); 
+      setInterval(unForceReload, 3000); 
     } else { // event not supported:
       var storedHash = window.location.hash;
       window.setInterval(function () {

@@ -1,6 +1,8 @@
 
 var emplogin = ""
-var openBox
+var numberEntries;
+var prevHash;
+var openBox;
 
 //////////// RPC Functions ///////////////
 function rpcSend(command, params) {
@@ -175,7 +177,7 @@ function messageModal(txidHash) {
 
 	$.colorbox({inline:true, href:"#messageModal", width:"50%",
 				onLoad:function(){ $("#messageModal").show(); },
-				onCleanup:function(){ $("#messageModal").hide(); reloadPage(); }
+				onCleanup:function(){ $("#messageModal").hide(); reloadPage(true); }
 				});
 }
 
@@ -212,7 +214,7 @@ function newModal() {
 
 	$.colorbox({inline:true, href:"#newModal", width:"50%",
 				onLoad:function(){ $("#newModal").show(); },
-				onCleanup:function(){ $("#newModal").hide(); reloadPage(); }
+				onCleanup:function(){ $("#newModal").hide(); reloadPage(true); }
 				});
 }
 
@@ -230,7 +232,7 @@ function addrDetailModal(address) {
 
 	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
 				onLoad:function(){ $("#addrDetailModal").show(); },
-				onCleanup:function(){ $("#addrDetailModal").hide(); reloadPage(); }
+				onCleanup:function(){ $("#addrDetailModal").hide(); reloadPage(true); }
 				});
 }
 
@@ -238,7 +240,7 @@ function addrModal() {
 
 	openBox = $.colorbox({inline:true, href:"#addrModal", width:"50%",
 				onLoad:function(){ $("#addrModal").show(); },
-				onCleanup:function(){ $("#addrModal").hide(); reloadPage(); }
+				onCleanup:function(){ $("#addrModal").hide(); reloadPage(true); }
 				});
 }
 
@@ -253,7 +255,7 @@ function loginModal() {
 }
 
 /////////////// Main Functions //////////////////////
-function reloadPage() {
+function reloadPage(force) {
 	var msg = null
 	var addr = null
 	var registered
@@ -282,70 +284,80 @@ function reloadPage() {
 			$("h3#box").text("Inbox");
 			msg = rpcSend("Inbox", [])
 	}
+
 	$("#refresh").attr("href", window.location.hash)
+	var newEntries;
 
-	$("table#main").children("colgroup").html("")
-	$("table#main").children("thead").html("")
-	$("table#main").children("tbody").html("")
-	$("table#main").children("tbody").attr("class", "datarow")
+	if (msg == null) newEntries = addr.result.length;
+	else newEntries = msg.result.length;
 
-	if (msg != null) {
-		$("#new").text("New Message")
-		$("#new").attr("onclick", "newModal()")
+	if (window.location.hash != window.prevHash || newEntries != window.numberEntries || force) {
+		window.prevHash = window.location.hash;
+		window.numberEntries = newEntries;
 
-		$("table#main").attr("class", "table-4")
-		for (var i = 0; i < 4; i++) {
-			$("table#main").children("colgroup").append("<col span='1'>");
-		}
-		$("table#main").children("thead").append("\
-			<tr>\
-            	<th>Date</th>\
-            	<th>From</th>\
-            	<th>To</th>\
-            	<th>Status</th>\
-	        </tr>");
-		for (var i = 0; i < msg.result.length; i++) {
-			var unread
-			if (msg.result[i].read) {
-				unread = "Read"
-			} else {
-				unread = "Unread"
+		$("table#main").children("colgroup").html("")
+		$("table#main").children("thead").html("")
+		$("table#main").children("tbody").html("")
+		$("table#main").children("tbody").attr("class", "datarow")
+
+		if (msg != null) {
+			$("#new").text("New Message")
+			$("#new").attr("onclick", "newModal()")
+
+			$("table#main").attr("class", "table-4")
+			for (var i = 0; i < 4; i++) {
+				$("table#main").children("colgroup").append("<col span='1'>");
 			}
+			$("table#main").children("thead").append("\
+				<tr>\
+	            	<th>Date</th>\
+	            	<th>From</th>\
+	            	<th>To</th>\
+	            	<th>Status</th>\
+		        </tr>");
+			for (var i = 0; i < msg.result.length; i++) {
+				var unread
+				if (msg.result[i].read) {
+					unread = "Read"
+				} else {
+					unread = "Unread"
+				}
 
-			date = new Date(Date.parse(msg.result[i].sent));
+				date = new Date(Date.parse(msg.result[i].sent));
 
-			msg.result[i].sender = rpcSend("GetLabel", [msg.result[i].sender]).result
-			if (msg.result[i].sender == null) {
-				msg.result[i].sender = "Not Decrypted Yet..."
+				msg.result[i].sender = rpcSend("GetLabel", [msg.result[i].sender]).result
+				if (msg.result[i].sender == null) {
+					msg.result[i].sender = "Not Decrypted Yet..."
+				}
+				msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
+
+				$("table#main").children("tbody").prepend("\
+				<tr onclick='messageModal(\"" + ArrayToBase64(msg.result[i].txid_hash) + "\")'>\
+	            	<td data-th='date'>" + date.toLocaleString() + "</td>\
+	            	<td data-th='from'>" + msg.result[i].sender + "</td>\
+	            	<td data-th='to'>" + msg.result[i].recipient + "</td>\
+	            	<td data-th='status'>" + unread + "</td>\
+		        </tr>");
 			}
-			msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
-
-			$("table#main").children("tbody").prepend("\
-			<tr onclick='messageModal(\"" + ArrayToBase64(msg.result[i].txid_hash) + "\")'>\
-            	<td data-th='date'>" + date.toLocaleString() + "</td>\
-            	<td data-th='from'>" + msg.result[i].sender + "</td>\
-            	<td data-th='to'>" + msg.result[i].recipient + "</td>\
-            	<td data-th='status'>" + unread + "</td>\
-	        </tr>");
-		}
-	} else {
-		$("#new").text("New Address")
-		$("#new").attr("onclick", "addrModal()")
-		$("table#main").attr("class", "table-2")
-		for (var i = 0; i < 2; i++) {
-			$("table#main").children("colgroup").append("<col span='1'>");
-		}
-		$("table#main").children("thead").append("\
-			<tr>\
-            	<th>Address</th>\
-            	<th>Label</th>\
-	        </tr>");
-		for (var i = 0; i < addr.result.length; i++) {
-			$("table#main").children("tbody").prepend("\
-				<tr onclick='addrDetailModal(\"" + addr.result[i][0] + "\")'>\
-					<td data-th='address'>" + addr.result[i][0] + "</td>\
-            		<td data-th='registered'>" + addr.result[i][1] + "</td>\
-            	</tr>");
+		} else {
+			$("#new").text("New Address")
+			$("#new").attr("onclick", "addrModal()")
+			$("table#main").attr("class", "table-2")
+			for (var i = 0; i < 2; i++) {
+				$("table#main").children("colgroup").append("<col span='1'>");
+			}
+			$("table#main").children("thead").append("\
+				<tr>\
+	            	<th>Address</th>\
+	            	<th>Label</th>\
+		        </tr>");
+			for (var i = 0; i < addr.result.length; i++) {
+				$("table#main").children("tbody").prepend("\
+					<tr onclick='addrDetailModal(\"" + addr.result[i][0] + "\")'>\
+						<td data-th='address'>" + addr.result[i][0] + "</td>\
+	            		<td data-th='registered'>" + addr.result[i][1] + "</td>\
+	            	</tr>");
+			}
 		}
 	}
 }

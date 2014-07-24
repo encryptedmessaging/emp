@@ -102,6 +102,17 @@ func Start(config *ApiConfig) {
 				} else {
 					fPURGE(config, frame, purge)
 				}
+			case objects.CHECKTXID:
+				chkTxid := new(objects.Hash)
+				if len(frame.Payload) == 0 {
+					break
+				}
+				err = chkTxid.FromBytes(frame.Payload)
+				if err != nil {
+					config.Log <- fmt.Sprintf("Error parsing checktxid hash: %s", err)
+				} else {
+					fCHECKTXID(config, frame, chkTxid)
+				}
 			default:
 				config.Log <- fmt.Sprintf("Received invalid frame for command: %d", frame.Header.Command)
 			}

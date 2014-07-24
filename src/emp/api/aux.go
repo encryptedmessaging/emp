@@ -149,6 +149,11 @@ func fOBJ(config *ApiConfig, frame quibit.Frame, obj *objects.Obj) {
 			sending = objects.MakeFrame(objects.GETOBJ, objects.REQUEST, &hash)
 			sending.Peer = frame.Peer
 			config.SendQueue <- *sending
+		} else if db.Contains(hash) == db.MSG {
+			// Check for purge
+			sending = objects.MakeFrame(objects.CHECKTXID, objects.REQUEST, &hash)
+			sending.Peer = frame.Peer
+			config.SendQueue <- *sending
 		}
 	}
 }
@@ -300,3 +305,27 @@ func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 		config.PurgeRegister <- purge.Txid
 	} // End Switch
 } // End fPURGE
+
+func fCHECKTXID(config *ApiConfig, frame quibit.Frame, hash *objects.Hash) {
+	// Verify not objects.BROADCAST
+	if frame.Header.Type == objects.BROADCAST {
+		// SHUN THE NODE! SHUN IT WITH FIRE!
+		config.Log <- "Node sent a checktxid frame as a broadcast. Disconnecting..."
+		quibit.KillPeer(frame.Peer)
+		return
+	}
+
+	// If object stored locally, send object as a objects.REPLY
+	var sending *quibit.Frame
+	if frame.Header.Type == objects.REQUEST {
+		if db.Contains(*hash) == db.PURGE {
+			sending = objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, *hash))
+			sending.Peer = frame.Peer
+			config.SendQueue <- *sending
+		} else {
+			sending = objects.MakeFrame(objects.CHECKTXID, objects.REPLY, new(objects.NilPayload))
+			sending.Peer = frame.Peer
+			config.SendQueue <- *sending
+		}
+	}
+} // End fCHECKTXID

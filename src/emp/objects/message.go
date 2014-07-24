@@ -31,7 +31,7 @@ const (
 	MSG            = iota
 	PURGE          = iota
 
-	SHUN = iota
+	CHECKTXID      = iota
 )
 
 // Message Types
