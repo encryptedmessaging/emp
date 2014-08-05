@@ -327,7 +327,7 @@ function reloadPage(force) {
 
 				msg.result[i].sender = rpcSend("GetLabel", [msg.result[i].sender]).result
 				if (msg.result[i].sender == null) {
-					msg.result[i].sender = "Not Decrypted Yet..."
+					msg.result[i].sender = "Click to Decrypt..."
 				}
 				msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
 
