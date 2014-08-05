@@ -19,10 +19,10 @@ mkdir -p ~/.config/emp
 mkdir -p ~/.config/emp/log
 touch ~/.config/emp/known_nodes.dat
 if [ ! -f ~/.config/emp/msg.conf ]; then
-  cp $DIR/msg.conf.example ~/.config/emp/msg.conf
+  cp "$DIR/msg.conf.example" ~/.config/emp/msg.conf
 fi
 rm -rf ~/.config/emp/client
-cp -r $DIR/../client ~/.config/emp/
+cp -r "$DIR/../client" ~/.config/emp/
 
 # Kill existing process
 if [ -f ~/.config/emp/pid ];
@@ -42,7 +42,7 @@ go get github.com/mxk/go-sqlite/sqlite3
 # Install and go!
 echo "Building and running..."
 if `go install emp`; then
-	$GOPATH/bin/emp > ~/.config/emp/log/log_`date +%s` &
+	"$GOPATH/bin/emp" > ~/.config/emp/log/log_`date +%s` &
 	echo $! > ~/.config/emp/pid
 
 	# Get Ports
