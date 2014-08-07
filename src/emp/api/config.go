@@ -29,6 +29,7 @@ type ApiConfig struct {
 	// Local Register
 	PubkeyRegister  chan objects.Hash
 	MessageRegister chan objects.Message
+	PubRegister     chan objects.Message
 	PurgeRegister   chan [16]byte
 
 	// Administration
@@ -61,6 +62,8 @@ func CmdString(cmd uint8) string {
 		ret = "public key"
 	case objects.MSG:
 		ret = "encrypted message"
+	case objects.PUB:
+		ret = "encrypted publication"
 	case objects.PURGE:
 		ret = "purge notification"
 	case objects.CHECKTXID:
@@ -145,9 +148,10 @@ func GetConfig(confFile string) *ApiConfig {
 	config.HttpRoot = GetConfDir() + tomlConf.RPCConf.Local
 
 	// Local Registers
-	config.PubkeyRegister = make(chan objects.Hash, bufLen)
+	config.PubkeyRegister  = make(chan objects.Hash, bufLen)
 	config.MessageRegister = make(chan objects.Message, bufLen)
-	config.PurgeRegister = make(chan [16]byte, bufLen)
+	config.PubRegister     = make(chan objects.Message, bufLen)
+	config.PurgeRegister   = make(chan [16]byte, bufLen)
 
 	// Administration
 	config.Log = make(chan string, bufLen)

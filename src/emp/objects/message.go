@@ -32,6 +32,7 @@ const (
 	PURGE          = iota
 
 	CHECKTXID      = iota
+	PUB            = iota
 )
 
 // Message Types

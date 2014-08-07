@@ -7,6 +7,25 @@ import (
 	"testing"
 )
 
+func TestCryptPub(t *testing.T) {
+	log := make(chan string, 5)
+
+	// Generate personal key
+	priv, x, y := CreateKey(log)
+
+	pub := elliptic.Marshal(elliptic.P256(), x, y)
+
+	message := "If you see this, the test has passed!"
+
+	enc := EncryptPub(log, priv, message)
+
+	plainBytes := DecryptPub(log, pub, enc)
+	plainBytes = bytes.Split(plainBytes, []byte{0})[0]
+	if message != string(plainBytes) {
+		t.Fail()
+	}
+}
+
 func TestCrypt(t *testing.T) {
 	log := make(chan string, 5)
 

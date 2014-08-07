@@ -48,6 +48,13 @@ func Initialize(log chan string, dbFile string) error {
 		return err
 	}
 
+	err = dbConn.Exec("CREATE TABLE IF NOT EXISTS pub (hash BLOB NOT NULL UNIQUE, addrHash BLOB NOT NULL, timestamp INTEGER NOT NULL, payload BLOB NOT NULL, PRIMARY KEY (hash))")
+	if err != nil {
+		log <- fmt.Sprintf("Error setting up pub schema... %s", err)
+		dbConn = nil
+		return err
+	}
+
 	err = dbConn.Exec("CREATE TABLE IF NOT EXISTS peer (ip BLOB NOT NULL, port INTEGER NOT NULL, port_admin INTEGER NOT NULL, last_seen INTEGER NOT NULL, id INTEGER PRIMARY KEY AUTOINCREMENT)")
 	if err != nil {
 		log <- fmt.Sprintf("Error setting up peer schema... %s", err)
@@ -87,6 +94,12 @@ func populateHashes() error {
 		var hash []byte
 		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
 		hashList[string(hash)] = MSG
+	}
+
+	for s, err := dbConn.Query("SELECT hash FROM pub"); err == nil; err = s.Next() {
+		var hash []byte
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
+		hashList[string(hash)] = PUB
 	}
 
 	for s, err := dbConn.Query("SELECT hash FROM purge"); err == nil; err = s.Next() {

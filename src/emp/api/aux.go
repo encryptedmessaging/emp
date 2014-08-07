@@ -183,6 +183,13 @@ func fGETOBJ(config *ApiConfig, frame quibit.Frame, hash *objects.Hash) {
 			} else {
 				config.Log <- "Error pulling message from database!"
 			}
+		case db.PUB:
+			message := db.GetMessage(config.Log, *hash)
+			if message != nil {
+				sending = objects.MakeFrame(objects.PUB, objects.REPLY, message)
+			} else {
+				config.Log <- "Error pulling publication from database!"
+			}
 		case db.PUBKEYRQ:
 			sending = objects.MakeFrame(objects.PUBKEY_REQUEST, objects.REPLY, hash)
 		default:
@@ -273,6 +280,35 @@ func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 	}
 } // End fMSG
 
+// Handle Encrypted Publication Broadcasts
+func fPUB(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
+	var sending quibit.Frame
+	// Check Hash in Object List
+	switch db.Contains(msg.TxidHash) {
+	// If Not in List, Store and objects.BROADCAST
+	case db.NOTFOUND:
+		err := db.AddPub(config.Log, msg)
+		if err != nil {
+			config.Log <- fmt.Sprintf("Error adding publication to database: %s", err)
+			break
+		}
+		if frame.Header.Type == objects.BROADCAST {
+			sending = *objects.MakeFrame(objects.PUB, objects.BROADCAST, msg)
+			sending.Peer = frame.Peer
+			config.SendQueue <- sending
+		}
+		config.Log <- "Registering publication..."
+		config.PubRegister <- *msg
+
+	// If found as PURGE, reply with PURGE
+	case db.PURGE:
+		config.Log <- "Received already-purged publication!"
+		sending = *objects.MakeFrame(objects.PURGE, objects.REPLY, db.GetPurge(config.Log, msg.TxidHash))
+		sending.Peer = frame.Peer
+		config.SendQueue <- sending
+	}
+} // End fMSG
+
 // Handle Purge Broadcasts
 func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 	var err error
@@ -281,10 +317,12 @@ func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 	// Check Hash in Object List
 	switch db.Contains(txidHash) {
 	// Delete Stored Messages
+	case db.PUB:
+		fallthrough
 	case db.MSG:
 		err = db.RemoveHash(config.Log, txidHash)
 		if err != nil {
-			config.Log <- fmt.Sprintf("Error removing message from database: %s", err)
+			config.Log <- fmt.Sprintf("Error removing message/publication from database: %s", err)
 			break
 		}
 		fallthrough

@@ -109,6 +109,27 @@ func GetPurge(log chan string, txidHash objects.Hash) *objects.Purge {
 	return nil
 }
 
+func AddPub(log chan string, msg *objects.Message) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if hashList == nil || dbConn == nil {
+		return DBError(EUNINIT)
+	}
+	if Contains(msg.TxidHash) == MSG {
+		return nil
+	}
+
+	err := dbConn.Exec("INSERT INTO pub VALUES (?, ?, ?, ?)", msg.TxidHash.GetBytes(), msg.AddrHash.GetBytes(), msg.Timestamp.Unix(), msg.Content.GetBytes())
+	if err != nil {
+		log <- fmt.Sprintf("Error inserting message into db... %s", err)
+		return err
+	}
+
+	Add(msg.TxidHash, PUB)
+	return nil
+}
+
 func AddMessage(log chan string, msg *objects.Message) error {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -140,7 +161,7 @@ func GetMessage(log chan string, txidHash objects.Hash) *objects.Message {
 	if hashList == nil || dbConn == nil {
 		return nil
 	}
-	if hashList[string(hash)] != MSG {
+	if hashList[string(hash)] != MSG && hashList[string(hash)] != PUB {
 		return nil
 	}
 

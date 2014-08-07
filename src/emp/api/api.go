@@ -14,6 +14,8 @@ func Start(config *ApiConfig) {
 
 	defer quit(config)
 
+	config.Log <- "Starting api..."
+
 	// Start Database Services
 	err = db.Initialize(config.Log, config.DbFile)
 	defer db.Cleanup()
@@ -93,6 +95,14 @@ func Start(config *ApiConfig) {
 					config.Log <- fmt.Sprintf("Error parsing message: %s", err)
 				} else {
 					fMSG(config, frame, msg)
+				}
+			case objects.PUB:
+				msg := new(objects.Message)
+				err = msg.FromBytes(frame.Payload)
+				if err != nil {
+					config.Log <- fmt.Sprintf("Error parsing publication: %s", err)
+				} else {
+					fPUB(config, frame, msg)
 				}
 			case objects.PURGE:
 				purge := new(objects.Purge)

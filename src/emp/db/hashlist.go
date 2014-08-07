@@ -7,6 +7,7 @@ const (
 	PURGE    = iota
 	MSG      = iota
 	PUBKEYRQ = iota
+	PUB      = iota
 	NOTFOUND = iota
 )
 
