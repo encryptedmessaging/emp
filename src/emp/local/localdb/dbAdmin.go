@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+func AddChannel(chanString string) error {
+
+}
+
+func GetChannelDetail(hash *objects.Hash) *objects.AddressDetail {
+
+}
+
+func GetMessagesByRecipient(*objects.AddressDetail) []objects.MetaMessage {
+	
+}
+
 func AddUpdateAddress(address *objects.AddressDetail) error {
 	localMutex.Lock()
 	defer localMutex.Unlock()
@@ -22,6 +34,10 @@ func AddUpdateAddress(address *objects.AddressDetail) error {
 	}
 
 	addrHash := objects.MakeHash(address.Address)
+
+	if Contains(addrHash) == CHANNEL {
+		return errors.New("Cannot update channel address.")
+	}
 
 	if Contains(addrHash) == ADDRESS { // Exists in message database, update pubkey, privkey, and registration
 		err = LocalDB.Exec("UPDATE addressbook SET registered=?, label=? WHERE hash=?", address.IsRegistered, address.Label, addrHash.GetBytes())

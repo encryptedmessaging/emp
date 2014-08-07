@@ -150,6 +150,8 @@ func register(config *api.ApiConfig) {
 			if err != nil {
 				config.Log <- err.Error()
 			}
+		case message = <-config.ChannelRegister:
+			
 		case txid = <-config.PurgeRegister:
 			// If Message in database, mark as purged
 			detail, err := localdb.GetMessageDetail(objects.MakeHash(txid[:]))

@@ -36,6 +36,13 @@ func Initialize(log chan string, dbFile string) error {
 		return err
 	}
 
+	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS channel (hash BLOB NOT NULL UNIQUE, name TEXT NOT NULL, address BLOB NOT NULL UNIQUE, pubkey BLOB, privkey BLOB, PRIMARY KEY (hash) ON CONFLICT REPLACE)")
+	if err != nil {
+		log <- fmt.Sprintf("Error setting up channel schema... %s", err)
+		LocalDB = nil
+		return err
+	}
+
 	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS msg (txid_hash BLOB NOT NULL, recipient BLOB, timestamp INTEGER, box INTEGER, encrypted BLOB, decrypted BLOB, purged INTEGER, sender BLOB, PRIMARY KEY (txid_hash) ON CONFLICT REPLACE)")
 	if err != nil {
 		log <- fmt.Sprintf("Error setting up msg schema... %s", err)
@@ -62,6 +69,12 @@ func populateHashes() error {
 		hashList[string(hash)] = ADDRESS
 	}
 
+	for s, err := LocalDB.Query("SELECT hash FROM channel"); err == nil; err = s.Next() {
+		var hash []byte
+		s.Scan(&hash) // Assigns 1st column to rowid, the rest to row
+		hashList[string(hash)] = CHANNEL
+	}
+
 	for s, err := LocalDB.Query("SELECT txid_hash, box FROM msg"); err == nil; err = s.Next() {
 		var hash []byte
 		var box int
@@ -83,6 +96,7 @@ const (
 	OUTBOX   = iota
 	SENDBOX  = iota
 	ADDRESS  = iota
+	CHANNEL  = iota
 	NOTFOUND = iota
 )
 

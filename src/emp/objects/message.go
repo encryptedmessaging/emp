@@ -32,6 +32,8 @@ const (
 	PURGE          = iota
 
 	CHECKTXID      = iota
+
+	CHANNEL        = iota
 )
 
 // Message Types

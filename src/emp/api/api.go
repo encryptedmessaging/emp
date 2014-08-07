@@ -113,6 +113,14 @@ func Start(config *ApiConfig) {
 				} else {
 					fCHECKTXID(config, frame, chkTxid)
 				}
+			case objects.CHANNEL:
+				msg := new(objects.Message)
+				err = msg.FromBytes(frame.Payload)
+				if err != nil {
+					config.Log <- fmt.Sprintf("Error parsing channel message: %s", err)
+				} else {
+					fCHANNEL(config, frame, msg)
+				}
 			default:
 				config.Log <- fmt.Sprintf("Received invalid frame for command: %d", frame.Header.Command)
 			}

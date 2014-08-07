@@ -273,6 +273,27 @@ func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 	}
 } // End fMSG
 
+// Handle Encrypted Channel Broadcasts
+func fCHANNEL(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
+	// Channels must be broadcast
+	if frame.Header.Type != objects.BROADCAST {
+		// SHUN THE NODE! SHUN IT WITH FIRE!
+		config.Log <- "Node didn't send channel as a broadcast. Disconnecting..."
+		quibit.KillPeer(frame.Peer)
+		return
+	}
+
+	if db.Contains(msg.TxidHash) == db.NOTFOUND {
+		// Add to Hash List, Register, and Rebroadcast
+		db.Add(msg.TxidHash, db.CHANNEL)
+		config.ChannelRegister <- *msg
+		sending := *objects.MakeFrame(objects.CHANNEL, objects.BROADCAST, msg)
+		sending.Peer = frame.Peer
+		config.SendQueue <- sending
+	}
+	// Ignore Already-Received Channel
+} // End fCHANNEL
+
 // Handle Purge Broadcasts
 func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 	var err error

@@ -7,6 +7,7 @@ const (
 	PURGE    = iota
 	MSG      = iota
 	PUBKEYRQ = iota
+	CHANNEL  = iota
 	NOTFOUND = iota
 )
 
@@ -50,7 +51,11 @@ func ObjList() *objects.Obj {
 
 	hash := new(objects.Hash)
 
-	for key, _ := range hashList {
+	for key, value := range hashList {
+		if value == CHANNEL {
+				continue
+		}
+		
 		hash.FromBytes([]byte(key))
 		ret.HashList = append(ret.HashList, *hash)
 	}

@@ -29,6 +29,7 @@ type ApiConfig struct {
 	// Local Register
 	PubkeyRegister  chan objects.Hash
 	MessageRegister chan objects.Message
+	ChannelRegister chan objects.Message
 	PurgeRegister   chan [16]byte
 
 	// Administration
@@ -147,6 +148,7 @@ func GetConfig(confFile string) *ApiConfig {
 	// Local Registers
 	config.PubkeyRegister = make(chan objects.Hash, bufLen)
 	config.MessageRegister = make(chan objects.Message, bufLen)
+	config.ChannelRegister = make(chan objects.Message, bufLen)
 	config.PurgeRegister = make(chan [16]byte, bufLen)
 
 	// Administration
