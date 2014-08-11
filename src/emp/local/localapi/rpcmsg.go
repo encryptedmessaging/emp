@@ -38,8 +38,8 @@ func (service *EMPService) PublishMessage(r *http.Request, args *SendMsg, reply 
 	}
 
 	// Nil Check
-	if len(args.Sender) == 0 || len(args.Recipient) == 0 || len(args.Plaintext) == 0 {
-		return errors.New("All fields required except signature.")
+	if len(args.Sender) == 0 || len(args.Plaintext) == 0 {
+		return errors.New("All fields required.")
 	}
 
 	var err error

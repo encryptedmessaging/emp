@@ -378,6 +378,10 @@ function reloadPage(force) {
 					msg.result[i].sender = "Click to Decrypt..."
 				}
 				msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
+				if (msg.result[i].recipient == null) {
+					msg.result[i].recipient = "&lt;Subscription Message&gt;"
+					if (window.location.hash == "#sendbox") unread = "N/A"
+				}
 
 				$("table#main").children("tbody").prepend("\
 				<tr onclick='messageModal(\"" + ArrayToBase64(msg.result[i].txid_hash) + "\")'>\
