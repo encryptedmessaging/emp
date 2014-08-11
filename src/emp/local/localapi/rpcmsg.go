@@ -127,6 +127,40 @@ func (service *EMPService) PublishMessage(r *http.Request, args *SendMsg, reply 
 
 }
 
+func (service *EMPService) PurgeMessage(r *http.Request, args *[]byte, reply *NilParam) error {
+	if len(*args) != 16 {
+		return errors.New("Invalid Txid: Bad Length")
+	}
+	
+	txidHash := objects.MakeHash(*args)
+
+	if (localdb.Contains(txidHash) <= localdb.SENDBOX) {
+		msg, err := localdb.GetMessageDetail(txidHash)
+		if (err != nil) {
+			return errors.New(fmt.Sprintf("Problem Retrieving Message: %s", err))
+		}
+		msg.MetaMessage.Purged = true
+		localdb.AddUpdateMessage(msg, -1)
+
+		// Send Purge Request
+		purge := new(objects.Purge)
+		purge.Txid = msg.Decrypted.Txid
+
+		service.Config.RecvQueue <- *objects.MakeFrame(objects.PURGE, objects.BROADCAST, purge)
+
+		return nil
+	}
+
+	return errors.New("Txid Not Found")
+}
+
+func (service *EMPService) DeleteMessage(r *http.Request, args *[]byte, reply *NilParam) error {
+	txidHash := new(objects.Hash)
+	txidHash.FromBytes(*args)
+
+	return localdb.DeleteMessage(txidHash)
+}
+
 func (service *EMPService) SendMessage(r *http.Request, args *SendMsg, reply *SendResponse) error {
 	if !basicAuth(service.Config, r) {
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)

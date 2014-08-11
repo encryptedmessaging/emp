@@ -129,6 +129,17 @@ func GetMessageDetail(txidHash objects.Hash) (*objects.FullMessage, error) {
 
 }
 
+func DeleteMessage(txidHash *objects.Hash) error {
+	localMutex.Lock()
+	defer localMutex.Unlock()
+
+	if Contains(*txidHash) > SENDBOX {
+		return errors.New("Error Deleting Message: Not Found!")
+	}
+
+	return LocalDB.Exec("DELETE FROM msg WHERE txid_hash=?", txidHash.GetBytes());
+}
+
 func AddUpdateMessage(msg *objects.FullMessage, box int) error {
 	localMutex.Lock()
 	defer localMutex.Unlock()

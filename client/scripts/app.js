@@ -105,6 +105,26 @@ function sendMessage() {
 	return false
 }
 
+function delMessage(txidHash) {
+	if (confirm("Are you sure you want to delete? This action cannot be undone.")) {
+		res = rpcSend("DeleteMessage", [txidHash])
+		if (res.error != null) {
+			alert("Error Deleting Message: " + res.error)
+		}
+	}
+	$.colorbox.close()
+}
+
+function purgeMessage(txid) {
+	res = rpcSend("PurgeMessage", [txid])
+
+	if (res.error != null) {
+		alert("Error Purging Message: " + res.error)
+	}
+
+	$.colorbox.close()
+}
+
 function pubMessage() {
 	var form = document.forms["pubmsg"]
 	if (form == null) {
@@ -197,6 +217,9 @@ function messageModal(txidHash) {
 		$("#messageModal").children().children("#mime").text(message.decrypted.MimeType)
 		$("#messageModal").children("#text").text(message.decrypted.Content)
 	}
+
+	$("#messageModal").children().children("#purge").attr("onclick", "purgeMessage('" + ArrayToBase64(message.decrypted.Txid) + "')")
+	$("#messageModal").children().children("#delete").attr("onclick", "delMessage('" + txidHash + "')")
 
 	$.colorbox({inline:true, href:"#messageModal", width:"50%",
 				onLoad:function(){ $("#messageModal").show(); },
