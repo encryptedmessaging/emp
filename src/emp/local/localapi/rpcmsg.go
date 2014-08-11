@@ -25,6 +25,108 @@ type SendResponse struct {
 	IsSent   bool   `json:"sent"`
 }
 
+type PubMsg struct {
+	Sender    string `json:"sender"`
+	Subject   string `json:"subject"`
+	Plaintext string `json:"content"`
+}
+
+func (service *EMPService) PublishMessage(r *http.Request, args *SendMsg, reply *SendResponse) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
+	// Nil Check
+	if len(args.Sender) == 0 || len(args.Recipient) == 0 || len(args.Plaintext) == 0 {
+		return errors.New("All fields required except signature.")
+	}
+
+	var err error
+
+	// Get Addresses
+	sendAddr := encryption.StringToAddress(args.Sender)
+	if len(sendAddr) == 0 {
+		return errors.New("Invalid sender address!")
+	}
+
+	sender, err := localdb.GetAddressDetail(objects.MakeHash(sendAddr))
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error pulling send address from Database: %s", err))
+	}
+	if sender.Privkey == nil {
+		return errors.New("Private Key Required to Publish Message")
+	}
+
+	// Create New Message
+	msg := new(objects.FullMessage)
+	msg.Decrypted = new(objects.DecryptedMessage)
+	msg.Encrypted = nil
+
+	txid := make([]byte, len(msg.Decrypted.Txid), cap(msg.Decrypted.Txid))
+
+	// Fill out decrypted message
+	n, err := rand.Read(txid)
+	if n < len(msg.Decrypted.Txid[:]) || err != nil {
+		return errors.New(fmt.Sprintf("Problem with random reader: %s", err))
+	}
+	copy(msg.Decrypted.Pubkey[:], sender.Pubkey)
+	msg.Decrypted.Subject = args.Subject
+	msg.Decrypted.MimeType = "text/plain"
+	msg.Decrypted.Content = args.Plaintext
+	msg.Decrypted.Length = uint32(len(msg.Decrypted.Content))
+
+	// Fill Out Meta Message (save timestamp)
+	msg.MetaMessage.Purged = false
+	msg.MetaMessage.TxidHash = objects.MakeHash(txid)
+	msg.MetaMessage.Sender = sender.String
+	msg.MetaMessage.Recipient = "<Subscription Message>"
+
+	// Get Signature
+	priv := new(ecdsa.PrivateKey)
+	priv.PublicKey.Curve = encryption.GetCurve()
+	priv.D = new(big.Int)
+	priv.D.SetBytes(sender.Privkey)
+
+	sign := msg.Decrypted.GetBytes()
+	sign = sign[:len(sign)-65]
+	signHash := objects.MakeHash(sign)
+
+	x, y, err := ecdsa.Sign(rand.Reader, priv, signHash.GetBytes())
+	if err != nil {
+		return err
+	}
+
+	copy(msg.Decrypted.Signature[:], encryption.MarshalPubkey(x, y))
+
+	// Send message and add to sendbox...
+	msg.Encrypted = encryption.EncryptPub(service.Config.Log, sender.Privkey, string(msg.Decrypted.GetBytes()))
+	msg.MetaMessage.Timestamp = time.Now().Round(time.Second)
+
+	// Now Add Txid
+	copy(msg.Decrypted.Txid[:], txid)
+
+	err = localdb.AddUpdateMessage(msg, localdb.SENDBOX)
+	if err != nil {
+		return err
+	}
+
+	sendMsg := new(objects.Message)
+	sendMsg.TxidHash = msg.MetaMessage.TxidHash
+	sendMsg.AddrHash = objects.MakeHash(sender.Address)
+	sendMsg.Timestamp = msg.MetaMessage.Timestamp
+	sendMsg.Content = *msg.Encrypted
+
+	service.Config.RecvQueue <- *objects.MakeFrame(objects.PUB, objects.BROADCAST, sendMsg)
+
+	reply.IsSent = true
+
+	// Finish by setting msg's txid
+	reply.TxidHash = msg.MetaMessage.TxidHash.GetBytes()
+	return nil
+
+}
+
 func (service *EMPService) SendMessage(r *http.Request, args *SendMsg, reply *SendResponse) error {
 	if !basicAuth(service.Config, r) {
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)

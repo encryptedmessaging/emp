@@ -150,6 +150,34 @@ func register(config *api.ApiConfig) {
 			if err != nil {
 				config.Log <- err.Error()
 			}
+		case message = <-config.PubRegister:
+			// If address is registered, store message in inbox
+			detail, err := localdb.GetAddressDetail(message.AddrHash)
+			if err != nil {
+				config.Log <- "Message address not in database..."
+				break
+			}
+			if !detail.IsSubscribed {
+				config.Log <- "Not Subscribed to Address..."
+				break
+			}
+
+			config.Log <- "Registering new publication..."
+
+			msg := new(objects.FullMessage)
+			msg.MetaMessage.TxidHash = message.TxidHash
+			msg.MetaMessage.Timestamp = message.Timestamp
+			msg.MetaMessage.Sender = detail.String
+			msg.MetaMessage.Recipient = "<Subscription Message>"
+			msg.Encrypted = &message.Content
+
+			msg.Decrypted = new(objects.DecryptedMessage)
+			msg.Decrypted.FromBytes(encryption.DecryptPub(config.Log, detail.Pubkey, msg.Encrypted))
+
+			err = localdb.AddUpdateMessage(msg, localdb.INBOX)
+			if err != nil {
+				config.Log <- err.Error()
+			}
 		case txid = <-config.PurgeRegister:
 			// If Message in database, mark as purged
 			detail, err := localdb.GetMessageDetail(objects.MakeHash(txid[:]))

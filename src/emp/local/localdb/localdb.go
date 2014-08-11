@@ -29,12 +29,15 @@ func Initialize(log chan string, dbFile string) error {
 
 	// Create Database Schema
 
-	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS addressbook (hash BLOB NOT NULL UNIQUE, address BLOB NOT NULL UNIQUE, registered INTEGER NOT NULL, pubkey BLOB, privkey BLOB, label TEXT, PRIMARY KEY (hash) ON CONFLICT REPLACE)")
+	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS addressbook (hash BLOB NOT NULL UNIQUE, address BLOB NOT NULL UNIQUE, registered INTEGER NOT NULL, pubkey BLOB, privkey BLOB, label TEXT, subscribed INTEGER NOT NULL, PRIMARY KEY (hash) ON CONFLICT REPLACE)")
 	if err != nil {
 		log <- fmt.Sprintf("Error setting up addressbook schema... %s", err)
 		LocalDB = nil
 		return err
 	}
+
+	// Migration, Ignore error
+	LocalDB.Exec("ALTER TABLE addressbook ADD COLUMN subscribed INTEGER NOT NULL")
 
 	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS msg (txid_hash BLOB NOT NULL, recipient BLOB, timestamp INTEGER, box INTEGER, encrypted BLOB, decrypted BLOB, purged INTEGER, sender BLOB, PRIMARY KEY (txid_hash) ON CONFLICT REPLACE)")
 	if err != nil {
