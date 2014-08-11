@@ -74,7 +74,9 @@ func Initialize(config *api.ApiConfig) error {
 
 	go register(config)
 
-	config.Log <- fmt.Sprintf("Started RPC Server on: %s", fmt.Sprintf(":%d", config.RPCPort))
+	portStr := fmt.Sprintf(":%d", config.RPCPort)
+
+	config.Log <- fmt.Sprintf("Started RPC Server on: %s", portStr)
 	return nil
 }
 

@@ -58,6 +58,7 @@
         <div class="datarow">
         <a onclick="reloadPage(true)" class="button--primary" id="refresh">Refresh</a>
         <a onclick="newModal()" class="button--primary" id="new">New Message</a>
+        <a onclick="pubModal()" class="button--primary" id="pub">Publish Message</a>
         </div>
       </header>
       <table id="main">
@@ -86,13 +87,32 @@
     <div id="newModal">
       <h2 class="large">New Message</h2>
       <hr />
-      <form onsubmit="return sendMessage()"name="sendmsg">
+      <form onsubmit="return sendMessage()" name="sendmsg">
         <p class="medium"> From:
           <select name="from" id="from" class="formSelect">
           </select>
         </p>
         <p class="medium"> To:
           <select name="to" id="to" class="formSelect">
+          </select>
+        </p>
+        <p class="medium"> Subject:
+          <input type="text" name="subject" class="formText"/>
+        </p>
+        <h4 class="medium"><b>Message:</b></h4>
+        <textarea name="message" class="formText" ></textarea>
+        <p class="medium">
+        <input type="submit" value="Send" />
+        </p>
+      </form>
+    </div>
+
+    <div id="pubModal">
+      <h2 class="large">Publish Message</h2>
+      <hr />
+      <form onsubmit="return pubMessage()" name="pubmsg">
+        <p class="medium"> From:
+          <select name="from" id="from" class="formSelect">
           </select>
         </p>
         <p class="medium"> Subject:
@@ -122,6 +142,7 @@
         <input type="text" id="privkey" name="privkey" class="formText" />
       </p>
       <p class="medium">I Own This Address: <input type="checkbox" name="registered" id="registered" /></p>
+      <p class="medium">Subscribe to Address: <input type="checkbox" name="subscribed" id="subscribed" /></p>
       <p>
         <input type="submit" value="Update Address" />
       </p>
@@ -150,6 +171,7 @@
         <input type="text" name="privkey" class="formText" />
       </p>
       <p class="medium" >I Own This Address: <input type="checkbox" name="registered" id="registered" /></p>
+      <p class="medium">Subscribe to Address: <input type="checkbox" name="subscribed" id="subscribed" /></p>
       <p>
         <input type="submit" value="Update Address" />
       </p>
@@ -188,6 +210,7 @@
       // Hide Modals
       $("#messageModal").hide();
       $("#newModal").hide();
+      $("#pubModal").hide();
       $("#addrDetailModal").hide();
       $("#addrModal").hide();
       $("#loginModal").hide();

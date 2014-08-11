@@ -37,7 +37,7 @@ func Initialize(log chan string, dbFile string) error {
 	}
 
 	// Migration, Ignore error
-	LocalDB.Exec("ALTER TABLE addressbook ADD COLUMN subscribed INTEGER NOT NULL")
+	LocalDB.Exec("ALTER TABLE addressbook ADD COLUMN subscribed INTEGER NOT NULL DEFAULT 0")
 
 	err = LocalDB.Exec("CREATE TABLE IF NOT EXISTS msg (txid_hash BLOB NOT NULL, recipient BLOB, timestamp INTEGER, box INTEGER, encrypted BLOB, decrypted BLOB, purged INTEGER, sender BLOB, PRIMARY KEY (txid_hash) ON CONFLICT REPLACE)")
 	if err != nil {

@@ -60,6 +60,7 @@ function addUpdateAddress(formName) {
 		address_bytes: null,
 		address_label: form["addrlabel"].value,
 		registered: form["registered"].checked,
+		subscribed: form["subscribed"].checked,
 		pubkey: form["pubkey"].value,
 		privkey: form["privkey"].value
 	}])
@@ -97,6 +98,28 @@ function sendMessage() {
 
 	if (res.error != null) {
 		alert("Error Sending Message: " + res.error)
+	}
+
+	$.colorbox.close()
+
+	return false
+}
+
+function pubMessage() {
+	var form = document.forms["pubmsg"]
+	if (form == null) {
+		alert("Error: Could not read form.")
+		return false
+	}
+
+	res = rpcSend("PublishMessage", [{
+		sender: form["from"].options[form["from"].selectedIndex].value,
+		subject: form["subject"].value,
+		content: form["message"].value
+	}])
+
+	if (res.error != null) {
+		alert("Error Publishing Message: " + res.error)
 	}
 
 	$.colorbox.close()
@@ -218,6 +241,30 @@ function newModal() {
 				});
 }
 
+function pubModal() {
+
+	registered = rpcSend("ListAddresses", [true])
+
+	$("#pubModal").children().children().children("#from").html("")
+
+	for (var i = 0; i < registered.result.length; i++) {
+		var str
+		if (registered.result[i][1].length > 0) {
+			str = registered.result[i][1]
+		} else {
+			str = registered.result[i][0]
+		}
+		$("#pubModal").children().children().children("#from").append("<option value='"+registered.result[i][0]+"'>" + str + "</option>")
+	}
+
+
+
+	$.colorbox({inline:true, href:"#pubModal", width:"50%",
+				onLoad:function(){ $("#pubModal").show(); },
+				onCleanup:function(){ $("#pubModal").hide(); reloadPage(true); }
+				});
+}
+
 function addrDetailModal(address) {
 	addrDetail = rpcSend("GetAddress", [address]).result
 	var modal = $("#addrDetailModal")
@@ -229,6 +276,7 @@ function addrDetailModal(address) {
 	modal.children("form").children().children("#privkey").attr("value", addrDetail.private_key)
 	document.forms["addrDetail"]["addrlabel"].value = addrDetail.address_label
 	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
+	document.forms["addrDetail"]["subscribed"].checked = addrDetail.subscribed
 
 	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
 				onLoad:function(){ $("#addrDetailModal").show(); },
