@@ -13,6 +13,8 @@ import (
 	"io/ioutil"
 )
 
+var confDir string;
+
 type ApiConfig struct {
 	// Network Channels
 	RecvQueue chan quibit.Frame
@@ -99,7 +101,15 @@ type RPCConf struct {
 	Local string `toml:"local_client"`
 }
 
+func SetConfDir(conf string) {
+	confDir = conf
+}
+
 func GetConfDir() string {
+	if len(confDir) != 0 {
+		return confDir
+	}
+
 	usr, err := user.Current()
 	if err != nil {
 		return "./"

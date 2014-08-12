@@ -51,7 +51,7 @@ func AddUpdateAddress(address *objects.AddressDetail) error {
 		}
 
 	} else { // Doesn't exist yet, insert it!
-		err = LocalDB.Exec("INSERT INTO addressbook VALUES (?, ?, ?, ?, ?, ?, ?)", addrHash.GetBytes(), address.Address, address.IsRegistered, address.Pubkey, address.Privkey, address.Label, address.IsSubscribed, address.EncPrivkey)
+		err = LocalDB.Exec("INSERT INTO addressbook VALUES (?, ?, ?, ?, ?, ?, ?, ?)", addrHash.GetBytes(), address.Address, address.IsRegistered, address.Pubkey, address.Privkey, address.Label, address.IsSubscribed, address.EncPrivkey)
 		if err != nil {
 			return err
 		}

@@ -22,6 +22,15 @@ func BlockingLogger(channel chan string) {
 
 func main() {
 
+	if len(os.Args) > 2 {
+		fmt.Println("Usage: emp [config_directory]")
+		return
+	}
+
+	if len(os.Args) == 2 {
+		api.SetConfDir(os.Args[1])
+	}
+
 	confFile := api.GetConfDir() + "msg.conf"
 
 	config := api.GetConfig(confFile)
