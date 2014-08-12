@@ -195,6 +195,9 @@ func fGETOBJ(config *ApiConfig, frame quibit.Frame, hash *objects.Hash) {
 		default:
 			sending = objects.MakeFrame(objects.GETOBJ, objects.REPLY, new(objects.NilPayload))
 		} // End switch
+		if (sending == nil) {
+			return
+		}
 		sending.Peer = frame.Peer
 		config.SendQueue <- *sending
 	} // End if
