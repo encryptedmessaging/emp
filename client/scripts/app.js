@@ -62,7 +62,8 @@ function addUpdateAddress(formName) {
 		registered: form["registered"].checked,
 		subscribed: form["subscribed"].checked,
 		pubkey: form["pubkey"].value,
-		privkey: form["privkey"].value
+		privkey: form["privkey"].value,
+		encrypted_privkey: null
 	}])
 
 	if (res.error != null) {
@@ -374,6 +375,7 @@ function reloadPage(force) {
 		if (msg != null) {
 			$("#new").text("New Message")
 			$("#new").attr("onclick", "newModal()")
+			$("#pub").show();
 
 			$("table#main").attr("class", "table-4")
 			for (var i = 0; i < 4; i++) {
@@ -417,6 +419,7 @@ function reloadPage(force) {
 		} else {
 			$("#new").text("New Address")
 			$("#new").attr("onclick", "addrModal()")
+			$("#pub").hide();
 			$("table#main").attr("class", "table-2")
 			for (var i = 0; i < 2; i++) {
 				$("table#main").children("colgroup").append("<col span='1'>");

@@ -31,6 +31,12 @@ type PubMsg struct {
 	Plaintext string `json:"content"`
 }
 
+type RawMsg struct {
+	Message objects.Message `json:"message"`
+	SendAddress string `json:"sender"`
+	Subscription bool `json:"is_subscription"`
+}
+
 func (service *EMPService) PublishMessage(r *http.Request, args *SendMsg, reply *SendResponse) error {
 	if !basicAuth(service.Config, r) {
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
@@ -161,6 +167,50 @@ func (service *EMPService) DeleteMessage(r *http.Request, args *[]byte, reply *N
 	return localdb.DeleteMessage(txidHash)
 }
 
+func (service *EMPService) SendRawMsg(r *http.Request, args *RawMsg, reply *NilParam) error {
+	if (args == nil) {
+		return errors.New("Cannot work with nil message object!")
+	}
+
+	detail, err := localdb.GetAddressDetail(args.Message.AddrHash)
+	if (err != nil) {
+		return err
+	}
+
+	// Create New Message
+	msg := new(objects.FullMessage)
+	msg.Decrypted = nil
+	msg.Encrypted = new(encryption.EncryptedMessage)
+	msg.Encrypted.FromBytes(args.Message.Content.GetBytes())
+
+	// Fill Out Meta Message (save timestamp)
+	msg.MetaMessage.Purged = false
+
+	msg.MetaMessage.TxidHash.FromBytes(args.Message.TxidHash.GetBytes())
+
+	if (args.Subscription) {
+		msg.MetaMessage.Sender = detail.String
+		msg.MetaMessage.Recipient = ""
+	} else {
+		msg.MetaMessage.Sender = args.SendAddress
+		msg.MetaMessage.Recipient = detail.String
+	} 
+	
+	err = localdb.AddUpdateMessage(msg, localdb.SENDBOX)
+	if (err != nil) {
+		return err
+	}
+
+
+	if (args.Subscription) {
+		service.Config.RecvQueue <- *objects.MakeFrame(objects.PUB, objects.BROADCAST, &(args.Message))
+	} else {
+		service.Config.RecvQueue <- *objects.MakeFrame(objects.MSG, objects.BROADCAST, &(args.Message))
+	}
+
+	return nil
+}
+
 func (service *EMPService) SendMessage(r *http.Request, args *SendMsg, reply *SendResponse) error {
 	if !basicAuth(service.Config, r) {
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
@@ -282,6 +332,26 @@ func (service *EMPService) SendMessage(r *http.Request, args *SendMsg, reply *Se
 	return nil
 }
 
+func (service *EMPService) ListMessagesBySender(r *http.Request, args *string, reply *[]objects.MetaMessage) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
+	*reply = localdb.GetBySender(*args)
+	return nil
+}
+
+func (service *EMPService) ListMessagesByRecpient(r *http.Request, args *string, reply *[]objects.MetaMessage) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
+	*reply = localdb.GetByRecipient(*args)
+	return nil
+}
+
 func (service *EMPService) Inbox(r *http.Request, args *NilParam, reply *[]objects.MetaMessage) error {
 	if !basicAuth(service.Config, r) {
 		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
@@ -309,6 +379,25 @@ func (service *EMPService) Sendbox(r *http.Request, args *NilParam, reply *[]obj
 	}
 
 	*reply = localdb.GetBox(localdb.SENDBOX)
+	return nil
+}
+
+func (service *EMPService) GetEncrypted(r *http.Request, args *[]byte, reply *encryption.EncryptedMessage) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
+	var txidHash objects.Hash
+	txidHash.FromBytes(*args)
+
+	// Get Message from Database
+	msg, err := localdb.GetMessageDetail(txidHash)
+	if err != nil {
+		return err
+	}
+
+	*reply = *msg.Encrypted
 	return nil
 }
 

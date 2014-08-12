@@ -43,8 +43,15 @@ func AddUpdateAddress(address *objects.AddressDetail) error {
 			}
 		}
 
+		if address.EncPrivkey != nil {
+			err = LocalDB.Exec("UPDATE addressbook SET encprivkey=? WHERE hash=?", address.EncPrivkey, addrHash.GetBytes())
+			if err != nil {
+				return err
+			}
+		}
+
 	} else { // Doesn't exist yet, insert it!
-		err = LocalDB.Exec("INSERT INTO addressbook VALUES (?, ?, ?, ?, ?, ?)", addrHash.GetBytes(), address.Address, address.IsRegistered, address.Pubkey, address.Privkey, address.Label, address.IsSubscribed)
+		err = LocalDB.Exec("INSERT INTO addressbook VALUES (?, ?, ?, ?, ?, ?, ?)", addrHash.GetBytes(), address.Address, address.IsRegistered, address.Pubkey, address.Privkey, address.Label, address.IsSubscribed, address.EncPrivkey)
 		if err != nil {
 			return err
 		}
@@ -64,9 +71,9 @@ func GetAddressDetail(addrHash objects.Hash) (*objects.AddressDetail, error) {
 
 	ret := new(objects.AddressDetail)
 
-	s, err := LocalDB.Query("SELECT address, registered, pubkey, privkey, label, subscribed FROM addressbook WHERE hash=?", addrHash.GetBytes())
+	s, err := LocalDB.Query("SELECT address, registered, pubkey, privkey, label, subscribed, encprivkey FROM addressbook WHERE hash=?", addrHash.GetBytes())
 	if err == nil {
-		s.Scan(&ret.Address, &ret.IsRegistered, &ret.Pubkey, &ret.Privkey, &ret.Label, &ret.IsSubscribed)
+		s.Scan(&ret.Address, &ret.IsRegistered, &ret.Pubkey, &ret.Privkey, &ret.Label, &ret.IsSubscribed, &ret.EncPrivkey)
 		ret.String = encryption.AddressToString(ret.Address)
 		return ret, nil
 	}
@@ -212,6 +219,58 @@ func GetBox(box int) []objects.MetaMessage {
 	ret := make([]objects.MetaMessage, 0, 0)
 
 	for s, err := LocalDB.Query("SELECT txid_hash, timestamp, purged, sender, recipient FROM msg WHERE box=?", box); err == nil; err = s.Next() {
+		mm := new(objects.MetaMessage)
+		sendBytes := make([]byte, 0, 0)
+		recvBytes := make([]byte, 0, 0)
+		txidHash := make([]byte, 0, 0)
+		var timestamp int64
+
+		s.Scan(&txidHash, &timestamp, &mm.Purged, &sendBytes, &recvBytes)
+		mm.Sender = encryption.AddressToString(sendBytes)
+		mm.Recipient = encryption.AddressToString(recvBytes)
+
+		mm.TxidHash.FromBytes(txidHash)
+		mm.Timestamp = time.Unix(timestamp, 0)
+
+		ret = append(ret, *mm)
+	}
+
+	return ret
+}
+
+func GetBySender(sender string) []objects.MetaMessage {
+	localMutex.Lock()
+	defer localMutex.Unlock()
+
+	ret := make([]objects.MetaMessage, 0, 0)
+
+	for s, err := LocalDB.Query("SELECT txid_hash, timestamp, purged, sender, recipient FROM msg WHERE sender=?", sender); err == nil; err = s.Next() {
+		mm := new(objects.MetaMessage)
+		sendBytes := make([]byte, 0, 0)
+		recvBytes := make([]byte, 0, 0)
+		txidHash := make([]byte, 0, 0)
+		var timestamp int64
+
+		s.Scan(&txidHash, &timestamp, &mm.Purged, &sendBytes, &recvBytes)
+		mm.Sender = encryption.AddressToString(sendBytes)
+		mm.Recipient = encryption.AddressToString(recvBytes)
+
+		mm.TxidHash.FromBytes(txidHash)
+		mm.Timestamp = time.Unix(timestamp, 0)
+
+		ret = append(ret, *mm)
+	}
+
+	return ret
+}
+
+func GetByRecipient(recipient string) []objects.MetaMessage {
+	localMutex.Lock()
+	defer localMutex.Unlock()
+
+	ret := make([]objects.MetaMessage, 0, 0)
+
+	for s, err := LocalDB.Query("SELECT txid_hash, timestamp, purged, sender, recipient FROM msg WHERE recipient=?", recipient); err == nil; err = s.Next() {
 		mm := new(objects.MetaMessage)
 		sendBytes := make([]byte, 0, 0)
 		recvBytes := make([]byte, 0, 0)

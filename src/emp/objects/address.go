@@ -7,5 +7,6 @@ type AddressDetail struct {
 	IsSubscribed bool   `json:"subscribed"`
 	Pubkey       []byte `json:"public_key"`
 	Privkey      []byte `json:"private_key"`
+	EncPrivkey   []byte `json:"encrypted_privkey"`
 	Label        string `json:"address_label"`
 }
