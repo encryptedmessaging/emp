@@ -20,10 +20,10 @@ export GOPATH=$DIR/..
 
 # Get Dependencies
 echo "Installing dependencies..."
-CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 go get code.google.com/p/go.crypto/ripemd160
-CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 go get github.com/BurntSushi/toml
-CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 go get github.com/gorilla/rpc
-CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 go get github.com/mxk/go-sqlite/sqlite3
+CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOARCH=arm GOOS=linux GOARM=6 go get code.google.com/p/go.crypto/ripemd160
+CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOARCH=arm GOOS=linux GOARM=6 go get github.com/BurntSushi/toml
+CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOARCH=arm GOOS=linux GOARM=6 go get github.com/gorilla/rpc
+CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOARCH=arm GOOS=linux GOARM=6 go get github.com/mxk/go-sqlite/sqlite3
 
 # Install and go!
 echo "Building..."
