@@ -199,6 +199,10 @@ function ArrayToBase64( buffer ) {
     return window.btoa( binary );
 }
 
+function BackButton() {
+    $.colorbox.close()
+}
+
 /////////////// Modal Functions ///////////////////
 
 function messageModal(txidHash) {
@@ -222,7 +226,7 @@ function messageModal(txidHash) {
 	$("#messageModal").children().children("#purge").attr("onclick", "purgeMessage('" + ArrayToBase64(message.decrypted.Txid) + "')")
 	$("#messageModal").children().children("#delete").attr("onclick", "delMessage('" + txidHash + "')")
 
-	$.colorbox({inline:true, href:"#messageModal", width:"50%",
+	$.colorbox({inline:true, href:"#messageModal", width:"100%",
 				onLoad:function(){ $("#messageModal").show(); },
 				onCleanup:function(){ $("#messageModal").hide(); reloadPage(true); }
 				});
@@ -259,7 +263,7 @@ function newModal() {
 
 
 
-	$.colorbox({inline:true, href:"#newModal", width:"50%",
+	$.colorbox({inline:true, href:"#newModal", width:"100%",
 				onLoad:function(){ $("#newModal").show(); },
 				onCleanup:function(){ $("#newModal").hide(); reloadPage(true); }
 				});
@@ -283,7 +287,7 @@ function pubModal() {
 
 
 
-	$.colorbox({inline:true, href:"#pubModal", width:"50%",
+	$.colorbox({inline:true, href:"#pubModal", width:"100%",
 				onLoad:function(){ $("#pubModal").show(); },
 				onCleanup:function(){ $("#pubModal").hide(); reloadPage(true); }
 				});
@@ -302,7 +306,7 @@ function addrDetailModal(address) {
 	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
 	document.forms["addrDetail"]["subscribed"].checked = addrDetail.subscribed
 
-	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
+	$.colorbox({inline:true, href:"#addrDetailModal", width:"100%",
 				onLoad:function(){ $("#addrDetailModal").show(); },
 				onCleanup:function(){ $("#addrDetailModal").hide(); reloadPage(true); }
 				});
@@ -310,7 +314,7 @@ function addrDetailModal(address) {
 
 function addrModal() {
 
-	openBox = $.colorbox({inline:true, href:"#addrModal", width:"50%",
+	openBox = $.colorbox({inline:true, href:"#addrModal", width:"100%",
 				onLoad:function(){ $("#addrModal").show(); },
 				onCleanup:function(){ $("#addrModal").hide(); reloadPage(true); }
 				});
@@ -319,7 +323,7 @@ function addrModal() {
 function loginModal() {
 	$("#loginError").hide();
 
-	$.colorbox({inline:true, href:"#loginModal", width:"50%",
+	$.colorbox({inline:true, href:"#loginModal", width:"100%",
 				onLoad:function(){ $("#loginModal").show(); },
 				onCleanup:function(){ $("#loginModal").hide(); },
 				onClosed:function(){ if(!isLoggedIn()) { loginModal(); } else {reloadPage()}}
@@ -433,7 +437,7 @@ function reloadPage(force) {
 				$("table#main").children("tbody").prepend("\
 					<tr onclick='addrDetailModal(\"" + addr.result[i][0] + "\")'>\
 						<td data-th='address'>" + addr.result[i][0] + "</td>\
-	            		<td data-th='registered'>" + addr.result[i][1] + "</td>\
+	            		<td data-th='registered' id='registered'>" + addr.result[i][1] + "</td>\
 	            	</tr>");
 			}
 		}

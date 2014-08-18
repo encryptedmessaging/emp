@@ -1,13 +1,9 @@
 build:
 	script/build.sh
-start:
-	script/start.sh
-stop:
-	script/stop.sh
-clean: stop
-	rm -rf bin
+
+clean:
+	rm -rf emp
 	rm -rf pkg
-	rm -rf ~/.config/emp/log/*
 
 clobber: clean
 	rm -rf src/github.com

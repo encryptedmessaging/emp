@@ -9,20 +9,25 @@ if ! which go > /dev/null; then
   exit -1
 fi
 
+if ! which arm-linux-gnueabi-gcc > /dev/null; then
+  echo "Build Script requires arm-linux-gnueabi-gcc compiler. Change line 12 of script/build.sh for a different compiler."
+  exit -1
+fi
+
 # Setup environment variables
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export GOPATH=$DIR/..
 
 # Get Dependencies
 echo "Installing dependencies..."
-go get code.google.com/p/go.crypto/ripemd160
-go get github.com/BurntSushi/toml
-go get github.com/gorilla/rpc
-go get github.com/mxk/go-sqlite/sqlite3
+CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 go get code.google.com/p/go.crypto/ripemd160
+CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 go get github.com/BurntSushi/toml
+CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 go get github.com/gorilla/rpc
+CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 go get github.com/mxk/go-sqlite/sqlite3
 
 # Install and go!
 echo "Building..."
-if `go install emp`; then
+if `CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm go build --ldflags '-extld "arm-linux-gnueabi-gcc" -extldflags "-static"' emp`; then
   echo "Build succeeded."
   exit 0
 else echo "Build Failed, could not start client."

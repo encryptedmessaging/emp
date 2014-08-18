@@ -6,3 +6,16 @@
 .formText {
 	width: 90%;
 }
+
+td {
+	padding-left: 110px !important;
+}
+
+#registered {
+	min-height: 55px;
+}
+
+.button--primary {
+	padding-left: 5px !important;
+	padding-right: 5px !important;
+}
