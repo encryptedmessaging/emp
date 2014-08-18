@@ -37,6 +37,14 @@ func basicAuth(config *api.ApiConfig, r *http.Request) bool {
 		return false
 	}
 
+	ip, _, error := net.SplitHostPort(r.RemoteAddr)
+	if error != nil {
+		return false
+	}
+	if ip != "127.0.0.1" {
+		return false
+	}
+
 	auth := r.Header.Get("Authorization")
 
 	auth2 := "Basic " + base64.StdEncoding.EncodeToString([]byte(config.RPCUser+":"+config.RPCPass))
