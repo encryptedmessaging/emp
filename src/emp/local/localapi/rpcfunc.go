@@ -7,9 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"quibit"
 )
 
 var logChan chan string
+
+func (service *EMPService) ConnectionStatus(r *http.Request, args *NilParam, reply *int) error {
+	*reply = quibit.Status()
+	return nil
+}
 
 func (service *EMPService) GetLabel(r *http.Request, args *string, reply *string) error {
 	if !basicAuth(service.Config, r) {

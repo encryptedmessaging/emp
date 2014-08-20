@@ -17,6 +17,7 @@ type Node struct {
 	IP       net.IP
 	Port     uint16
 	LastSeen time.Time
+	Attempts uint8
 }
 
 type NodeList struct {
@@ -40,6 +41,7 @@ func (n *Node) FromString(hostPort string) error {
 	}
 	n.Port = uint16(prt)
 	n.LastSeen = time.Now().Round(time.Second)
+	n.Attempts = 0
 	return nil
 }
 
@@ -88,6 +90,7 @@ func (n *NodeList) FromBytes(data []byte) error {
 		node.IP = net.IP(b.Next(16))
 		node.Port = binary.BigEndian.Uint16(b.Next(2))
 		node.LastSeen = time.Unix(int64(binary.BigEndian.Uint64(b.Next(8))), 0)
+		node.Attempts = 0
 		n.Nodes[node.String()] = *node
 	}
 

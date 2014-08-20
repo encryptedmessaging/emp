@@ -27,6 +27,7 @@ type ApiConfig struct {
 	NodeFile     string
 	NodeList     objects.NodeList
 	LocalVersion objects.Version
+	Bootstrap    []string
 
 	// Local Register
 	PubkeyRegister  chan objects.Hash
@@ -171,6 +172,8 @@ func GetConfig(confFile string) *ApiConfig {
 	config.NodeList.Nodes = make(map[string]objects.Node)
 
 	// Bootstrap Nodes
+	config.Bootstrap = make([]string, len(tomlConf.Peers), cap(tomlConf.Peers))
+	copy(config.Bootstrap, tomlConf.Peers)
 	for i, str := range tomlConf.Peers {
 		if i >= bufLen {
 			break

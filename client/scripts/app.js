@@ -331,6 +331,24 @@ function reloadPage(force) {
 	var msg = null
 	var addr = null
 	var registered
+
+	var status = rpcSend("ConnectionStatus", [])
+
+	switch (status.result) {
+		case 1:
+		// Client
+			$("#status").css("background-color", "yellow");
+			break;
+		case 2:
+		// Full Connection
+			$("#status").css("background-color", "green");
+			break;
+		default:
+		// Disconnected
+			$("#status").css("background-color", "red");
+			break;
+	}
+
 	switch (window.location.hash) {
 		case "#outbox":
 			$("h3#box").text("Outbox");
