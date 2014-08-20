@@ -7,9 +7,36 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"quibit"
 )
 
 var logChan chan string
+
+func (service *EMPService) ForgetAddress(r *http.Request, args *string, reply *NilParam) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+
+	address := encryption.StringToAddress(*args)
+	if len(address) != 25 {
+		return errors.New(fmt.Sprintf("Invalid Address: %s", address))
+	}
+
+	addrHash := objects.MakeHash(address)
+
+	return localdb.DeleteAddress(&addrHash)
+}
+
+func (service *EMPService) ConnectionStatus(r *http.Request, args *NilParam, reply *int) error {
+	if !basicAuth(service.Config, r) {
+		service.Config.Log <- fmt.Sprintf("Unauthorized RPC Request from: %s", r.RemoteAddr)
+		return errors.New("Unauthorized")
+	}
+	
+	*reply = quibit.Status()
+	return nil
+}
 
 func (service *EMPService) GetLabel(r *http.Request, args *string, reply *string) error {
 	if !basicAuth(service.Config, r) {

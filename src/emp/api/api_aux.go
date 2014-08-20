@@ -266,11 +266,11 @@ func fMSG(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 			config.Log <- fmt.Sprintf("Error adding message to database: %s", err)
 			break
 		}
-		if frame.Header.Type == objects.BROADCAST {
-			sending = *objects.MakeFrame(objects.MSG, objects.BROADCAST, msg)
-			sending.Peer = frame.Peer
-			config.SendQueue <- sending
-		}
+		// Re-broadcast unpurged message
+		sending = *objects.MakeFrame(objects.MSG, objects.BROADCAST, msg)
+		sending.Peer = frame.Peer
+		config.SendQueue <- sending
+
 		config.Log <- "Registering message..."
 		config.MessageRegister <- *msg
 
@@ -295,11 +295,10 @@ func fPUB(config *ApiConfig, frame quibit.Frame, msg *objects.Message) {
 			config.Log <- fmt.Sprintf("Error adding publication to database: %s", err)
 			break
 		}
-		if frame.Header.Type == objects.BROADCAST {
+		// Re-broadcast
 			sending = *objects.MakeFrame(objects.PUB, objects.BROADCAST, msg)
 			sending.Peer = frame.Peer
 			config.SendQueue <- sending
-		}
 		config.Log <- "Registering publication..."
 		config.PubRegister <- *msg
 
@@ -338,11 +337,9 @@ func fPURGE(config *ApiConfig, frame quibit.Frame, purge *objects.Purge) {
 		}
 
 		// Re-objects.BROADCAST if necessary
-		if frame.Header.Type == objects.BROADCAST {
 			sending := *objects.MakeFrame(objects.PURGE, objects.BROADCAST, purge)
 			sending.Peer = frame.Peer
 			config.SendQueue <- sending
-		}
 		config.PurgeRegister <- purge.Txid
 	} // End Switch
 } // End fPURGE

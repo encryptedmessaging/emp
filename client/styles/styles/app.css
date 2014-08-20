@@ -1,0 +1,16 @@
+.datarow :hover {
+	cursor: pointer !important;
+	cursor: hand !important;
+}
+
+.formText {
+	width: 90%;
+}
+
+#status {
+	position: fixed;
+	bottom: 5px;
+	right: 5px;
+	width: 25px;
+	height: 25px;
+}

@@ -21,10 +21,10 @@
     <meta name="msapplication-TileColor" content="#3372DF">
 
     <!-- build:css styles/components/main.min.css -->
-    <link rel="stylesheet" href="styles/app.css">
     <link rel="stylesheet" href="styles/h5bp.css">
     <link rel="stylesheet" href="styles/components/components.css">
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/app.css">
     <!-- endbuild -->
 
     <link rel="stylesheet" href="styles/colorbox.css">
@@ -32,10 +32,11 @@
     <script src="scripts/jquery.colorbox.js"></script>
   </head>
   <body>
+    <div id="status"></div>
     <header class="app-bar promote-layer">
       <div class="app-bar-container">
-        <button class="menu"><img src="/images/hamburger.png" alt="Menu"></button>
-        <h1 class="logo">EMP Local</h1>
+        <button class="menu"><img src="images/hamburger.svg" alt="Menu"></button>
+        <h1 class="logo">EMPLocal: The Local EMP Client</h1>
         <section class="app-bar-actions">
         <!-- Put App Bar Buttons Here -->
         </section>
@@ -56,9 +57,9 @@
       <header>
         <h3 class="xlarge" id="box">Loading...</h3>
         <div class="datarow">
-        <a onclick="reloadPage(true)" class="button--primary small" id="refresh">Refresh</a>
-        <a onclick="newModal()" class="button--primary small" id="new">New Message</a>
-        <a onclick="pubModal()" class="button--primary small" id="pub">Publish Message</a>
+        <a onclick="reloadPage(true)" class="button--primary" id="refresh">Refresh</a>
+        <a onclick="newModal()" class="button--primary" id="new">New Message</a>
+        <a onclick="pubModal()" class="button--primary" id="pub">Publish Message</a>
         </div>
       </header>
       <table id="main">
@@ -151,6 +152,9 @@
         <input type="submit" value="Update Address" />
       </p>
       </form>
+      <p class="base datarow">
+        <a class="button--secondary color--danger" id="forget">Forget Address</a>
+      </p>
     </div>
 
     <div id="addrModal">
@@ -158,7 +162,7 @@
       <hr />
       <div class="datarow">
         <a onclick="createAddress()" class="button--primary">Generate New</a>
-        <br />Note: Will appear under "My Addresses"
+        Note: Will appear under "My Addresses"
       </div>
       <h3>Import New:</h3>
       <form onsubmit="return addUpdateAddress('addrForm')" name="addrForm">
@@ -174,7 +178,7 @@
       <p class="medium"> Private Key (optional):<br />
         <input type="text" name="privkey" class="formText" />
       </p>
-      <p class="medium" style="display:none" >I Own This Address: <input type="checkbox" name="registered" id="registered" /></p>
+      <p class="medium" >I Own This Address: <input type="checkbox" name="registered" id="registered" /></p>
       <p class="medium">Subscribe to Address: <input type="checkbox" name="subscribed" id="subscribed" /></p>
       <p>
         <input type="submit" value="Update Address" />
@@ -220,7 +224,6 @@
       $("#loginModal").hide();
 
       window.emplogin = getCookie("emplogin")
-      LogIn('rpcUser', 'rpcPass')
       if (!isLoggedIn()) {
         loginModal();
       } else {

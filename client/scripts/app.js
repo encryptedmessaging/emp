@@ -116,6 +116,16 @@ function delMessage(txidHash) {
 	$.colorbox.close()
 }
 
+function delAddress(addr) {
+	if (confirm("Are you sure you want to forget? You will no longer receive messages to this address. This action cannot be undone.")) {
+		res = rpcSend("ForgetAddress", [addr])
+		if (res.error != null) {
+			alert("Error Forgetting Address: " + res.error)
+		}
+	}
+	$.colorbox.close()
+}
+
 function purgeMessage(txid) {
 	res = rpcSend("PurgeMessage", [txid])
 
@@ -199,10 +209,6 @@ function ArrayToBase64( buffer ) {
     return window.btoa( binary );
 }
 
-function BackButton() {
-    $.colorbox.close()
-}
-
 /////////////// Modal Functions ///////////////////
 
 function messageModal(txidHash) {
@@ -211,8 +217,10 @@ function messageModal(txidHash) {
 	message = res.result
 	date = new Date(Date.parse(message.info.sent));
 
-	message.info.sender = rpcSend("GetLabel", [message.info.sender]).result
-	message.info.recipient = rpcSend("GetLabel", [message.info.recipient]).result
+	var tmp = rpcSend("GetLabel", [message.info.sender]).result
+	if (tmp != null) message.info.sender = tmp;
+	tmp = rpcSend("GetLabel", [message.info.recipient]).result
+	if (tmp != null) message.info.recipient = tmp;
 
 	$("#messageModal").children().children("#sender").text(message.info.sender)
 	$("#messageModal").children().children("#recipient").text(message.info.recipient)
@@ -226,7 +234,7 @@ function messageModal(txidHash) {
 	$("#messageModal").children().children("#purge").attr("onclick", "purgeMessage('" + ArrayToBase64(message.decrypted.Txid) + "')")
 	$("#messageModal").children().children("#delete").attr("onclick", "delMessage('" + txidHash + "')")
 
-	$.colorbox({inline:true, href:"#messageModal", width:"100%",
+	$.colorbox({inline:true, href:"#messageModal", width:"50%",
 				onLoad:function(){ $("#messageModal").show(); },
 				onCleanup:function(){ $("#messageModal").hide(); reloadPage(true); }
 				});
@@ -263,7 +271,7 @@ function newModal() {
 
 
 
-	$.colorbox({inline:true, href:"#newModal", width:"100%",
+	$.colorbox({inline:true, href:"#newModal", width:"50%",
 				onLoad:function(){ $("#newModal").show(); },
 				onCleanup:function(){ $("#newModal").hide(); reloadPage(true); }
 				});
@@ -287,7 +295,7 @@ function pubModal() {
 
 
 
-	$.colorbox({inline:true, href:"#pubModal", width:"100%",
+	$.colorbox({inline:true, href:"#pubModal", width:"50%",
 				onLoad:function(){ $("#pubModal").show(); },
 				onCleanup:function(){ $("#pubModal").hide(); reloadPage(true); }
 				});
@@ -306,7 +314,9 @@ function addrDetailModal(address) {
 	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
 	document.forms["addrDetail"]["subscribed"].checked = addrDetail.subscribed
 
-	$.colorbox({inline:true, href:"#addrDetailModal", width:"100%",
+	modal.children().children("#forget").attr("onclick", "delAddress('" + addrDetail.address + "')")
+
+	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
 				onLoad:function(){ $("#addrDetailModal").show(); },
 				onCleanup:function(){ $("#addrDetailModal").hide(); reloadPage(true); }
 				});
@@ -314,7 +324,7 @@ function addrDetailModal(address) {
 
 function addrModal() {
 
-	openBox = $.colorbox({inline:true, href:"#addrModal", width:"100%",
+	openBox = $.colorbox({inline:true, href:"#addrModal", width:"50%",
 				onLoad:function(){ $("#addrModal").show(); },
 				onCleanup:function(){ $("#addrModal").hide(); reloadPage(true); }
 				});
@@ -323,7 +333,7 @@ function addrModal() {
 function loginModal() {
 	$("#loginError").hide();
 
-	$.colorbox({inline:true, href:"#loginModal", width:"100%",
+	$.colorbox({inline:true, href:"#loginModal", width:"50%",
 				onLoad:function(){ $("#loginModal").show(); },
 				onCleanup:function(){ $("#loginModal").hide(); },
 				onClosed:function(){ if(!isLoggedIn()) { loginModal(); } else {reloadPage()}}
@@ -335,6 +345,24 @@ function reloadPage(force) {
 	var msg = null
 	var addr = null
 	var registered
+
+	var status = rpcSend("ConnectionStatus", [])
+
+	switch (status.result) {
+		case 1:
+		// Client
+			$("#status").css("background-color", "yellow");
+			break;
+		case 2:
+		// Full Connection
+			$("#status").css("background-color", "green");
+			break;
+		default:
+		// Disconnected
+			$("#status").css("background-color", "red");
+			break;
+	}
+
 	switch (window.location.hash) {
 		case "#outbox":
 			$("h3#box").text("Outbox");
@@ -402,14 +430,21 @@ function reloadPage(force) {
 
 				date = new Date(Date.parse(msg.result[i].sent));
 
-				msg.result[i].sender = rpcSend("GetLabel", [msg.result[i].sender]).result
-				if (msg.result[i].sender == null) {
-					msg.result[i].sender = "Click to Decrypt..."
-				}
-				msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
-				if (msg.result[i].recipient == null) {
-					msg.result[i].recipient = "&lt;Subscription Message&gt;"
-					if (window.location.hash == "#sendbox") unread = "N/A"
+					var tmp = rpcSend("GetLabel", [msg.result[i].sender]).result
+					if (tmp == null) {
+						if (msg.result[i].sender == null) msg.result[i].sender = "Click to Decrypt..."
+					} else {
+						msg.result[i].sender = tmp
+					}
+
+				tmp = rpcSend("GetLabel", [msg.result[i].recipient]).result
+				if (tmp == null) {
+					if (msg.result[i].recipient == null) {
+						msg.result[i].recipient = "&lt;Subscription Message&gt;"
+						if (window.location.hash == "#sendbox") unread = "N/A"
+					}
+				} else {
+					msg.result[i].recipient = tmp
 				}
 
 				$("table#main").children("tbody").prepend("\
@@ -437,7 +472,7 @@ function reloadPage(force) {
 				$("table#main").children("tbody").prepend("\
 					<tr onclick='addrDetailModal(\"" + addr.result[i][0] + "\")'>\
 						<td data-th='address'>" + addr.result[i][0] + "</td>\
-	            		<td data-th='registered' id='registered'>" + addr.result[i][1] + "</td>\
+	            		<td data-th='registered'>" + addr.result[i][1] + "</td>\
 	            	</tr>");
 			}
 		}
