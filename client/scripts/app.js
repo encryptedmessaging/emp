@@ -116,6 +116,16 @@ function delMessage(txidHash) {
 	$.colorbox.close()
 }
 
+function delAddress(addr) {
+	if (confirm("Are you sure you want to forget? You will no longer receive messages to this address. This action cannot be undone.")) {
+		res = rpcSend("ForgetAddress", [addr])
+		if (res.error != null) {
+			alert("Error Forgetting Address: " + res.error)
+		}
+	}
+	$.colorbox.close()
+}
+
 function purgeMessage(txid) {
 	res = rpcSend("PurgeMessage", [txid])
 
@@ -301,6 +311,8 @@ function addrDetailModal(address) {
 	document.forms["addrDetail"]["addrlabel"].value = addrDetail.address_label
 	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
 	document.forms["addrDetail"]["subscribed"].checked = addrDetail.subscribed
+
+	modal.children().children("#forget").attr("onclick", "delAddress('" + addrDetail.address + "')")
 
 	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
 				onLoad:function(){ $("#addrDetailModal").show(); },
