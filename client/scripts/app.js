@@ -433,6 +433,7 @@ function reloadPage(force) {
 					var tmp = rpcSend("GetLabel", [msg.result[i].sender]).result
 					if (tmp == null) {
 						if (msg.result[i].sender == null) msg.result[i].sender = "Click to Decrypt..."
+						else if (msg.result[i].sender.length < 1) msg.result[i].sender = "Click to Decrypt..."
 					} else {
 						msg.result[i].sender = tmp
 					}
@@ -449,10 +450,10 @@ function reloadPage(force) {
 
 				$("table#main").children("tbody").prepend("\
 				<tr onclick='messageModal(\"" + ArrayToBase64(msg.result[i].txid_hash) + "\")'>\
-	            	<td data-th='date'>" + date.toLocaleString() + "</td>\
-	            	<td data-th='from'>" + msg.result[i].sender + "</td>\
-	            	<td data-th='to'>" + msg.result[i].recipient + "</td>\
-	            	<td data-th='status'>" + unread + "</td>\
+	            	<td data-th='Date'>" + date.toLocaleString() + "</td>\
+	            	<td data-th='From'>" + msg.result[i].sender + "</td>\
+	            	<td data-th='To'>" + msg.result[i].recipient + "</td>\
+	            	<td data-th='Status'>" + unread + "</td>\
 		        </tr>");
 			}
 		} else {
@@ -471,8 +472,8 @@ function reloadPage(force) {
 			for (var i = 0; i < addr.result.length; i++) {
 				$("table#main").children("tbody").prepend("\
 					<tr onclick='addrDetailModal(\"" + addr.result[i][0] + "\")'>\
-						<td data-th='address'>" + addr.result[i][0] + "</td>\
-	            		<td data-th='registered'>" + addr.result[i][1] + "</td>\
+						<td data-th='Address'>" + addr.result[i][0] + "</td>\
+	            		<td data-th='Label'>" + addr.result[i][1] + "</td>\
 	            	</tr>");
 			}
 		}
