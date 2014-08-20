@@ -6,3 +6,4 @@ src/*.local
 *~
 *.db
 distro
+eclipse_workspace/bin
