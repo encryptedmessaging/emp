@@ -217,8 +217,10 @@ function messageModal(txidHash) {
 	message = res.result
 	date = new Date(Date.parse(message.info.sent));
 
-	message.info.sender = rpcSend("GetLabel", [message.info.sender]).result
-	message.info.recipient = rpcSend("GetLabel", [message.info.recipient]).result
+	var tmp = rpcSend("GetLabel", [message.info.sender]).result
+	if (tmp != null) message.info.sender = tmp;
+	tmp = rpcSend("GetLabel", [message.info.recipient]).result
+	if (tmp != null) message.info.recipient = tmp;
 
 	$("#messageModal").children().children("#sender").text(message.info.sender)
 	$("#messageModal").children().children("#recipient").text(message.info.recipient)
@@ -428,14 +430,21 @@ function reloadPage(force) {
 
 				date = new Date(Date.parse(msg.result[i].sent));
 
-				msg.result[i].sender = rpcSend("GetLabel", [msg.result[i].sender]).result
-				if (msg.result[i].sender == null) {
-					msg.result[i].sender = "Click to Decrypt..."
-				}
-				msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
-				if (msg.result[i].recipient == null) {
-					msg.result[i].recipient = "&lt;Subscription Message&gt;"
-					if (window.location.hash == "#sendbox") unread = "N/A"
+					var tmp = rpcSend("GetLabel", [msg.result[i].sender]).result
+					if (tmp == null) {
+						if (msg.result[i].sender == null) msg.result[i].sender = "Click to Decrypt..."
+					} else {
+						msg.result[i].sender = tmp
+					}
+
+				tmp = rpcSend("GetLabel", [msg.result[i].recipient]).result
+				if (tmp == null) {
+					if (msg.result[i].recipient == null) {
+						msg.result[i].recipient = "&lt;Subscription Message&gt;"
+						if (window.location.hash == "#sendbox") unread = "N/A"
+					}
+				} else {
+					msg.result[i].recipient = tmp
 				}
 
 				$("table#main").children("tbody").prepend("\
