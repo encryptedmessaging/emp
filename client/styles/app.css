@@ -20,6 +20,11 @@ td {
 	padding-right: 5px !important;
 }
 
+.button--secondary {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+}
+
 #new {
 	position: fixed;
 	top: 20px;

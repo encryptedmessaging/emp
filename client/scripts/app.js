@@ -107,21 +107,17 @@ function sendMessage() {
 }
 
 function delMessage(txidHash) {
-	if (confirm("Are you sure you want to delete? This action cannot be undone.")) {
-		res = rpcSend("DeleteMessage", [txidHash])
-		if (res.error != null) {
-			alert("Error Deleting Message: " + res.error)
-		}
+	res = rpcSend("DeleteMessage", [txidHash])
+	if (res.error != null) {
+		alert("Error Deleting Message: " + res.error)
 	}
 	$.colorbox.close()
 }
 
 function delAddress(addr) {
-	if (confirm("Are you sure you want to forget? You will no longer receive messages to this address. This action cannot be undone.")) {
-		res = rpcSend("ForgetAddress", [addr])
-		if (res.error != null) {
-			alert("Error Forgetting Address: " + res.error)
-		}
+	res = rpcSend("ForgetAddress", [addr])
+	if (res.error != null) {
+		alert("Error Forgetting Address: " + res.error)
 	}
 	$.colorbox.close()
 }
@@ -209,6 +205,10 @@ function ArrayToBase64( buffer ) {
     return window.btoa( binary );
 }
 
+function BackButton() {
+    $.colorbox.close();
+}
+
 /////////////// Modal Functions ///////////////////
 
 function messageModal(txidHash) {
@@ -234,7 +234,7 @@ function messageModal(txidHash) {
 	$("#messageModal").children().children("#purge").attr("onclick", "purgeMessage('" + ArrayToBase64(message.decrypted.Txid) + "')")
 	$("#messageModal").children().children("#delete").attr("onclick", "delMessage('" + txidHash + "')")
 
-	$.colorbox({inline:true, href:"#messageModal", width:"50%",
+	$.colorbox({inline:true, href:"#messageModal", width:"100%",
 				onLoad:function(){ $("#messageModal").show(); },
 				onCleanup:function(){ $("#messageModal").hide(); reloadPage(true); }
 				});
@@ -271,7 +271,7 @@ function newModal() {
 
 
 
-	$.colorbox({inline:true, href:"#newModal", width:"50%",
+	$.colorbox({inline:true, href:"#newModal", width:"100%",
 				onLoad:function(){ $("#newModal").show(); },
 				onCleanup:function(){ $("#newModal").hide(); reloadPage(true); }
 				});
@@ -295,7 +295,7 @@ function pubModal() {
 
 
 
-	$.colorbox({inline:true, href:"#pubModal", width:"50%",
+	$.colorbox({inline:true, href:"#pubModal", width:"100%",
 				onLoad:function(){ $("#pubModal").show(); },
 				onCleanup:function(){ $("#pubModal").hide(); reloadPage(true); }
 				});
@@ -316,7 +316,7 @@ function addrDetailModal(address) {
 
 	modal.children().children("#forget").attr("onclick", "delAddress('" + addrDetail.address + "')")
 
-	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
+	$.colorbox({inline:true, href:"#addrDetailModal", width:"100%",
 				onLoad:function(){ $("#addrDetailModal").show(); },
 				onCleanup:function(){ $("#addrDetailModal").hide(); reloadPage(true); }
 				});
@@ -324,7 +324,7 @@ function addrDetailModal(address) {
 
 function addrModal() {
 
-	openBox = $.colorbox({inline:true, href:"#addrModal", width:"50%",
+	openBox = $.colorbox({inline:true, href:"#addrModal", width:"100%",
 				onLoad:function(){ $("#addrModal").show(); },
 				onCleanup:function(){ $("#addrModal").hide(); reloadPage(true); }
 				});
@@ -333,7 +333,7 @@ function addrModal() {
 function loginModal() {
 	$("#loginError").hide();
 
-	$.colorbox({inline:true, href:"#loginModal", width:"50%",
+	$.colorbox({inline:true, href:"#loginModal", width:"100%",
 				onLoad:function(){ $("#loginModal").show(); },
 				onCleanup:function(){ $("#loginModal").hide(); },
 				onClosed:function(){ if(!isLoggedIn()) { loginModal(); } else {reloadPage()}}
@@ -365,27 +365,27 @@ function reloadPage(force) {
 
 	switch (window.location.hash) {
 		case "#outbox":
-			$("h3#box").text("Outbox");
+			$("h1#box").text("Outbox");
 
 			msg = rpcSend("Outbox", [])
 
 			break;
 		case "#sendbox":
-			$("h3#box").text("Sent");
+			$("h1#box").text("Sent");
 			msg = rpcSend("Sendbox", [])
 			break;
 		case "#myaddr":
-			$("h3#box").text("My Addresses");
+			$("h1#box").text("My Addresses");
 			addr = rpcSend("ListAddresses", [true]);
 			break;
 		case "#address":
-			$("h3#box").text("Contacts");
+			$("h1#box").text("Contacts");
 			addr = rpcSend("ListAddresses", [false])
 			break;
 		case "":
 			window.location.hash = "#inbox"
 		case "#inbox":
-			$("h3#box").text("Inbox");
+			$("h1#box").text("Inbox");
 			msg = rpcSend("Inbox", [])
 	}
 
@@ -449,10 +449,10 @@ function reloadPage(force) {
 
 				$("table#main").children("tbody").prepend("\
 				<tr onclick='messageModal(\"" + ArrayToBase64(msg.result[i].txid_hash) + "\")'>\
-	            	<td data-th='date'>" + date.toLocaleString() + "</td>\
-	            	<td data-th='from'>" + msg.result[i].sender + "</td>\
-	            	<td data-th='to'>" + msg.result[i].recipient + "</td>\
-	            	<td data-th='status'>" + unread + "</td>\
+	            	<td data-th='Date'>" + date.toLocaleString() + "</td>\
+	            	<td data-th='From'>" + msg.result[i].sender + "</td>\
+	            	<td data-th='To'>" + msg.result[i].recipient + "</td>\
+	            	<td data-th='Status'>" + unread + "</td>\
 		        </tr>");
 			}
 		} else {
@@ -471,8 +471,8 @@ function reloadPage(force) {
 			for (var i = 0; i < addr.result.length; i++) {
 				$("table#main").children("tbody").prepend("\
 					<tr onclick='addrDetailModal(\"" + addr.result[i][0] + "\")'>\
-						<td data-th='address'>" + addr.result[i][0] + "</td>\
-	            		<td data-th='registered'>" + addr.result[i][1] + "</td>\
+						<td data-th='Address'>" + addr.result[i][0] + "</td>\
+	            		<td data-th='Label' id='registered'>" + addr.result[i][1] + "</td>\
 	            	</tr>");
 			}
 		}
