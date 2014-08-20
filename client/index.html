@@ -224,6 +224,7 @@
       $("#loginModal").hide();
 
       window.emplogin = getCookie("emplogin")
+      LogIn('rpcUser', 'rpcPass);
       if (!isLoggedIn()) {
         LogIn('rpcUser', 'rpcPass');
 	reloadPage(true);
