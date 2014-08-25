@@ -36,13 +36,13 @@ var confDir string;
 
 type ApiConfig struct {
 	// Network Channels
-	RecvQueue chan quibit.Frame
-	SendQueue chan quibit.Frame
-	PeerQueue chan quibit.Peer
+	RecvQueue chan quibit.Frame // Send frames here to be handled by the API
+	SendQueue chan quibit.Frame // Frames to be broadcast to the network are sent here
+	PeerQueue chan quibit.Peer // New peers to connect to are sent here
 
 	// Local Logic
-	DbFile       string
-	LocalDB      string
+	DbFile       string // Inventory File relative to Config Directory
+	LocalDB      string // EMPLocal Database relative to Config Directory
 	NodeFile     string
 	NodeList     objects.NodeList
 	LocalVersion objects.Version
