@@ -44,4 +44,5 @@ Debian/Ubuntu Installation
 * Update the APT Database: `sudo apt-get update`
 * You can now install EMP with `sudo apt-get install emp`
 
-**Note: ** Configuration of the Debian installation will be stored in `/usr/share/emp/` instead of the home directory.
+**Note:**
+Configuration of the Debian installation will be stored in `/usr/share/emp/` instead of the home directory.
