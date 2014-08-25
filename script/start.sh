@@ -61,7 +61,7 @@ go get github.com/mxk/go-sqlite/sqlite3
 # Install and go!
 echo "Building and running..."
 if `go install emp`; then
-	"$GOPATH/bin/emp" > ~/.config/emp/log/log_`date +%s` &
+	"$GOPATH/bin/emp" "$HOME/.config/emp/" > ~/.config/emp/log/log_`date +%s` &
 	echo $! > ~/.config/emp/pid
 
 	# Get Ports
