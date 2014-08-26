@@ -7,6 +7,15 @@ import (
 	"time"
 )
 
+func SweepMessages(duration time.Duration) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	deadline := time.Now().Add(-duration).Unix()
+
+	return dbConn.Exec("DELETE FROM msg WHERE timestamp <= ?", deadline)
+}
+
 func AddPubkey(log chan string, pubkey objects.EncryptedPubkey) error {
 	mutex.Lock()
 	defer mutex.Unlock()

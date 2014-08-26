@@ -24,9 +24,6 @@ body {
   min-height: 100%;
 }
 
-body.open {
-  overflow: hidden;
-}
 
 .app-bar {
   display: block;
@@ -52,11 +49,6 @@ body.open {
   margin: 0 auto;
 }
 
-.app-bar.open,
-.app-bar.open ~ main {
-  -webkit-transform: translate(250px, 0);
-          transform: translate(250px, 0);
-}
 
 .app-bar .logo {
   -webkit-flex: 1;
@@ -73,11 +65,6 @@ body.open {
   line-height: 60px;
 }
 
-.app-bar .logo a {
-  text-decoration: none;
-  color: inherit;
-  font-weight: normal;
-}
 
 .app-bar-actions {
   display: -webkit-flex;
@@ -155,10 +142,6 @@ button.menu img {
   overflow-y: auto;
 }
 
-.navdrawer-container.open {
-  -webkit-transform: translate(0, 0);
-          transform: translate(0, 0);
-}
 
 .app-bar, .navdrawer-container, main {
   -webkit-transition: -webkit-transform 0.3s ease-out;
@@ -229,11 +212,6 @@ main {
     position: relative;
   }
 
-  .app-bar.open,
-  .app-bar.open ~ main {
-    -webkit-transform: translate(0px, 0);
-            transform: translate(0px, 0);
-  }
 
   .app-bar-container {
     display: block;

@@ -116,6 +116,16 @@ function delMessage(txidHash) {
 	$.colorbox.close()
 }
 
+function delAddress(addr) {
+	if (confirm("Are you sure you want to forget? You will no longer receive messages to this address. This action cannot be undone.")) {
+		res = rpcSend("ForgetAddress", [addr])
+		if (res.error != null) {
+			alert("Error Forgetting Address: " + res.error)
+		}
+	}
+	$.colorbox.close()
+}
+
 function purgeMessage(txid) {
 	res = rpcSend("PurgeMessage", [txid])
 
@@ -207,8 +217,10 @@ function messageModal(txidHash) {
 	message = res.result
 	date = new Date(Date.parse(message.info.sent));
 
-	message.info.sender = rpcSend("GetLabel", [message.info.sender]).result
-	message.info.recipient = rpcSend("GetLabel", [message.info.recipient]).result
+	var tmp = rpcSend("GetLabel", [message.info.sender]).result
+	if (tmp != null) message.info.sender = tmp;
+	tmp = rpcSend("GetLabel", [message.info.recipient]).result
+	if (tmp != null) message.info.recipient = tmp;
 
 	$("#messageModal").children().children("#sender").text(message.info.sender)
 	$("#messageModal").children().children("#recipient").text(message.info.recipient)
@@ -302,6 +314,8 @@ function addrDetailModal(address) {
 	document.forms["addrDetail"]["registered"].checked = addrDetail.registered
 	document.forms["addrDetail"]["subscribed"].checked = addrDetail.subscribed
 
+	modal.children().children("#forget").attr("onclick", "delAddress('" + addrDetail.address + "')")
+
 	$.colorbox({inline:true, href:"#addrDetailModal", width:"50%",
 				onLoad:function(){ $("#addrDetailModal").show(); },
 				onCleanup:function(){ $("#addrDetailModal").hide(); reloadPage(true); }
@@ -331,6 +345,24 @@ function reloadPage(force) {
 	var msg = null
 	var addr = null
 	var registered
+
+	var status = rpcSend("ConnectionStatus", [])
+
+	switch (status.result) {
+		case 1:
+		// Client
+			$("#status").css("background-color", "yellow");
+			break;
+		case 2:
+		// Full Connection
+			$("#status").css("background-color", "green");
+			break;
+		default:
+		// Disconnected
+			$("#status").css("background-color", "red");
+			break;
+	}
+
 	switch (window.location.hash) {
 		case "#outbox":
 			$("h3#box").text("Outbox");
@@ -398,22 +430,30 @@ function reloadPage(force) {
 
 				date = new Date(Date.parse(msg.result[i].sent));
 
-				msg.result[i].sender = rpcSend("GetLabel", [msg.result[i].sender]).result
-				if (msg.result[i].sender == null) {
-					msg.result[i].sender = "Click to Decrypt..."
-				}
-				msg.result[i].recipient = rpcSend("GetLabel", [msg.result[i].recipient]).result
-				if (msg.result[i].recipient == null) {
-					msg.result[i].recipient = "&lt;Subscription Message&gt;"
-					if (window.location.hash == "#sendbox") unread = "N/A"
+					var tmp = rpcSend("GetLabel", [msg.result[i].sender]).result
+					if (tmp == null) {
+						if (msg.result[i].sender == null) msg.result[i].sender = "Click to Decrypt..."
+						else if (msg.result[i].sender.length < 1) msg.result[i].sender = "Click to Decrypt..."
+					} else {
+						msg.result[i].sender = tmp
+					}
+
+				tmp = rpcSend("GetLabel", [msg.result[i].recipient]).result
+				if (tmp == null) {
+					if (msg.result[i].recipient == null) {
+						msg.result[i].recipient = "&lt;Subscription Message&gt;"
+						if (window.location.hash == "#sendbox") unread = "N/A"
+					}
+				} else {
+					msg.result[i].recipient = tmp
 				}
 
 				$("table#main").children("tbody").prepend("\
 				<tr onclick='messageModal(\"" + ArrayToBase64(msg.result[i].txid_hash) + "\")'>\
-	            	<td data-th='date'>" + date.toLocaleString() + "</td>\
-	            	<td data-th='from'>" + msg.result[i].sender + "</td>\
-	            	<td data-th='to'>" + msg.result[i].recipient + "</td>\
-	            	<td data-th='status'>" + unread + "</td>\
+	            	<td data-th='Date'>" + date.toLocaleString() + "</td>\
+	            	<td data-th='From'>" + msg.result[i].sender + "</td>\
+	            	<td data-th='To'>" + msg.result[i].recipient + "</td>\
+	            	<td data-th='Status'>" + unread + "</td>\
 		        </tr>");
 			}
 		} else {
@@ -432,8 +472,8 @@ function reloadPage(force) {
 			for (var i = 0; i < addr.result.length; i++) {
 				$("table#main").children("tbody").prepend("\
 					<tr onclick='addrDetailModal(\"" + addr.result[i][0] + "\")'>\
-						<td data-th='address'>" + addr.result[i][0] + "</td>\
-	            		<td data-th='registered'>" + addr.result[i][1] + "</td>\
+						<td data-th='Address'>" + addr.result[i][0] + "</td>\
+	            		<td data-th='Label'>" + addr.result[i][1] + "</td>\
 	            	</tr>");
 			}
 		}

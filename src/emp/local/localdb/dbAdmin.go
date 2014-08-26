@@ -147,6 +147,17 @@ func DeleteMessage(txidHash *objects.Hash) error {
 	return LocalDB.Exec("DELETE FROM msg WHERE txid_hash=?", txidHash.GetBytes());
 }
 
+func DeleteAddress(addrHash *objects.Hash) error {
+	localMutex.Lock()
+	defer localMutex.Unlock()
+
+	if Contains(*addrHash) > ADDRESS {
+		return errors.New("Error Deleting Message: Not Found!")
+	}
+
+	return LocalDB.Exec("DELETE FROM addressbook WHERE hash=?", addrHash.GetBytes());
+}
+
 func AddUpdateMessage(msg *objects.FullMessage, box int) error {
 	localMutex.Lock()
 	defer localMutex.Unlock()

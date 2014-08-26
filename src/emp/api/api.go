@@ -5,6 +5,7 @@ import (
 	"emp/objects"
 	"fmt"
 	"quibit"
+	"runtime"
 	"time"
 )
 
@@ -31,6 +32,10 @@ func Start(config *ApiConfig) {
 		locVersion.Peer = str
 		config.SendQueue <- *locVersion
 	}
+
+	// Set Up Clocks
+	second := time.Tick(2 * time.Second)
+	minute := time.Tick(time.Minute)
 
 	for {
 		select {
@@ -131,6 +136,66 @@ func Start(config *ApiConfig) {
 			// Dump Nodes to File
 			DumpNodes(config)
 			return
+		case <-second:
+			// Reconnection Logic
+			for key, node := range config.NodeList.Nodes {
+				peer := quibit.GetPeer(key)
+				if peer == nil || !peer.IsConnected() {
+					quibit.KillPeer(key)
+					if node.Attempts >= 3 {
+						config.Log <- fmt.Sprintf("Max connection attempts reached for %s, disconnecting...", key)
+						// Max Attempts Reached, disconnect
+						delete(config.NodeList.Nodes, key)
+					} else {
+						config.Log <- fmt.Sprintf("Disconnected from peer %s, trying to reconnect...", key)
+						peer = new(quibit.Peer)
+						peer.IP = node.IP
+						peer.Port = node.Port
+						config.PeerQueue <- *peer
+						runtime.Gosched()
+						peer = nil
+						node.Attempts++
+						config.NodeList.Nodes[key] = node
+						locVersion.Peer = key
+						config.SendQueue <- *locVersion
+					}
+				}
+			}
+
+			if len(config.NodeList.Nodes) < 1 {
+				config.Log <- "All connections lost, re-bootstrapping..."
+
+				for i, str := range config.Bootstrap {
+					if i >= bufLen {
+						break
+					}
+
+					p := new(quibit.Peer)
+					n := new(objects.Node)
+					err := n.FromString(str)
+					if err != nil {
+						fmt.Println("Error Decoding Peer ", str, ": ", err)
+						continue
+					}
+
+					p.IP = n.IP
+					p.Port = n.Port
+					config.PeerQueue <- *p
+					runtime.Gosched()
+					config.NodeList.Nodes[n.String()] = *n
+				}
+
+				for str, _ := range config.NodeList.Nodes {
+					locVersion.Peer = str
+					config.SendQueue <- *locVersion
+				}
+			}
+		case <-minute:
+			// Dump old messages
+			err = db.SweepMessages(30 * 24 * time.Hour)
+			if err != nil {
+				config.Log <- fmt.Sprintf("Error Sweeping Messages: %s", err)
+			}
 		}
 	}
 
