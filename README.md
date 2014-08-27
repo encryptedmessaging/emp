@@ -5,6 +5,8 @@ Originally based off of BitMessage, EMP makes modifications to the API to includ
 both Read Receipts that Purge the network of read messages, and an extra identification field
 to prevent clients from having to decrypt every single incoming message.
 
+** You can check out some more detailed information in the GitHub Wiki! **
+
 Submodules
 ----------
 
