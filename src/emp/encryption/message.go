@@ -9,6 +9,8 @@
     LICENSE file for more details.
 **/
 
+// Package encryption wraps around Go's native crypto library to provide 
+// ECIES and AES-256 encryption for EMP Basic and Published Messages.
 package encryption
 
 import (
@@ -18,6 +20,8 @@ import (
 	"crypto/sha512"
 )
 
+
+// Encrypt plainText into an Encrypted Message using the given public key.
 func Encrypt(log chan string, dest_pubkey []byte, plainText string) *EncryptedMessage {
 	// Generate New Public/Private Key Pair
 	D1, X1, Y1 := CreateKey(log)
@@ -48,6 +52,7 @@ func Encrypt(log chan string, dest_pubkey []byte, plainText string) *EncryptedMe
 	return ret
 }
 
+// Encrypt plainText into an Encrypted Published Message using the given private key.
 func EncryptPub(log chan string, src_privkey []byte, plainText string) *EncryptedMessage {
 	// Generate New Public/Private Key Pair
 	D1, X1, Y1 := CreateKey(log)
@@ -84,6 +89,8 @@ func checkMAC(message, messageMAC, key []byte) bool {
 	return hmac.Equal(messageMAC, expectedMAC)
 }
 
+// Decrypt a given Encrypted Message using the given private key. 
+// <Nil> is returned if the key fails the HMAC-SHA256 test.
 func Decrypt(log chan string, privKey []byte, encrypted *EncryptedMessage) []byte {
 	if encrypted == nil || privKey == nil || log == nil {
 		return nil
@@ -109,6 +116,8 @@ func Decrypt(log chan string, privKey []byte, encrypted *EncryptedMessage) []byt
 	return SymmetricDecrypt(encrypted.IV, PubHash_E, encrypted.CipherText)
 }
 
+// Decrypt the given Published Message using the given Pubkey. 
+// <Nil> is returned if the HMAC-SHA256 test fails.
 func DecryptPub(log chan string, pubkey []byte, encrypted *EncryptedMessage) []byte {
 	if encrypted == nil || pubkey == nil || log == nil {
 		return nil

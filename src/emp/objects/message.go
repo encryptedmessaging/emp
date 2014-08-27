@@ -20,17 +20,17 @@ import (
 )
 
 type Message struct {
-	AddrHash  Hash
-	TxidHash  Hash
-	Timestamp time.Time
-	Content   encryption.EncryptedMessage
+	AddrHash  Hash                        // Hash of Recipient's Address
+	TxidHash  Hash                        // Hash of random identifier
+	Timestamp time.Time                   // Time that message was first broadcast
+	Content   encryption.EncryptedMessage // see package encryption
 }
 
 const (
 	msgLen = 2*hashLen + 8
 )
 
-// Message Commands
+// Message Command Types, See EMPv1 Specification
 const (
 	VERSION = iota
 	PEER    = iota
@@ -46,7 +46,7 @@ const (
 	PUB            = iota
 )
 
-// Message Types
+// Quibit Types, see package quibit.
 const (
 	BROADCAST = iota
 	REQUEST   = iota

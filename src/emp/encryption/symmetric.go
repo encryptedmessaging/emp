@@ -18,6 +18,9 @@ import (
 	"fmt"
 )
 
+// Symmetrically encryptes plainText using AES-256 and the given key. Returns the IV and ciphertext. 
+//
+// Special Case: If the key is length 25-bytes (an address), it is padded to 32-bytes with 0x00.
 func SymmetricEncrypt(key []byte, plainText string) ([aes.BlockSize]byte, []byte, error) {
 
 	// Make Initialization Vector
@@ -55,6 +58,8 @@ func SymmetricEncrypt(key []byte, plainText string) ([aes.BlockSize]byte, []byte
 	return IV, cipherText, nil
 }
 
+
+// Decrypted cipherText encrypted with AES-256 using the given IV and key.
 func SymmetricDecrypt(IV [aes.BlockSize]byte, key, cipherText []byte) []byte {
 	plainText := make([]byte, len(cipherText), len(cipherText))
 

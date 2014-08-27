@@ -25,10 +25,10 @@ const (
 )
 
 type Node struct {
-	IP       net.IP
-	Port     uint16
-	LastSeen time.Time
-	Attempts uint8
+	IP       net.IP    // Public IPv6 or IPv4 Address
+	Port     uint16    // Port on which TCP Server is running
+	LastSeen time.Time // Time of last connection to Node.
+	Attempts uint8     // Number of reconnection attempt. Currently, node is forgotten after 3 failed attempts.
 }
 
 type NodeList struct {

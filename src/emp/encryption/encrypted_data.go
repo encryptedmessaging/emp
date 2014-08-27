@@ -14,10 +14,10 @@ package encryption
 import "errors"
 
 type EncryptedMessage struct {
-	IV         [16]byte
-	PublicKey  [65]byte
-	CipherText []byte
-	HMAC       [32]byte
+	IV         [16]byte // Initialization Vector for AES encryption
+	PublicKey  [65]byte // Random Public Key used for decryption
+	CipherText []byte   // CipherText, length is multiple of AES blocksize
+	HMAC       [32]byte // HMAC-SHA256, used to validate key before decryption
 }
 
 const (

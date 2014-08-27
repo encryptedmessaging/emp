@@ -21,6 +21,7 @@ import (
 	"strconv"
 )
 
+// Create a new Public-Private ECC-256 Keypair.
 func CreateKey(log chan string) ([]byte, *big.Int, *big.Int) {
 	priv, x, y, err := elliptic.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -30,10 +31,12 @@ func CreateKey(log chan string) ([]byte, *big.Int, *big.Int) {
 	return priv, x, y
 }
 
+// Convert public key to uncompressed 65-byte slice (2 32-bit integers with prefix 0x04)
 func MarshalPubkey(x, y *big.Int) []byte {
 	return elliptic.Marshal(elliptic.P256(), x, y)
 }
 
+// Convert 65-byte slice as created by MarshalPubkey() into an ECC-256 Public Key.
 func UnmarshalPubkey(data []byte) (x, y *big.Int) {
 	return elliptic.Unmarshal(elliptic.P256(), data)
 }
@@ -42,6 +45,7 @@ func GetCurve() elliptic.Curve {
 	return elliptic.P256()
 }
 
+// Convert ECC-256 Public Key to an EMP address (raw 25 bytes).
 func GetAddress(log chan string, x, y *big.Int) []byte {
 	pubKey := elliptic.Marshal(elliptic.P256(), x, y)
 	ripemd := ripemd160.New()
@@ -71,6 +75,7 @@ func GetAddress(log chan string, x, y *big.Int) []byte {
 	return address
 }
 
+// Determine if address is valid (checksum is correct, correct length, and it starts with a 1-byte number).
 func ValidateAddress(addr []byte) bool {
 	if len(addr) != 25 {
 		return false
@@ -88,6 +93,7 @@ func ValidateAddress(addr []byte) bool {
 	return true
 }
 
+// Converts 25-byte address to String representation.
 func AddressToString(addr []byte) string {
 	if !ValidateAddress(addr) {
 		return ""
@@ -96,6 +102,7 @@ func AddressToString(addr []byte) string {
 	return strconv.Itoa(int(addr[0])) + base64.StdEncoding.EncodeToString(addr[1:])
 }
 
+// Converts String representation to 25-byte address.
 func StringToAddress(addr string) []byte {
 	if len(addr) < 2 {
 		return nil

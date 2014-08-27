@@ -22,6 +22,7 @@ const (
 
 type Hash [hashLen]byte
 
+// Create a SHA-384 Hash of data.
 func MakeHash(data []byte) Hash {
 	hashArr := sha512.Sum384(data)
 	return Hash(hashArr)

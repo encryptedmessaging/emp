@@ -18,6 +18,7 @@ import (
 	"time"
 )
 
+// Remove all basic and published messages older than (Current Time - duration).
 func SweepMessages(duration time.Duration) error {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -27,6 +28,7 @@ func SweepMessages(duration time.Duration) error {
 	return dbConn.Exec("DELETE FROM msg WHERE timestamp <= ?", deadline)
 }
 
+// Add Encrypted public key to database and hash list.
 func AddPubkey(log chan string, pubkey objects.EncryptedPubkey) error {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -51,6 +53,7 @@ func AddPubkey(log chan string, pubkey objects.EncryptedPubkey) error {
 	return nil
 }
 
+// Get Encrypted Public Key from database.
 func GetPubkey(log chan string, addrHash objects.Hash) *objects.EncryptedPubkey {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -77,6 +80,7 @@ func GetPubkey(log chan string, addrHash objects.Hash) *objects.EncryptedPubkey 
 	return nil
 }
 
+// Add Purge Token to database, and remove corresponding message if necessary.
 func AddPurge(log chan string, p objects.Purge) error {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -105,6 +109,7 @@ func AddPurge(log chan string, p objects.Purge) error {
 	return nil
 }
 
+// Get purge token from the database.
 func GetPurge(log chan string, txidHash objects.Hash) *objects.Purge {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -129,6 +134,7 @@ func GetPurge(log chan string, txidHash objects.Hash) *objects.Purge {
 	return nil
 }
 
+// Add Published Message to database and hash list.
 func AddPub(log chan string, msg *objects.Message) error {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -150,6 +156,7 @@ func AddPub(log chan string, msg *objects.Message) error {
 	return nil
 }
 
+// Add basic message to database and hash list.
 func AddMessage(log chan string, msg *objects.Message) error {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -172,6 +179,7 @@ func AddMessage(log chan string, msg *objects.Message) error {
 
 }
 
+// Get basic message from database.
 func GetMessage(log chan string, txidHash objects.Hash) *objects.Message {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -205,6 +213,7 @@ func GetMessage(log chan string, txidHash objects.Hash) *objects.Message {
 	return nil
 }
 
+// Remove any object from the database and hash list.
 func RemoveHash(log chan string, hashObj objects.Hash) error {
 	mutex.Lock()
 	defer mutex.Unlock()

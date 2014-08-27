@@ -21,9 +21,9 @@ const (
 )
 
 type EncryptedPubkey struct {
-	AddrHash Hash
-	IV       [16]byte
-	Payload  []byte
+	AddrHash Hash     // Hash of address that own this public key.
+	IV       [16]byte // IV for AES-256 encryption of public key
+	Payload  []byte   // Public key encrypted with AES-256. The Address is the key.
 }
 
 func (e *EncryptedPubkey) GetBytes() []byte {

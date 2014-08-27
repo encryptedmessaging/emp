@@ -16,6 +16,7 @@ import (
 	"fmt"
 )
 
+// Print a randomly-generated string.
 func GUID(bytes int) {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)

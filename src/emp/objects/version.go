@@ -26,11 +26,11 @@ const (
 )
 
 type Version struct {
-	Version   uint16    `json:"version"`
-	Timestamp time.Time `json:"timestamp"`
-	IpAddress net.IP    `json:"ip_address"`
-	Port      uint16    `json:"port"`
-	UserAgent string    `json:"user_agent"`
+	Version   uint16    `json:"version"`    // Protocol Version, currently 1
+	Timestamp time.Time `json:"timestamp"`  // Current server timestamp, should be within 5 minutes to connect.
+	IpAddress net.IP    `json:"ip_address"` // Public IPv6 or IPv4 Address
+	Port      uint16    `json:"port"`       // Public-facing port with running TCP server
+	UserAgent string    `json:"user_agent"` // Node-provided (spoofable) User agent.
 }
 
 func (v *Version) FromBytes(data []byte) error {

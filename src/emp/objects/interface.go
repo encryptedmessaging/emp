@@ -9,6 +9,7 @@
     LICENSE file for more details.
 **/
 
+// Package objects provides all serializeable data structures within the EMProtocol.
 package objects
 
 import (
@@ -30,6 +31,7 @@ func (n *NilPayload) FromBytes(b []byte) error {
 	return nil
 }
 
+// Creates a new Quibit Frame reading for sending from a Serializeable Object.
 func MakeFrame(command, t uint8, payload Serializer) *quibit.Frame {
 	frame := new(quibit.Frame)
 	frame.Configure(payload.GetBytes(), command, t)

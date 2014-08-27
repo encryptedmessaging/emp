@@ -9,6 +9,7 @@
     LICENSE file for more details.
 **/
 
+// Package api provides a TCP server that fully implements the EMProtocol.
 package api
 
 import (
@@ -20,6 +21,10 @@ import (
 	"time"
 )
 
+// Starts a new TCP Server wth configuration specified in ApiConfig. 
+// Server will terminate cleanly only when data is sent to the Quit channel.
+// 
+// See (struct ApiConfig) for details.
 func Start(config *ApiConfig) {
 	var err error
 	var frame quibit.Frame

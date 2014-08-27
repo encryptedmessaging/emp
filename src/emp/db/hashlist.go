@@ -14,17 +14,18 @@ package db
 import "emp/objects"
 
 const (
-	PUBKEY   = iota
-	PURGE    = iota
-	MSG      = iota
-	PUBKEYRQ = iota
-	PUB      = iota
-	NOTFOUND = iota
+	PUBKEY   = iota // Encrypted Public Key
+	PURGE    = iota // Purged Message
+	MSG      = iota // Basic Message
+	PUBKEYRQ = iota // Public Key Request
+	PUB      = iota // Published Message
+	NOTFOUND = iota // Object not in hash list.
 )
 
 // Hash List
 var hashList map[string]int
 
+// Add an object to the hash list with a given type.
 func Add(hashObj objects.Hash, hashType int) {
 	hash := string(hashObj.GetBytes())
 	if hashList != nil {
@@ -32,6 +33,7 @@ func Add(hashObj objects.Hash, hashType int) {
 	}
 }
 
+// Remove an object from the hash list.
 func Delete(hashObj objects.Hash) {
 	hash := string(hashObj.GetBytes())
 	if hashList != nil {
@@ -39,6 +41,7 @@ func Delete(hashObj objects.Hash) {
 	}
 }
 
+// Return the type the item in the hash list (see constants).
 func Contains(hashObj objects.Hash) int {
 	hash := string(hashObj.GetBytes())
 	if hashList != nil {
@@ -52,6 +55,7 @@ func Contains(hashObj objects.Hash) int {
 	return NOTFOUND
 }
 
+// List of all hashes in the hash list.
 func ObjList() *objects.Obj {
 	if hashList == nil {
 		return nil

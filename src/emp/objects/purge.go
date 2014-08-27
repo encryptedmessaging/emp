@@ -18,7 +18,7 @@ const (
 )
 
 type Purge struct {
-	Txid [16]byte
+	Txid [16]byte // Random message identifier.
 }
 
 func (p *Purge) GetBytes() []byte {
