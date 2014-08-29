@@ -55,7 +55,7 @@ func basicAuth(config *api.ApiConfig, r *http.Request) bool {
 		if error != nil {
 			return false
 		}
-		if ip != "127.0.0.1" {
+		if ip != "127.0.0.1" && ip != "::1" {
 			return false
 		}
 	}
