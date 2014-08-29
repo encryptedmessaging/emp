@@ -25,3 +25,4 @@ user = "rpcUser"
 pass = "rpcPass"
 port = 8080
 local_client = "client"
+local_only = true

@@ -9,6 +9,8 @@
     LICENSE file for more details.
 **/
 
+// Package LocalAPI provides the RPC-API that allows management of Addresses and Messages
+// in EMPLocal.
 package localapi
 
 import (
@@ -46,6 +48,16 @@ func (s *EMPService) Version(r *http.Request, args *NilParam, reply *objects.Ver
 func basicAuth(config *api.ApiConfig, r *http.Request) bool {
 	if config == nil || r == nil {
 		return false
+	}
+
+	if config.LocalOnly {
+		ip, _, error := net.SplitHostPort(r.RemoteAddr)
+		if error != nil {
+			return false
+		}
+		if ip != "127.0.0.1" {
+			return false
+		}
 	}
 
 	auth := r.Header.Get("Authorization")

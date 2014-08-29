@@ -54,6 +54,7 @@ type ApiConfig struct {
 	RPCPort uint16 // Port to run RPC API and EMPLocal Client
 	RPCUser string // Username for RPC server
 	RPCPass string // Password for RPC Server
+	LocalOnly bool // If true, only allow RPC from 127.0.0.1
 
 	HttpRoot string // HTML Root of EMPLocal Client
 }
@@ -108,10 +109,11 @@ type tomlConfig struct {
 }
 
 type rpcConf struct {
-	User  string
-	Pass  string
-	Port  uint16
-	Local string `toml:"local_client"`
+	User      string
+	Pass      string
+	Port      uint16
+	Local     string `toml:"local_client"`
+	LocalOnly bool `toml:"local_only"`
 }
 
 // Set Config Directory where databases and configuration are stored.
@@ -168,10 +170,11 @@ func GetConfig(confFile string) *ApiConfig {
 	config.LocalVersion.UserAgent = objects.LOCAL_USER
 
 	// RPC
-	config.RPCPort = tomlConf.RPCConf.Port
-	config.RPCUser = tomlConf.RPCConf.User
-	config.RPCPass = tomlConf.RPCConf.Pass
-	config.HttpRoot = GetConfDir() + tomlConf.RPCConf.Local
+	config.RPCPort   = tomlConf.RPCConf.Port
+	config.RPCUser   = tomlConf.RPCConf.User
+	config.RPCPass   = tomlConf.RPCConf.Pass
+	config.LocalOnly = tomlConf.RPCConf.LocalOnly
+	config.HttpRoot  = GetConfDir() + tomlConf.RPCConf.Local
 
 	// Local Registers
 	config.PubkeyRegister  = make(chan objects.Hash, bufLen)
