@@ -1,3 +1,15 @@
+/**
+    Copyright 2014 JARST, LLC.
+    
+    This file is part of EMP.
+
+    EMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the included
+    LICENSE file for more details.
+**/
+
+// Package localdb provdes a local SQLite3 Database for the EMPLocal client.
 package localdb
 
 import (
@@ -11,6 +23,7 @@ import (
 var LocalDB *sqlite3.Conn
 var localMutex *sync.Mutex
 
+// Initialize database with mutexes from file.
 func Initialize(log chan string, dbFile string) error {
 	var err error
 	if LocalDB != nil {
@@ -76,23 +89,26 @@ func populateHashes() error {
 	return nil
 }
 
+// Close and Cleanup database.
 func Cleanup() {
 	LocalDB.Close()
 	LocalDB = nil
 	hashList = nil
 }
 
+// Hash Types
 const (
-	INBOX    = iota
-	OUTBOX   = iota
-	SENDBOX  = iota
-	ADDRESS  = iota
-	NOTFOUND = iota
+	INBOX    = iota // Incoming Messages
+	OUTBOX   = iota // Outgoing, Unsent Messages
+	SENDBOX  = iota // Outgoing, Sent Messages
+	ADDRESS  = iota // EMP Addresses
+	NOTFOUND = iota // Not Found in DB
 )
 
 // Hash List
 var hashList map[string]int
 
+// Add to global Hash List.
 func Add(hashObj objects.Hash, hashType int) {
 	hash := string(hashObj.GetBytes())
 	if hashList != nil {
@@ -100,6 +116,7 @@ func Add(hashObj objects.Hash, hashType int) {
 	}
 }
 
+// Delete hash from Hash List
 func Del(hashObj objects.Hash) {
 	hash := string(hashObj.GetBytes())
 	if hashList != nil {
@@ -107,6 +124,7 @@ func Del(hashObj objects.Hash) {
 	}
 }
 
+// Get type of object in Hash List
 func Contains(hashObj objects.Hash) int {
 	hash := string(hashObj.GetBytes())
 	if hashList != nil {

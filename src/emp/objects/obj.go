@@ -1,3 +1,14 @@
+/**
+    Copyright 2014 JARST, LLC.
+    
+    This file is part of EMP.
+
+    EMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the included
+    LICENSE file for more details.
+**/
+
 package objects
 
 import (
@@ -11,6 +22,7 @@ const (
 
 type Hash [hashLen]byte
 
+// Create a SHA-384 Hash of data.
 func MakeHash(data []byte) Hash {
 	hashArr := sha512.Sum384(data)
 	return Hash(hashArr)

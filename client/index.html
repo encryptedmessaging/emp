@@ -225,7 +225,10 @@
 
       window.emplogin = getCookie("emplogin")
       if (!isLoggedIn()) {
-        loginModal();
+	LogIn('rpcUser', 'rpcPass');
+	if (!isLoggedIn()) {
+        	loginModal();
+	} else reloadPage(true);
       } else {
         reloadPage(true);
       }

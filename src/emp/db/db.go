@@ -1,3 +1,15 @@
+/**
+    Copyright 2014 JARST, LLC.
+    
+    This file is part of EMP.
+
+    EMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the included
+    LICENSE file for more details.
+**/
+
+// Package db provides a connection to a local SQLite database to store the EMP inventory.
 package db
 
 import (
@@ -10,6 +22,7 @@ import (
 var dbConn *sqlite3.Conn
 var mutex *sync.Mutex
 
+// Initialize Database connection from Database File (Absolute Path), mutexes, and the global hash list.
 func Initialize(log chan string, dbFile string) error {
 	var err error
 	if dbConn != nil {
@@ -112,6 +125,7 @@ func populateHashes() error {
 	return nil
 }
 
+// Closes the database connection and de-initializes the global hash list.
 func Cleanup() {
 	dbConn.Close()
 	dbConn = nil

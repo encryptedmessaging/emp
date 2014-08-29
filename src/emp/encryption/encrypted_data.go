@@ -1,12 +1,23 @@
+/**
+    Copyright 2014 JARST, LLC.
+    
+    This file is part of EMP.
+
+    EMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the included
+    LICENSE file for more details.
+**/
+
 package encryption
 
 import "errors"
 
 type EncryptedMessage struct {
-	IV         [16]byte
-	PublicKey  [65]byte
-	CipherText []byte
-	HMAC       [32]byte
+	IV         [16]byte // Initialization Vector for AES encryption
+	PublicKey  [65]byte // Random Public Key used for decryption
+	CipherText []byte   // CipherText, length is multiple of AES blocksize
+	HMAC       [32]byte // HMAC-SHA256, used to validate key before decryption
 }
 
 const (

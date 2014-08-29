@@ -1,3 +1,15 @@
+/**
+    Copyright 2014 JARST, LLC.
+    
+    This file is part of EMP.
+
+    EMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the included
+    LICENSE file for more details.
+**/
+
+// Package api provides a TCP server that fully implements the EMProtocol.
 package api
 
 import (
@@ -9,6 +21,10 @@ import (
 	"time"
 )
 
+// Starts a new TCP Server wth configuration specified in ApiConfig. 
+// Server will terminate cleanly only when data is sent to the Quit channel.
+// 
+// See (struct ApiConfig) for details.
 func Start(config *ApiConfig) {
 	var err error
 	var frame quibit.Frame

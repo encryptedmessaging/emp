@@ -5,6 +5,8 @@ Originally based off of BitMessage, EMP makes modifications to the API to includ
 both Read Receipts that Purge the network of read messages, and an extra identification field
 to prevent clients from having to decrypt every single incoming message.
 
+**You can check out some more detailed information in the GitHub Wiki!**
+
 Submodules
 ----------
 
@@ -36,3 +38,13 @@ Building and Launching
 Configuration
 ---------
 All configuration is found in `~/.config/emp/msg.conf`, which is installed automatically with `make start`. An example is found in `./script/msg.conf.example`. The example should be good for most users, but if you plan on running a "backbone" node, make sure to add your external IP to msg.conf in order to have it circulated around the network.
+
+Debian/Ubuntu Installation
+---------
+* Add the APT repository with `add-apt-repository 'deb http://emp.jar.st/repos/apt/debian unstable main'`
+* Download and install the JARST GPG Key with `wget -O key http://emp.jar.st/repos/apt/debian/conf/jarst.gpg.key && sudo apt-key add key; rm -f key`
+* Update the APT Database: `sudo apt-get update`
+* You can now install EMP with `sudo apt-get install emp`
+
+**Note:**
+Configuration of the Debian installation will be stored in `/usr/share/emp/` instead of the home directory.

@@ -1,3 +1,14 @@
+/**
+    Copyright 2014 JARST, LLC.
+    
+    This file is part of EMP.
+
+    EMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the included
+    LICENSE file for more details.
+**/
+
 package objects
 
 import (
@@ -9,11 +20,11 @@ import (
 )
 
 type MetaMessage struct {
-	TxidHash  Hash      `json:"txid_hash"`
-	Timestamp time.Time `json:"sent"`
-	Purged    bool      `json:"read"`
-	Sender    string    `json:"sender"`
-	Recipient string    `json:"recipient"`
+	TxidHash  Hash      `json:"txid_hash"` // Hash of random identifier
+	Timestamp time.Time `json:"sent"`      // Time message was sent
+	Purged    bool      `json:"read"`      // Whether purge token has been received
+	Sender    string    `json:"sender"`    // String representation of sender's address, if available.
+	Recipient string    `json:"recipient"` // String representation of recipient's address, if available.
 }
 
 type FullMessage struct {
@@ -23,13 +34,13 @@ type FullMessage struct {
 }
 
 type DecryptedMessage struct {
-	Txid      [16]byte
-	Pubkey    [65]byte
-	Subject   string
-	MimeType  string
-	Length    uint32
-	Content   string
-	Signature [65]byte
+	Txid      [16]byte // Randomly generated identifier and purge token.
+	Pubkey    [65]byte // Sender's 65-byte Public Key
+	Subject   string   // Human-readable subject of this message
+	MimeType  string   // Mime-Type of Content
+	Length    uint32   // Length of Content in bytes
+	Content   string   // Content of message, could be any data.
+	Signature [65]byte // Sender's Signature of entire message.
 }
 
 func (d *DecryptedMessage) GetBytes() []byte {

@@ -1,3 +1,14 @@
+/**
+    Copyright 2014 JARST, LLC.
+    
+    This file is part of EMP.
+
+    EMP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the included
+    LICENSE file for more details.
+**/
+
 package api
 
 import (
@@ -17,36 +28,38 @@ var confDir string;
 
 type ApiConfig struct {
 	// Network Channels
-	RecvQueue chan quibit.Frame
-	SendQueue chan quibit.Frame
-	PeerQueue chan quibit.Peer
+	RecvQueue chan quibit.Frame // Send frames here to be handled by the Running API
+	SendQueue chan quibit.Frame // Frames to be broadcast to the network are sent here
+	PeerQueue chan quibit.Peer // New peers to connect to are sent here
 
 	// Local Logic
-	DbFile       string
-	LocalDB      string
-	NodeFile     string
-	NodeList     objects.NodeList
-	LocalVersion objects.Version
-	Bootstrap    []string
+	DbFile       string // Inventory File relative to Config Directory
+	LocalDB      string // EMPLocal Database relative to Config Directory
+	NodeFile     string // File to store list of <IP>:<Host> Strings
+	NodeList     objects.NodeList // Active list of connected backbone nodes.
+	LocalVersion objects.Version // Local version broadcast to nodes upon connection
+	Bootstrap    []string // List of bootstrap nodes to use when all other nodes are disconnected.
 
 	// Local Register
-	PubkeyRegister  chan objects.Hash
-	MessageRegister chan objects.Message
-	PubRegister     chan objects.Message
-	PurgeRegister   chan [16]byte
+	PubkeyRegister  chan objects.Hash // Identifiers for incoming encrypted public keys are sent here.
+	MessageRegister chan objects.Message // Incoming basic messages are copied here.
+	PubRegister     chan objects.Message // Incoming published messages are copied here.
+	PurgeRegister   chan [16]byte // Incomping purge tokens are copied here.
 
 	// Administration
-	Log  chan string
-	Quit chan os.Signal
+	Log  chan string // Error messages are sent here. WILL BLOCK if not 
+	Quit chan os.Signal // Send data here to cleanly quit the API Server
 
 	// Network
-	RPCPort uint16
-	RPCUser string
-	RPCPass string
+	RPCPort uint16 // Port to run RPC API and EMPLocal Client
+	RPCUser string // Username for RPC server
+	RPCPass string // Password for RPC Server
+	LocalOnly bool // If true, only allow RPC from 127.0.0.1
 
-	HttpRoot string
+	HttpRoot string // HTML Root of EMPLocal Client
 }
 
+// Returns Human-Readable string for a specific EMP command.
 func CmdString(cmd uint8) string {
 	var ret string
 
@@ -92,20 +105,23 @@ type tomlConfig struct {
 
 	Peers []string `toml:"bootstrap"`
 
-	RPCConf RPCConf `toml:"rpc"`
+	RPCConf rpcConf `toml:"rpc"`
 }
 
-type RPCConf struct {
-	User  string
-	Pass  string
-	Port  uint16
-	Local string `toml:"local_client"`
+type rpcConf struct {
+	User      string
+	Pass      string
+	Port      uint16
+	Local     string `toml:"local_client"`
+	LocalOnly bool `toml:"local_only"`
 }
 
+// Set Config Directory where databases and configuration are stored.
 func SetConfDir(conf string) {
 	confDir = conf
 }
 
+// Get Config Directory: Defaults to $(HOME)/.config/emp/
 func GetConfDir() string {
 	if len(confDir) != 0 {
 		return confDir
@@ -119,6 +135,7 @@ func GetConfDir() string {
 	return usr.HomeDir + "/.config/emp/"
 }
 
+// Generate new config from configuration file. File provided as an Absolute Path.
 func GetConfig(confFile string) *ApiConfig {
 
 	var tomlConf tomlConfig
@@ -153,10 +170,11 @@ func GetConfig(confFile string) *ApiConfig {
 	config.LocalVersion.UserAgent = objects.LOCAL_USER
 
 	// RPC
-	config.RPCPort = tomlConf.RPCConf.Port
-	config.RPCUser = tomlConf.RPCConf.User
-	config.RPCPass = tomlConf.RPCConf.Pass
-	config.HttpRoot = GetConfDir() + tomlConf.RPCConf.Local
+	config.RPCPort   = tomlConf.RPCConf.Port
+	config.RPCUser   = tomlConf.RPCConf.User
+	config.RPCPass   = tomlConf.RPCConf.Pass
+	config.LocalOnly = tomlConf.RPCConf.LocalOnly
+	config.HttpRoot  = GetConfDir() + tomlConf.RPCConf.Local
 
 	// Local Registers
 	config.PubkeyRegister  = make(chan objects.Hash, bufLen)
@@ -201,6 +219,7 @@ func GetConfig(confFile string) *ApiConfig {
 	return config
 }
 
+// Load and connect to all nodes from the NodeFile found in the ApiConfig.
 func ReadNodes(config *ApiConfig) {
 	file, err := os.Open(config.NodeFile);
 	defer file.Close()
@@ -235,6 +254,7 @@ func ReadNodes(config *ApiConfig) {
 	fmt.Println(count, "nodes pulled from node file.")
 }
 
+// Dump all nodes in config.NodeList to config.NodeFile.
 func DumpNodes(config *ApiConfig) {
 	if config == nil {
 		return
