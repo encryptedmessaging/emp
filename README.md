@@ -48,3 +48,7 @@ Debian/Ubuntu Installation
 
 **Note:**
 Configuration of the Debian installation will be stored in `/usr/share/emp/` instead of the home directory.
+
+Support
+---------
+Support is available through our [Google group](https://groups.google.com/forum/#!forum/encryptedmessaging).
