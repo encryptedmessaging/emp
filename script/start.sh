@@ -53,7 +53,7 @@ fi
 
 # Get Dependencies
 echo "Installing dependencies..."
-go get code.google.com/p/go.crypto/ripemd160
+go get golang.org/x/crypto/ripemd160
 go get github.com/BurntSushi/toml
 go get github.com/gorilla/rpc
 go get github.com/mxk/go-sqlite/sqlite3

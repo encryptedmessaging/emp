@@ -12,7 +12,7 @@
 package encryption
 
 import (
-	"code.google.com/p/go.crypto/ripemd160"
+	"golang.org/x/crypto/ripemd160"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha512"
